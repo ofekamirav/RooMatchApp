@@ -7,9 +7,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.roomatchapp.presentation.screens.login.LoginScreen
 import com.example.roomatchapp.presentation.screens.register.RegisterScreen
-import com.example.roomatchapp.presentation.screens.register.chooseTypeScreen.ChooseTypeUserScreen
-import com.example.roomatchapp.presentation.screens.register.roommateStep1.RoommateStep1
-import com.example.roomatchapp.presentation.screens.register.roommateStep2.RoommateStep2
+import com.example.roomatchapp.presentation.screens.register.ChooseTypeUserScreen
+import com.example.roomatchapp.presentation.screens.register.RoommateStep1
+import com.example.roomatchapp.presentation.screens.register.RoommateStep2
 import com.example.roomatchapp.presentation.screens.welcome.WelcomeScreen
 
 

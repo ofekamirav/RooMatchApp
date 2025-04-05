@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.res.painterResource
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.theme.Primary
 
 
 @Composable
@@ -87,7 +88,7 @@ fun WelcomeScreen(onGetStartedClick: () -> Unit) {
             Button(
                 onClick = onGetStartedClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF01999E),
+                    containerColor = Primary,
                     contentColor = Color.White
                 ),
                 modifier = Modifier

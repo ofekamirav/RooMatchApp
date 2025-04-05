@@ -1,4 +1,4 @@
-package com.example.roomatchapp.presentation.screens.register.chooseTypeScreen
+package com.example.roomatchapp.presentation.screens.register
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

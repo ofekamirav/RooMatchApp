@@ -1,14 +1,13 @@
-package com.example.roomatchapp.presentation.screens.register.roommateStep2
+package com.example.roomatchapp.presentation.screens.register
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.roomatch_front.android.presentation.register.roommateStep2.RoommateStep2ViewModel
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
+import com.example.roomatchapp.presentation.theme.Primary
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -86,15 +86,11 @@ fun RoommateStep2(
            Spacer(modifier = Modifier.height(16.dp))
             SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = totalSteps)
 
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Attributes:", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Select at least 3 attributes", fontSize = MaterialTheme.typography.titleSmall.fontSize, fontWeight = FontWeight.Light, color = Color.Gray)
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Attributes:", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.width(16.dp))
-                Text("Select at least 3 attributes", fontSize = MaterialTheme.typography.titleSmall.fontSize, fontWeight = FontWeight.Light, color = Color.Gray)
-            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -118,7 +114,7 @@ fun RoommateStep2(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(22.dp))
             Text("Hobbies:", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(16.dp))
             Text("Select at least 3 hobbies", fontSize = MaterialTheme.typography.titleSmall.fontSize, fontWeight = FontWeight.Light, color = Color.Gray)
@@ -144,7 +140,27 @@ fun RoommateStep2(
                 }
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onContinue,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                ,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Primary,
+                    contentColor = Color.White
+                ),
+
+                ) {
+                Text(
+                    "Continue",
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
         }
+
     }
 
 }

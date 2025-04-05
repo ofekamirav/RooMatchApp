@@ -1,4 +1,4 @@
-package com.example.roomatchapp.presentation.screens.register.roommateStep1
+package com.example.roomatchapp.presentation.screens.register
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
