@@ -17,7 +17,8 @@ fun CapsuleTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(50)
 ) {
     OutlinedTextField(
         value = value,
@@ -27,7 +28,7 @@ fun CapsuleTextField(
         modifier = modifier
             .fillMaxWidth()
             .height(55.dp),
-        shape = RoundedCornerShape(50),
+        shape = shape,
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
