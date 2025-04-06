@@ -27,16 +27,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.theme.Background
+import com.example.roomatchapp.presentation.theme.Secondary
 
 @Composable
 fun ChooseTypeUserScreen(
     onRoommateClick: () -> Unit,
     onOwnerClick: () -> Unit
 ) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Background)
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -83,7 +86,7 @@ fun OptionCard(
     val isClicked = remember { mutableStateOf(false) }
     val backgroundColor =
         if (isClicked.value) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary) else CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary
+            containerColor = Secondary
         )
     Card(
         modifier = modifier

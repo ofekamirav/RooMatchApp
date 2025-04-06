@@ -44,7 +44,7 @@ import com.example.roomatchapp.presentation.theme.Secondary
 fun RoommateStep1(
     onContinue: () -> Unit,
     stepIndex: Int = 0,
-    totalSteps: Int = 3,
+    totalSteps: Int = 4,
     onAIButtonClick: () -> Unit
 ){
     var personalBio by remember { mutableStateOf("") }
@@ -128,7 +128,8 @@ fun RoommateStep1(
                 placeholder = "Personal Bio",
                 modifier = Modifier
                     .height(170.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(20)
 
             )
             Spacer(modifier = Modifier.height(8.dp))
