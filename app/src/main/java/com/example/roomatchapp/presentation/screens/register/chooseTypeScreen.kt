@@ -16,8 +16,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,14 +29,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Secondary
 
 @Composable
 fun ChooseTypeUserScreen(
     onRoommateClick: () -> Unit,
-    onOwnerClick: () -> Unit
+    onOwnerClick: (isLoadingSetter: (Boolean) -> Unit) -> Unit
 ) {
+
+    var isOwnerLoading by remember { mutableStateOf(false) }
+
 
     Box(
         modifier = Modifier
@@ -43,34 +49,44 @@ fun ChooseTypeUserScreen(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        if (isOwnerLoading) {
+            LoadingAnimation(isLoading = isOwnerLoading)
+        } else {
 
-            ) {
-            OptionCard(
-                image = painterResource(id = R.drawable.ic_roommate),
-                title = "Looking For Roommates",
-                description = "Browse available rooms and connect with potential housemates.",
-                onClick = onRoommateClick,
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
+                    .fillMaxSize()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
 
-            Spacer(modifier = Modifier.height(26.dp))
+                ) {
+                OptionCard(
+                    image = painterResource(id = R.drawable.ic_roommate),
+                    title = "Looking For Roommates",
+                    description = "Browse available rooms and connect with potential housemates.",
+                    onClick = onRoommateClick,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
 
-            OptionCard(
-                image = painterResource(id = R.drawable.ic_owner),
-                title = "House/Room Owner",
-                description = "List your property and find potential roommates easily.",
-                onClick = onOwnerClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
+                Spacer(modifier = Modifier.height(26.dp))
+
+                OptionCard(
+                    image = painterResource(id = R.drawable.ic_owner),
+                    title = "House/Room Owner",
+                    description = "List your property and find potential roommates easily.",
+                    onClick = {
+                        isOwnerLoading = true
+                        onOwnerClick { isLoading ->
+                            isOwnerLoading = isLoading
+                        }
+                              },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+            }
         }
     }
 }

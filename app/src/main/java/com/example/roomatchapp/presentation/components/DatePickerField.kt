@@ -39,7 +39,7 @@ fun DatePickerField(
     OutlinedTextField(
         value = selectedDate,
         onValueChange = {},
-        label = { Text("Birthday") },
+        label = { Text("Birthdate") },
         enabled = false, //Disables the text field
         trailingIcon = {
             Icon(
@@ -50,6 +50,7 @@ fun DatePickerField(
                 }
             )
         },
+        singleLine = true,
         modifier = modifier
             .fillMaxWidth()
             .clickable { datePickerDialog.show() }

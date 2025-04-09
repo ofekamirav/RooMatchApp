@@ -23,10 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,12 +36,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.DatePickerField
+import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.presentation.theme.Primary
 
 @Composable
-fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit){
+fun RegisterScreen(
+    onRegisterClick: () -> Unit,
+    onLoginClick: () -> Unit,
+    registrationViewModel: RegistrationViewModel
+){
+    val state by registrationViewModel.state.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,15 +59,7 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit){
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ){
-            var email by remember { mutableStateOf("") }
-            var password by remember { mutableStateOf("") }
-            var confirmPassword by remember { mutableStateOf("") }
-            var name by remember { mutableStateOf("") }
-            var phone by remember { mutableStateOf("") }
-            var birthDate by remember { mutableStateOf("") }
-
             // Logo
             Image(
                 painter = painterResource(id = R.drawable.logoname),
@@ -80,23 +77,41 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit){
                 Column(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ){
                     Text("Create Account", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
 
                     // Email input
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Enter your email address") },
+                        value = state.email,
+                        onValueChange = { email ->
+                            registrationViewModel.updateState(
+                                state.copy(
+                                    email = email,
+                                    emailError = if (registrationViewModel.isValidEmail(email)) null else "Email is not valid"
+                                )
+                            )
+                        },
+                        isError = state.emailError != null,
+                        supportingText = { state.emailError?.let { Text(text = it) } },
                         singleLine = true,
+                        label = { Text("Enter your email address") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Full name") },
+                        value = state.fullName,
+                        onValueChange = { fullName ->
+                            registrationViewModel.updateState(
+                                state.copy(
+                                    fullName = fullName,
+                                    fullNameError = if (registrationViewModel.isValidFullName(fullName)) null else "You must enter your full name"
+                                )
+                            )
+                        },
+                        isError = state.fullNameError != null,
+                        supportingText = { state.fullNameError?.let { Text(text = it) } },
                         singleLine = true,
+                        label = { Text("Full name") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -105,32 +120,66 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit){
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         DatePickerField(
-                            selectedDate = birthDate,
-                            onDateSelected = { birthDate = it },
+                            selectedDate = state.birthDate,
+                            onDateSelected = { birthDate ->
+                                registrationViewModel.updateState(
+                                    state.copy(
+                                        birthDate = birthDate,
+                                        birthDateError = if (registrationViewModel.isValidBirthDate(birthDate)) null else "Birthdate is required"
+                                    )
+                                )
+                            },
                             modifier = Modifier.weight(1f)
                         )
                         OutlinedTextField(
-                            value = phone,
-                            onValueChange = { phone = it },
-                            label = { Text("Phone Number") },
+                            value = state.phoneNumber,
+                            onValueChange = { phone ->
+                                registrationViewModel.updateState(
+                                    state.copy(
+                                        phoneNumber = phone,
+                                        phoneNumberError = if (registrationViewModel.isValidPhoneNumber(phone)) null else "Phone not valid"
+                                    )
+                                )
+                            },
+                            isError = state.phoneNumberError != null,
+                            supportingText = { state.phoneNumberError?.let { Text(text = it) } },
                             singleLine = true,
+                            label = { Text("Phone Number") },
                             modifier = Modifier.weight(1f)
                         )
                     }
                     // Password input
                     OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Enter your Password") },
+                        value = state.password,
+                        onValueChange = { password ->
+                            registrationViewModel.updateState(
+                                state.copy(
+                                    password = password,
+                                    passwordError = if (registrationViewModel.isValidPassword(password)) null else "Weak password"
+                                )
+                            )
+                        },
+                        isError = state.passwordError != null,
+                        supportingText = { state.passwordError?.let { Text(text = it) } },
                         singleLine = true,
+                        label = { Text("Enter your Password") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     // Confirm Password input
                     OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = { Text("Confirm Password") },
+                        value = state.confirmPassword,
+                        onValueChange = { confirm ->
+                            registrationViewModel.updateState(
+                                state.copy(
+                                    confirmPassword = confirm,
+                                    confirmPasswordError = if (registrationViewModel.doPasswordsMatch(state.password, confirm)) null else "Passwords don't match"
+                                )
+                            )
+                        },
+                        isError = state.confirmPasswordError != null,
+                        supportingText = { state.confirmPasswordError?.let { Text(text = it) } },
                         singleLine = true,
+                        label = { Text("Confirm Password") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -145,6 +194,7 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit){
                             containerColor = Primary,
                             contentColor = Color.White
                         ),
+                        enabled = registrationViewModel.validateAllFields()
                     ) {
                         Text("Registration",
                             fontSize = MaterialTheme.typography.titleLarge.fontSize,
@@ -181,6 +231,7 @@ fun RegisterScreen(onRegisterClick: () -> Unit, onLoginClick: () -> Unit){
 fun RegisterScreenPreview(){
     RegisterScreen(
         onRegisterClick = {},
-        onLoginClick = {}
+        onLoginClick = {},
+        registrationViewModel = RegistrationViewModel()
     )
 }

@@ -1,11 +1,14 @@
 package com.example.roomatchapp.presentation.screens.register
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +25,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatch_front.android.presentation.register.roommateStep2.RoommateStep2ViewModel
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
@@ -45,8 +53,11 @@ fun RoommateStep3(
     onContinue: () -> Unit,
     onBack: () -> Unit,
     stepIndex: Int = 2,
-    totalSteps: Int = 4
+    totalSteps: Int = 4,
+    onAIButtonClick: () -> Unit
 ) {
+    var personalBio by remember { mutableStateOf("") }
+
     val lookingForRoomies = listOf(
         "Smoker", "Student", "Pet lover", "Pet Owner", "Vegetarian", "Clean",
         "Night-Worker", "In-Relationship", "Kosher", "Jewish", "Muslim", "Christian",
@@ -121,31 +132,53 @@ fun RoommateStep3(
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
-            Text(
-                "Your Profile Avatar",
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                "Please upload your profile picture",
-                fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                fontWeight = FontWeight.Light,
-                color = Color.Gray)
+            Spacer(modifier = Modifier.height(28.dp))
+
+            //Personal Bio
+            Text("Personal Bio:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light, fontSize = MaterialTheme.typography.titleMedium.fontSize)
             Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                painter = painterResource(id = R.drawable.avatar),
-                contentDescription = "Avatar",
+            CapsuleTextField(
+                value = personalBio,
+                onValueChange = { personalBio = it },
+                placeholder = "Personal Bio",
                 modifier = Modifier
-                    .size(250.dp)
-                    .padding(8.dp)
-                    .clip(CircleShape)
+                    .height(170.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(20)
+
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            //IconButton()
-
+            //AI Button
+            Button(
+                onClick = onAIButtonClick,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .height(40.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black,
+                ),
+                shape = RoundedCornerShape(50),
+                border = BorderStroke(1.dp, Secondary)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_gemini),
+                        contentDescription = "AI Icon",
+                        modifier = Modifier.size(60.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Suggest",
+                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.weight(1f))
             Button(
@@ -176,6 +209,7 @@ fun RoommateStep3(
 fun RoommateStep3Preview() {
     RoommateStep3(
         onContinue = {},
-        onBack = {}
+        onBack = {},
+        onAIButtonClick = {}
     )
 }

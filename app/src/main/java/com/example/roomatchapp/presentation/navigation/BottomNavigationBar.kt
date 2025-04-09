@@ -11,6 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.domain.model.BottomNavItem
 import com.example.roomatchapp.presentation.theme.Background
+import androidx.compose.foundation.layout.height
 
 @Composable
 fun BottomNavigationBar(
@@ -19,8 +20,9 @@ fun BottomNavigationBar(
     currentRoute: String?
 ) {
     NavigationBar(
+        modifier = Modifier.height(56.dp),
         containerColor = Background,
-        tonalElevation = 4.dp
+        tonalElevation = 2.dp
     ) {
         items.forEach { item ->
             val isSelected = currentRoute == item.route
@@ -36,10 +38,13 @@ fun BottomNavigationBar(
                     Icon(
                         painter = painterResource(id = if (isSelected) item.selectedIcon else item.unselectedIcon),
                         contentDescription = item.label,
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(42.dp),
                         tint = Color.Unspecified
                     )
-                }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = Color.Transparent //remove the background color
+                )
             )
         }
     }

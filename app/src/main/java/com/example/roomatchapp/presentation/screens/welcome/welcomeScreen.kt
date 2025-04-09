@@ -5,6 +5,7 @@ package com.example.roomatchapp.presentation.screens.welcome
 import android.net.Uri
 import android.widget.VideoView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.res.painterResource
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 
 
@@ -29,13 +31,18 @@ import com.example.roomatchapp.presentation.theme.Primary
 fun WelcomeScreen(onGetStartedClick: () -> Unit) {
     val context = LocalContext.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(Background)
+        .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
 
-        // video background
+        // video
         AndroidView(
             factory = {
                 VideoView(it).apply {
-                    val videoUri = Uri.parse("android.resource://${context.packageName}/${R.raw.welcomevideo}")
+                    val videoUri = Uri.parse("android.resource://${context.packageName}/${R.raw.wekcome_animate}")
                     setVideoURI(videoUri)
                     setOnPreparedListener { mediaPlayer ->
                         mediaPlayer.isLooping = true
@@ -46,8 +53,7 @@ fun WelcomeScreen(onGetStartedClick: () -> Unit) {
             modifier = Modifier.fillMaxSize()
         )
 
-
-//Overlay the video
+        //Overlay the video
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,7 +85,7 @@ fun WelcomeScreen(onGetStartedClick: () -> Unit) {
                 text ="No stress, just perfect matches for your next home and roommates.",
                 fontSize = MaterialTheme.typography.titleMedium.fontSize,
                 fontFamily = FontFamily.SansSerif,
-                color = Color.White
+                color = Color.DarkGray
                 )
 
             Spacer(modifier = Modifier.height(22.dp))
