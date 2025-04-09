@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -45,9 +47,7 @@ fun RoommateStep1(
     onContinue: () -> Unit,
     stepIndex: Int = 0,
     totalSteps: Int = 4,
-    onAIButtonClick: () -> Unit
 ){
-    var personalBio by remember { mutableStateOf("") }
     var workPlace by remember { mutableStateOf("") }
     val genders = listOf("Men", "Women", "Other")
     var selectedGender by remember { mutableStateOf("") }
@@ -119,51 +119,27 @@ fun RoommateStep1(
 
             Spacer(modifier = Modifier.height(22.dp))
 
-            //Personal Bio
-            Text("Personal Bio:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light, fontSize = MaterialTheme.typography.titleMedium.fontSize)
-            Spacer(modifier = Modifier.height(8.dp))
-            CapsuleTextField(
-                value = personalBio,
-                onValueChange = { personalBio = it },
-                placeholder = "Personal Bio",
-                modifier = Modifier
-                    .height(170.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(20)
-
+            Text(
+                "Your Profile Avatar",
+                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                fontWeight = FontWeight.Bold
             )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                "Please upload your profile picture",
+                fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                fontWeight = FontWeight.Light,
+                color = Color.Gray)
             Spacer(modifier = Modifier.height(8.dp))
-
-            //AI Button
-            Button(
-                onClick = onAIButtonClick,
+            Image(
+                painter = painterResource(id = R.drawable.avatar),
+                contentDescription = "Avatar",
                 modifier = Modifier
-                    .align(Alignment.End)
-                    .height(40.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black,
-                ),
-                shape = RoundedCornerShape(50),
-                border = BorderStroke(1.dp, Secondary)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_gemini),
-                        contentDescription = "AI Icon",
-                        modifier = Modifier.size(60.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Suggest",
-                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+                    .size(200.dp)
+                    .padding(8.dp)
+                    .clip(CircleShape)
+            )
+            //IconButton()
 
             Spacer(modifier = Modifier.height(22.dp))
 
@@ -197,5 +173,5 @@ fun RoommateStep1(
 @Preview(showBackground = true)
 @Composable
 fun RoommateStep1Preview(){
-    RoommateStep1(onContinue = {}, onAIButtonClick = {})
+    RoommateStep1(onContinue = {})
 }

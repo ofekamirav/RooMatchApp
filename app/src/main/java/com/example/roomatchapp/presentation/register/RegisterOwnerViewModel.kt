@@ -1,6 +1,7 @@
 package com.example.roomatchapp.presentation.register
 
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
@@ -19,9 +20,12 @@ class RegisterOwnerViewModel(
     ) {
         viewModelScope.launch {
             try {
+                Log.d("TAG", "RegisterOwnerViewModel-Registering owner with request: $request")
                 val response = repository.registerOwner(request)
+                Log.d("TAG", "RegisterOwnerViewModel-Owner registered response: $response")
                 onSuccess(response)
             } catch (e: Exception) {
+                Log.e("TAG", "RegisterOwnerViewModel-Registration failed: ${e.message}", e)
                 onError(e.message ?: "Unknown error")
             }
         }
