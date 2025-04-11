@@ -28,7 +28,9 @@ import com.example.roomatchapp.presentation.theme.Primary
 
 
 @Composable
-fun WelcomeScreen(onGetStartedClick: () -> Unit) {
+fun WelcomeScreen(
+    onGetStartedClick: () -> Unit,
+) {
     val context = LocalContext.current
 
     Box(modifier = Modifier
@@ -42,7 +44,7 @@ fun WelcomeScreen(onGetStartedClick: () -> Unit) {
         AndroidView(
             factory = {
                 VideoView(it).apply {
-                    val videoUri = Uri.parse("android.resource://${context.packageName}/${R.raw.wekcome_animate}")
+                    val videoUri = Uri.parse("android.resource://${context.packageName}/${R.raw.welcome_animate}")
                     setVideoURI(videoUri)
                     setOnPreparedListener { mediaPlayer ->
                         mediaPlayer.isLooping = true

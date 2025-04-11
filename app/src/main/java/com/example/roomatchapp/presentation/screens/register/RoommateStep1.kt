@@ -1,12 +1,9 @@
 package com.example.roomatchapp.presentation.screens.register
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,10 +34,11 @@ import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
+import com.example.roomatchapp.presentation.navigation.StartGraph
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
-
+import com.ramcosta.composedestinations.annotation.Destination
 
 @Composable
 fun RoommateStep1(

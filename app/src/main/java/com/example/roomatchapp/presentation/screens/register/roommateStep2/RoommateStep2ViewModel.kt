@@ -1,4 +1,4 @@
-package com.example.roomatch_front.android.presentation.register.roommateStep2
+package com.example.roomatchapp.presentation.screens.register.roommateStep2
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

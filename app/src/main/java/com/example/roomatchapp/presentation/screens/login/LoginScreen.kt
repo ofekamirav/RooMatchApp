@@ -41,15 +41,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.login.LoginViewModel
+import com.example.roomatchapp.presentation.navigation.StartGraph
 import com.example.roomatchapp.presentation.theme.Primary
-
+import com.ramcosta.composedestinations.annotation.Destination
 
 @Composable
 fun LoginScreen(
     onLoginClick: () -> Unit,
     onGoogleLoginClick: () -> Unit,
     onForgotPasswordClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    loginViewModel: LoginViewModel
 ){
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -178,6 +181,7 @@ fun PreviewLoginScreen() {
         onLoginClick = {},
         onGoogleLoginClick = {},
         onForgotPasswordClick = {},
-        onRegisterClick = {}
+        onRegisterClick = {},
+        loginViewModel = LoginViewModel()
     )
 }

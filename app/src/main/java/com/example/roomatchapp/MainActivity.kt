@@ -11,8 +11,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.core.view.WindowCompat
-import androidx.navigation.compose.rememberNavController
 import com.example.roomatchapp.presentation.navigation.AppNavGraph
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
@@ -20,7 +18,6 @@ import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false) //full screen over the status bar
         enableEdgeToEdge()
         setContent {
             RooMatchAppTheme {
@@ -30,10 +27,8 @@ class MainActivity : ComponentActivity() {
                         .systemBarsPadding(),
                     color = Background
                 ) {
-                    val navController = rememberNavController()
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr){
-                        AppNavGraph(navController = navController)
-
+                        AppNavGraph()
                     }
                 }
             }

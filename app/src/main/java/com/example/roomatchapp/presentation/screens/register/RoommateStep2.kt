@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
-import com.example.roomatch_front.android.presentation.register.roommateStep2.RoommateStep2ViewModel
+import com.example.roomatchapp.presentation.screens.register.roommateStep2.RoommateStep2ViewModel
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.theme.Primary
