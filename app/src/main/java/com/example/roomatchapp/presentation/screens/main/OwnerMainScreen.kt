@@ -11,8 +11,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.roomatchapp.presentation.navigation.BottomNavItems
 import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
+import com.example.roomatchapp.presentation.navigation.OwnerGraph
+import com.ramcosta.composedestinations.annotation.Destination
 
-
+@Destination<OwnerGraph>
 @Composable
 fun OwnerMainScreen() {
     val navController = rememberNavController()

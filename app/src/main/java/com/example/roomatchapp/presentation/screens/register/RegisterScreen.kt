@@ -41,6 +41,7 @@ import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.presentation.theme.Primary
 
+
 @Composable
 fun RegisterScreen(
     onRegisterClick: () -> Unit,
