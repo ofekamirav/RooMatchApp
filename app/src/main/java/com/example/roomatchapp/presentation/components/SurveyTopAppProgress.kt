@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -16,7 +17,8 @@ fun SurveyTopAppProgress(
     totalSteps: Int,
 ){
     val progress by animateFloatAsState(
-        targetValue = (stepIndex + 1) / totalSteps.toFloat()
+        targetValue = (stepIndex + 1) / totalSteps.toFloat(),
+        animationSpec = tween(durationMillis = 500)
     )
     LinearProgressIndicator(
         progress = progress,

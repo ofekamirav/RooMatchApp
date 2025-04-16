@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.register
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 
-data class RegistrationState(
+data class BaseRegistrationState(
     val email: String = "",
     val emailError: String? = null,
     val fullName: String = "",
@@ -21,19 +22,51 @@ data class RegistrationState(
     val password: String = "",
     val passwordError: String? = null,
     val confirmPassword: String = "",
-    val confirmPasswordError: String? = null
+    val confirmPasswordError: String? = null,
+)
+
+data class RoommateRegistrationState(
+    val gender: String = "",
+    val work: String = "",
+    val workError: String? = null,
+    val profilePicture: String = "",
 )
 
 class RegistrationViewModel : ViewModel() {
-    private val _state = MutableStateFlow(RegistrationState())
-    val state: StateFlow<RegistrationState> = _state.asStateFlow()
+    private val _baseState = MutableStateFlow(BaseRegistrationState())
+    val baseState: StateFlow<BaseRegistrationState> = _baseState.asStateFlow()
 
-    fun updateState(newState: RegistrationState) {
-        _state.value = newState
+    private val _roommateState = MutableStateFlow(RoommateRegistrationState())
+    val roommateState: StateFlow<RoommateRegistrationState> = _roommateState.asStateFlow()
+
+    var isUploadingImage by mutableStateOf(false)
+        private set
+
+    fun updateGender(genderValue: String?) {
+        _roommateState.value = _roommateState.value.copy(gender = genderValue ?: "")
     }
 
+    fun updateWork(workValue: String) {
+        _roommateState.value = _roommateState.value.copy(work = workValue)
+    }
+
+    fun updateProfilePicture(url: String) {
+        _roommateState.value = _roommateState.value.copy(profilePicture = url)
+    }
+
+    fun updateState(newState: BaseRegistrationState) {
+        _baseState.value = newState
+    }
+
+
+    fun setUploadingImageUploading(isUploading: Boolean) {
+        isUploadingImage = isUploading
+    }
+
+
     fun clearState() {
-        _state.value = RegistrationState()
+        _baseState.value = BaseRegistrationState()
+        _roommateState.value = RoommateRegistrationState()
     }
 
     //Validation
@@ -65,12 +98,21 @@ class RegistrationViewModel : ViewModel() {
 
     // Check all fields
     fun validateAllFields(): Boolean {
-        return isValidEmail(_state.value.email) &&
-                isValidFullName(_state.value.fullName) &&
-                isValidPhoneNumber(_state.value.phoneNumber) &&
-                isValidBirthDate(_state.value.birthDate) &&
-                isValidPassword(_state.value.password) &&
-                doPasswordsMatch(_state.value.password, _state.value.confirmPassword)
+        return isValidEmail(_baseState.value.email) &&
+                isValidFullName(_baseState.value.fullName) &&
+                isValidPhoneNumber(_baseState.value.phoneNumber) &&
+                isValidBirthDate(_baseState.value.birthDate) &&
+                isValidPassword(_baseState.value.password) &&
+                doPasswordsMatch(_baseState.value.password, _baseState.value.confirmPassword)
+    }
+
+    //RoommateStep1
+    fun isRoommateStep1Valid(): Boolean {
+        val state = _roommateState.value
+        return state.gender.isNotBlank() &&
+                state.work.isNotBlank() &&
+                state.profilePicture.isNotBlank()
+        Log.d("TAG", "RegistrationViewModel- Registration state status: ${roommateState.value.gender}, ${roommateState.value.work}, ${roommateState.value.profilePicture}")
     }
 
 }

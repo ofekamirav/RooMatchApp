@@ -18,6 +18,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "CLOUD_NAME", "\"${project.properties["CLOUD_NAME"]?: ""}\"")
+        buildConfigField("String", "API_KEY", "\"${project.properties["API_KEY"]?: ""}\"")
+        buildConfigField("String", "API_SECRET", "\"${project.properties["API_SECRET"]?: ""}\"")
     }
 
     buildTypes {
@@ -38,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
 }
@@ -50,12 +55,17 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation (libs.androidx.navigation.compose)
+    //UI
     implementation(libs.lottie.compose)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.material)
+    implementation(libs.coil.compose)
+    implementation(libs.accompanist.navigation.material)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)
@@ -66,10 +76,15 @@ dependencies {
     //retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
-    //raam costa for navigation
+    //raam-costa for navigation
     implementation(libs.compose.destinations.core)
     ksp(libs.compose.destinations.ksp)
     implementation(libs.bottom.sheet)
+
+    //Google API
+    implementation(libs.places)
+    //Data-Base and Cloud
+    implementation(libs.cloudinary.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
