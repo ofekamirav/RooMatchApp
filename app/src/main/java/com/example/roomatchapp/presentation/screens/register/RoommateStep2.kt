@@ -71,20 +71,7 @@ fun RoommateStep2(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ){
-            Spacer(modifier = Modifier.height(20.dp))
-
-            IconButton(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.Start)
-        ){
-            Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_back),
-                contentDescription = "Back Button",
-                tint = Color.Unspecified,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-           Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = totalSteps)
 
             Spacer(modifier = Modifier.height(16.dp))

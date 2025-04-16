@@ -77,9 +77,9 @@ fun RegisterScreenComposable(navigator: DestinationsNavigator) {
 @Composable
 fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator) {
     val context = LocalContext.current
-    val registrationViewModel: RegistrationViewModel = viewModel()
     val ownerViewModel = RegisterOwnerViewModel(AppDependencies.userRepository)
-    val state = registrationViewModel.state.collectAsStateWithLifecycle()
+    val registrationViewModel: RegistrationViewModel = viewModel()
+    val state = registrationViewModel.baseState.collectAsStateWithLifecycle()
 
     ChooseTypeUserScreen(
         onRoommateClick = {navigator.navigate(RoommateStep1ComposableDestination) },
@@ -115,10 +115,14 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator) {
     )
 }
 
+
 @Destination<StartGraph>
 @Composable
 fun RoommateStep1Composable(navigator: DestinationsNavigator) {
-    RoommateStep1(onContinue = { navigator.navigate(RoommateStep2ComposableDestination) })
+    RoommateStep1(
+        onContinue = { navigator.navigate(RoommateStep2ComposableDestination) },
+        registrationViewModel = RegistrationViewModel()
+    )
 }
 
 @Destination<StartGraph>

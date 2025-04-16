@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.navigation.AppNavGraph
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        CloudinaryModel.init(this)
         setContent {
             RooMatchAppTheme {
                 Surface(

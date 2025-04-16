@@ -38,8 +38,10 @@ import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.DatePickerField
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
-import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.presentation.theme.Primary
+import androidx.compose.material3.ColorScheme
+import com.example.roomatchapp.presentation.components.PasswordTextField
+import com.example.roomatchapp.presentation.theme.cardBackground
 
 
 @Composable
@@ -48,7 +50,7 @@ fun RegisterScreen(
     onLoginClick: () -> Unit,
     registrationViewModel: RegistrationViewModel
 ){
-    val state by registrationViewModel.state.collectAsState()
+    val state by registrationViewModel.baseState.collectAsState()
 
     Box(
         modifier = Modifier
@@ -73,7 +75,7 @@ fun RegisterScreen(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
             ){
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -150,7 +152,7 @@ fun RegisterScreen(
                         )
                     }
                     // Password input
-                    OutlinedTextField(
+                    PasswordTextField(
                         value = state.password,
                         onValueChange = { password ->
                             registrationViewModel.updateState(
@@ -160,14 +162,11 @@ fun RegisterScreen(
                                 )
                             )
                         },
-                        isError = state.passwordError != null,
-                        supportingText = { state.passwordError?.let { Text(text = it) } },
-                        singleLine = true,
-                        label = { Text("Enter your Password") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Enter your Password",
+                        error = state.passwordError
                     )
                     // Confirm Password input
-                    OutlinedTextField(
+                    PasswordTextField(
                         value = state.confirmPassword,
                         onValueChange = { confirm ->
                             registrationViewModel.updateState(
@@ -177,11 +176,8 @@ fun RegisterScreen(
                                 )
                             )
                         },
-                        isError = state.confirmPasswordError != null,
-                        supportingText = { state.confirmPasswordError?.let { Text(text = it) } },
-                        singleLine = true,
-                        label = { Text("Confirm Password") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = "Confirm Password",
+                        error = state.confirmPasswordError
                     )
 
                     // Register button

@@ -36,14 +36,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.example.roomatchapp.presentation.navigation.StartGraph
 import com.example.roomatchapp.presentation.theme.Primary
+import com.example.roomatchapp.presentation.theme.cardBackground
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Composable
@@ -54,8 +58,7 @@ fun LoginScreen(
     onRegisterClick: () -> Unit,
     loginViewModel: LoginViewModel
 ){
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val state by loginViewModel.state.collectAsState()
 
     Box(
         modifier = Modifier
@@ -68,20 +71,18 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             // Logo
             Image(
                 painter = painterResource(id = R.drawable.logoname),
                 contentDescription = "Logo",
                 modifier = Modifier.size(200.dp)
             )
-
             // Card container
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -107,21 +108,28 @@ fun LoginScreen(
 
                     // Email input
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
+                        value = state.email,
+                        onValueChange = { email ->
+                            loginViewModel.updateState(
+                                state.copy(
+                                    email = email,
+                                    emailError = if (loginViewModel.isValidEmail(email)) null else "Email is not valid"
+                                )
+                            )
+                        },
+                        isError = state.emailError != null,
+                        supportingText = { state.emailError?.let { Text(text = it) } },
                         label = { Text("Enter your email address") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     // Password input
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Enter your Password") },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                    PasswordTextField(
+                        value = state.password,
+                        onValueChange = { loginViewModel.updatePassword(it) },
+                        label = "Enter your password",
+                        error = state.passwordError
                     )
 
                     // Forgot password
@@ -139,6 +147,7 @@ fun LoginScreen(
                     // Log in button
                     Button(
                         onClick = onLoginClick,
+                        enabled = loginViewModel.validateAllFields(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
