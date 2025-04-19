@@ -4,36 +4,17 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,8 +25,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import android.Manifest
-import android.os.Build
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.di.CloudinaryModel
@@ -64,24 +43,16 @@ fun RoommateStep1(
     registrationViewModel: RegistrationViewModel,
     stepIndex: Int = 0,
     totalSteps: Int = 4,
-){
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val state by registrationViewModel.roommateState.collectAsState()
-    val baseState by registrationViewModel.baseState.collectAsState()
-    var workPlace by remember { mutableStateOf("") }
     val genders = listOf("Men", "Women", "Other")
     var selectedGender by remember { mutableStateOf(state.work) }
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
-    var isSetProfilePic by remember { mutableStateOf(false) }
 
-
-
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             imageUri.value = it
             val source = ImageDecoder.createSource(context.contentResolver, it)
@@ -89,17 +60,12 @@ fun RoommateStep1(
             bitmap.value?.let { bmp ->
                 coroutineScope.launch {
                     registrationViewModel.setUploadingImageUploading(true)
-                    isSetProfilePic = CloudinaryModel().uploadImage(
+                    CloudinaryModel().uploadImage(
                         bitmap = bmp,
                         name = "roommate_${System.currentTimeMillis()}",
                         folder = "roomatchapp/roommates",
-                        onSuccess = { url ->
-                            Log.d("TAG", "RoommateStep1-Upload profile pic Success: $url")
-                            registrationViewModel.updateProfilePicture(url.toString())
-                        },
-                        onError = { error ->
-                            Log.e("TAG", "RoommateStep1-Upload profile pic Error: $error")
-                        },
+                        onSuccess = { url -> registrationViewModel.updateProfilePicture(url.toString()) },
+                        onError = { Log.e("TAG", "Upload Error: $it") },
                         context = context
                     )
                     registrationViewModel.setUploadingImageUploading(false)
@@ -108,24 +74,17 @@ fun RoommateStep1(
         }
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bmp ->
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
         bmp?.let {
             bitmap.value = it
             coroutineScope.launch {
                 registrationViewModel.setUploadingImageUploading(true)
-                isSetProfilePic = CloudinaryModel().uploadImage(
+                CloudinaryModel().uploadImage(
                     bitmap = it,
                     name = "roommate_${System.currentTimeMillis()}",
                     folder = "roomatchapp/roommates",
-                    onSuccess = { url ->
-                        Log.d("TAG", "RoommateStep1-Upload profile pic Success: $url")
-                        registrationViewModel.updateProfilePicture(url.toString())
-                    },
-                    onError = { error ->
-                        Log.e("TAG", "RoommateStep1-Upload profile pic Error: $error")
-                    },
+                    onSuccess = { url -> registrationViewModel.updateProfilePicture(url.toString()) },
+                    onError = { Log.e("TAG", "Upload Error: $it") },
                     context = context
                 )
                 registrationViewModel.setUploadingImageUploading(false)
@@ -133,207 +92,145 @@ fun RoommateStep1(
         }
     }
 
-//--------------------------------Gallery and Camera Permissions-----------------------------------
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            cameraLauncher.launch(null)
-        } else {
-            Log.e("TAG", "RoommateStep1-Camera permission denied")
-        }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) cameraLauncher.launch(null)
     }
 
-    val galleryPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            galleryLauncher.launch("image/*")
-        } else {
-            Log.e("RoommateStep1", "Gallery permission denied")
-        }
+    val galleryPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) galleryLauncher.launch("image/*")
     }
-
-//--------------------------------------------------------------------------------------------------
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-        contentAlignment = Alignment.Center
-    ){
-        if (registrationViewModel.isUploadingImage) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingAnimation(isLoading = registrationViewModel.isUploadingImage)
-            }
-        }
+            .padding(16.dp)
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ){
-            Spacer(modifier = Modifier.height(16.dp))
-            SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = totalSteps)
-
-            Spacer(modifier = Modifier.height(8.dp))
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = "About you..",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(bottom = 24.dp)
-                    .align(Alignment.Start)
+                modifier = Modifier.align(Alignment.Start)
             )
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Gender
-            Text(
-                text = "Gender:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Light,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Text("Gender:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light)
             Spacer(modifier = Modifier.height(8.dp))
-
             genders.forEach { gender ->
                 val isSelected = gender.uppercase() == state.gender
-
                 Button(
                     onClick = {
-                        val serverEnumValue = gender.uppercase()
                         selectedGender = gender
-                        registrationViewModel.updateGender(serverEnumValue)
+                        registrationViewModel.updateGender(gender.uppercase())
                     },
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isSelected) Primary else Secondary,
-                        contentColor = Color.White,
+                        contentColor = Color.White
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
-                        .height(48.dp),
+                        .height(48.dp)
                 ) {
-                    Text(gender, fontWeight = FontWeight.Light, fontSize = MaterialTheme.typography.titleMedium.fontSize)
+                    Text(gender, fontWeight = FontWeight.Light)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Work
-            Text("Work:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light, fontSize = MaterialTheme.typography.titleMedium.fontSize)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text("Work:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light)
             Spacer(modifier = Modifier.height(8.dp))
             CapsuleTextField(
                 value = state.work,
-                onValueChange = { work ->
-                    registrationViewModel.updateWork(work)
-                },
+                onValueChange = registrationViewModel::updateWork,
                 placeholder = "Work place",
                 isError = state.workError != null,
                 supportingText = state.workError
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                "Your Profile Avatar",
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                "Please upload your profile picture",
-                fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                fontWeight = FontWeight.Light,
-                color = Color.Gray)
-            Spacer(modifier = Modifier.height(6.dp))
-            Image(
-                painter = if(state.profilePicture.isNotBlank()){
-                    rememberAsyncImagePainter(state.profilePicture)
+            Text("Your Profile Avatar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Please upload your profile picture", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (registrationViewModel.isUploadingImage) {
+                    LoadingAnimation(
+                        isLoading = registrationViewModel.isUploadingImage,
+                        animationResId = R.raw.loading_animation
+                    )
                 } else {
-                    painterResource(id = R.drawable.avatar)
-                },
-                contentDescription = "Avatar",
-                modifier = Modifier
-                    .size(180.dp)
-                    .clip(CircleShape)
-            )
+                    Image(
+                        painter = if (state.profilePicture.isNotBlank()) rememberAsyncImagePainter(state.profilePicture)
+                        else painterResource(id = R.drawable.avatar),
+                        contentDescription = "Avatar",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ){
-                IconButton(
-                    onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
-                    modifier = Modifier
-                        .size(50.dp)
-                ){
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_camera),
                         contentDescription = "Camera",
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier.size(48.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
-
-                IconButton(
-                    onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        {
-                            galleryPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
-                        }
-                        else {
+                Spacer(modifier = Modifier.width(12.dp))
+                IconButton(onClick = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        galleryPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                    } else {
                         galleryLauncher.launch("image/*")
-                    } },
-                    modifier = Modifier
-                        .size(50.dp)
-                ){
+                    }
+                }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_gallery),
                         contentDescription = "Gallery",
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier.size(48.dp)
                     )
                 }
-
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
+
             Button(
                 onClick = onContinue,
                 enabled = registrationViewModel.isRoommateStep1Valid() && !registrationViewModel.isUploadingImage,
+                colors = ButtonDefaults.buttonColors(containerColor = Secondary, contentColor = Color.White),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                ,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Secondary,
-                    contentColor = Color.White
-                ),
             ) {
-                Text("Continue",
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontFamily = FontFamily.SansSerif)
+                Text("Continue", fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.SansSerif)
             }
-
         }
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
-fun RoommateStep1Preview(){
-    RoommateStep1(
-        onContinue = {},
-        registrationViewModel = RegistrationViewModel()
-    )
+fun RoommateStep1Preview() {
+    RoommateStep1(onContinue = {}, registrationViewModel = RegistrationViewModel())
 }
