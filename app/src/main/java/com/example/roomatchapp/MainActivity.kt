@@ -25,8 +25,7 @@ class MainActivity : ComponentActivity() {
             RooMatchAppTheme {
                 Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .systemBarsPadding(),
+                        .fillMaxSize(),
                     color = Background
                 ) {
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr){

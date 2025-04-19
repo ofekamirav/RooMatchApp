@@ -17,5 +17,4 @@ interface UserRepository {
 
     suspend fun geminiSuggestClicked(fullName: String, attributes: List<Attribute>, hobbies: List<Hobby>, work: String): BioResponse
 
-
 }

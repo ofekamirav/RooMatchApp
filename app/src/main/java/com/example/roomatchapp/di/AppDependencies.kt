@@ -1,7 +1,7 @@
 package com.example.roomatchapp.di
 
 import com.example.roomatchapp.data.remote.api.ApiService
-import com.example.roomatchapp.data.remote.api.UserApiServiceImplementation
+import com.example.roomatchapp.data.remote.api.ApiServiceImplementation
 import com.example.roomatchapp.data.repository.UserRepositoryImpl
 import com.example.roomatchapp.domain.repository.UserRepository
 import io.ktor.client.HttpClient
@@ -32,7 +32,7 @@ object AppDependencies {
     }
 
     val apiService: ApiService by lazy {
-        UserApiServiceImplementation(httpClient, BASE_URL)
+        ApiServiceImplementation(httpClient, BASE_URL)
     }
 
     val userRepository: UserRepository by lazy {

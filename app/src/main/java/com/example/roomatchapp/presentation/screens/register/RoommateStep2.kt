@@ -21,7 +21,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,21 +52,24 @@ fun RoommateStep2(
     val attributes = Attribute.entries
     val hobbies = Hobby.entries
 
+    val isStepValid by remember(state.attributes, state.hobbies) {
+        derivedStateOf {
+            state.attributes.size >= 3 && state.hobbies.size >= 3
+        }
+    }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFEEEEE1))
-            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            .padding(top = 0.dp, start = 4.dp, end = 4.dp, bottom = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ){
-            Spacer(modifier = Modifier.height(16.dp))
-            SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = totalSteps)
-
-            Spacer(modifier = Modifier.height(16.dp))
             Text("Attributes:", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(16.dp))
             Text("Select at least 3 attributes", fontSize = MaterialTheme.typography.titleSmall.fontSize, fontWeight = FontWeight.Light, color = Color.Gray)
@@ -135,11 +140,11 @@ fun RoommateStep2(
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = onContinue,
+                enabled = isStepValid,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
                 ,
-                enabled = viewModel.validateRoommateStep2(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Secondary,
                     contentColor = Color.White

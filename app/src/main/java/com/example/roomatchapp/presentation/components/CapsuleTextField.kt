@@ -28,7 +28,8 @@ fun CapsuleTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder, color = Color(0xFF808080), fontWeight = FontWeight.Light) },
-        singleLine = true,
+        singleLine = false,
+        maxLines = 6,
         isError = isError,
         modifier = modifier
             .fillMaxWidth()

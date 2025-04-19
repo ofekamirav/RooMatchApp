@@ -122,10 +122,12 @@ class RegistrationViewModel : ViewModel() {
         _roommateState.value = _roommateState.value.copy(latitude = lat, longitude = lng)
     }
 
+    fun clearRoommateState() {
+        _roommateState.value = RoommateRegistrationState()
+    }
 
     fun clearState() {
         _baseState.value = BaseRegistrationState()
-        _roommateState.value = RoommateRegistrationState()
     }
 
     //Validation
@@ -201,11 +203,6 @@ class RegistrationViewModel : ViewModel() {
         Log.d("TAG", "RegistrationViewModel- Hobbies state status: ${roommateState.value.hobbies}")
     }
 
-    fun validateRoommateStep2(): Boolean {
-        val state = _roommateState.value
-        return state.attributes.size >= 3 && state.hobbies.size >= 3
-    }
-
 
 //----------------------------RoommateStep3---------------------------------------------------------------------------------
 
@@ -223,6 +220,7 @@ class RegistrationViewModel : ViewModel() {
                     hobbies = state.hobbies,
                     work = state.work
                 )
+                Log.d("TAG", "RegistrationViewModel-AI Suggest Response: ${response.generatedBio}")
                 updatePersonalBio(response.generatedBio)
             } catch (e: Exception) {
                 Log.e("TAG", "RegistrationViewModel-AI Suggest Error: ${e.message}")
@@ -251,11 +249,6 @@ class RegistrationViewModel : ViewModel() {
         _roommateState.value = _roommateState.value.copy(lookingForRoomies = current)
     }
 
-    fun validateRoommateStep3(): Boolean {
-        val state = _roommateState.value
-        return state.lookingForRoomies.size>=3 && state.personalBio.isNotBlank()
-    }
-
 //--------------------------RoommateStep4---------------------------------------------------------------------------------
 
 
@@ -276,8 +269,43 @@ class RegistrationViewModel : ViewModel() {
         _roommateState.value = _roommateState.value.copy(lookingForCondo = current)
     }
 
-    fun validateRoommateStep4(): Boolean {
-        return roommateState.value.lookingForCondo.size >= 2
+    fun submitRoommate(
+        userRepository: UserRepository,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val base = _baseState.value
+        val roommate = _roommateState.value
+
+        val request = RoommateUserRequest(
+            email = base.email,
+            fullName = base.fullName,
+            phoneNumber = base.phoneNumber,
+            birthDate = base.birthDate,
+            password = base.password,
+            profilePicture = roommate.profilePicture,
+            work = roommate.work,
+            attributes = roommate.attributes,
+            hobbies = roommate.hobbies,
+            lookingForRoomies = roommate.lookingForRoomies,
+            lookingForCondo = roommate.lookingForCondo,
+            roommatesNumber = roommate.roommatesNumber,
+            minPropertySize = roommate.minPropertySize,
+            maxPropertySize = roommate.maxPropertySize,
+            minPrice = roommate.minPrice,
+            maxPrice = roommate.maxPrice,
+            personalBio = roommate.personalBio
+        )
+
+        viewModelScope.launch {
+            try {
+                userRepository.registerRoommate(request)
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error")
+            }
+        }
     }
+
 
 }

@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.coil.compose)
     implementation(libs.accompanist.navigation.material)
+    implementation(libs.androidx.runtime.saveable)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)

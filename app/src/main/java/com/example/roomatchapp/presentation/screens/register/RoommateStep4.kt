@@ -42,6 +42,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import android.Manifest
+import androidx.compose.runtime.derivedStateOf
+import com.example.roomatchapp.R
 import com.example.roomatchapp.data.remote.dto.CondoPreference
 import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
@@ -70,6 +72,12 @@ fun RoommateStep4(
     var isRoommateLoading by remember { mutableStateOf(false) }
 
     val preferences = CondoPreference.entries
+
+    val isStepValid by remember(state.lookingForCondo) {
+        derivedStateOf {
+            state.lookingForCondo.size >= 2
+        }
+    }
 
     var priceRange by remember { mutableStateOf(1000f..15000f) }
     var sizeRange by remember { mutableStateOf(10f..200f) }
@@ -129,18 +137,14 @@ fun RoommateStep4(
         contentAlignment = Alignment.Center
     ) {
         if(isRoommateLoading){
-            LoadingAnimation(isLoading = isRoommateLoading)
-        } else {
-
+            LoadingAnimation(
+                isLoading = isRoommateLoading,
+                animationResId = R.raw.loading_animation
+            )        } else {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = totalSteps)
-
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     "Which condo are you looking for..",
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
@@ -233,7 +237,7 @@ fun RoommateStep4(
                                 .width(112.dp)
                         ) {
                             Text(
-                                text = pref.name.replace("_", " ").uppercase(),
+                                text = pref.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                                 fontSize = MaterialTheme.typography.titleSmall.fontSize,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
@@ -254,7 +258,7 @@ fun RoommateStep4(
                             isRoommateLoading = isLoading
                         }
                     },
-                    enabled = viewModel.validateRoommateStep4(),
+                    enabled = isStepValid,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),

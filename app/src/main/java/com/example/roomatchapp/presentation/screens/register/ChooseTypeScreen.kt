@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.theme.Background
+import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 
 @Composable
@@ -50,7 +51,10 @@ fun ChooseTypeUserScreen(
         contentAlignment = Alignment.Center
     ) {
         if (isOwnerLoading) {
-            LoadingAnimation(isLoading = isOwnerLoading)
+            LoadingAnimation(
+                isLoading = isOwnerLoading,
+                animationResId = R.raw.loading_animation
+            )
         } else {
 
             Column(
@@ -101,7 +105,7 @@ fun OptionCard(
 ) {
     val isClicked = remember { mutableStateOf(false) }
     val backgroundColor =
-        if (isClicked.value) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary) else CardDefaults.cardColors(
+        if (isClicked.value) CardDefaults.cardColors(containerColor = Primary) else CardDefaults.cardColors(
             containerColor = Secondary
         )
     Card(

@@ -2,6 +2,7 @@ package com.example.roomatchapp.data.remote.api
 
 import android.util.Log
 import com.example.roomatchapp.data.remote.dto.Attribute
+import com.example.roomatchapp.data.remote.dto.BioRequest
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.Hobby
 import com.example.roomatchapp.data.remote.dto.LoginRequest
@@ -16,7 +17,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 // Implementation of the ApiService interface methods
-class UserApiServiceImplementation(
+class ApiServiceImplementation(
     private val client: HttpClient,
     private val baseUrl: String
 ) : ApiService {
@@ -56,7 +57,6 @@ class UserApiServiceImplementation(
 
     override suspend fun registerRoommate(request: RoommateUserRequest): UserResponse {
         TODO("Not yet implemented")
-
     }
 
     override suspend fun geminiSuggestClicked(
@@ -65,18 +65,29 @@ class UserApiServiceImplementation(
         hobbies: List<Hobby>,
         work: String
     ): BioResponse {
-        try{
-            Log.d("TAG", "ApiService-Sending POST to $baseUrl/generate-bio with body: $fullName, $attributes, $hobbies, $work")
-            val response = client.post("$baseUrl/generate-bio") {
+        try {
+            val request = BioRequest(
+                fullName = fullName,
+                attributes = attributes.map { it.name },
+                hobbies = hobbies.map { it.name },
+                work = work
+            )
+
+            Log.d("TAG", "ApiService-Sending POST to $baseUrl/roommates/generate-bio with body: $request")
+
+            val response: BioResponse = client.post("$baseUrl/roommates/generate-bio") {
                 contentType(ContentType.Application.Json)
-                setBody(mapOf("fullName" to fullName, "attributes" to attributes, "hobbies" to hobbies, "work" to work))
-            }.body<String>()
+                setBody(request)
+            }.body<BioResponse>()
+
             Log.d("TAG", "ApiService-Response received: $response")
-            return BioResponse(response)
+            return response
+
         } catch (e: Exception) {
             Log.e("TAG", "ApiService-API call failed: ${e.message}", e)
             throw e
         }
     }
+
 
 }
