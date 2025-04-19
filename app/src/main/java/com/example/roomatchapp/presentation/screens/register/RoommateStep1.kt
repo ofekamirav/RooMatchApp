@@ -167,8 +167,7 @@ fun RoommateStep1(
         if (registrationViewModel.isUploadingImage) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f)),
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 LoadingAnimation(isLoading = registrationViewModel.isUploadingImage)
@@ -178,7 +177,7 @@ fun RoommateStep1(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ){
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = totalSteps)
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -333,7 +332,8 @@ fun RoommateStep1(
 @Preview(showBackground = true)
 @Composable
 fun RoommateStep1Preview(){
-    RoommateStep1(onContinue = {},
+    RoommateStep1(
+        onContinue = {},
         registrationViewModel = RegistrationViewModel()
     )
 }

@@ -13,5 +13,5 @@ annotation class StartGraph
 @NavGraph<StartGraph>
 annotation class OwnerGraph
 
-//@NavGraph<StartGraph>
-//annotation class RoommateGraph
+@NavGraph<StartGraph>
+annotation class RoommateGraph

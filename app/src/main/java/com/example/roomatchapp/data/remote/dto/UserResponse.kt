@@ -9,3 +9,8 @@ data class UserResponse(
     val userId: String?,
     val userType: String?,
 )
+
+@Serializable
+data class BioResponse(
+    val generatedBio: String,
+)

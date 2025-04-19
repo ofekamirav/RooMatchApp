@@ -23,7 +23,7 @@ fun LoadingAnimation(
     if (isLoading) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             val compositionResult = rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_animation))
 
@@ -33,7 +33,6 @@ fun LoadingAnimation(
                         composition = composition,
                         iterations = LottieConstants.IterateForever, //loop
                         modifier = Modifier.size(animationSize)
-
                     )
                 }
                 //is fail...

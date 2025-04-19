@@ -1,9 +1,16 @@
 package com.example.roomatchapp.presentation.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.remote.dto.LoginRequest
+import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
+import com.example.roomatchapp.data.remote.dto.UserResponse
+import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class LoginState(
     val email: String = "",
@@ -12,9 +19,29 @@ data class LoginState(
     val passwordError: String? = null
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val repository: UserRepository
+) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
+
+    fun login(
+        request: LoginRequest,
+        onSuccess: (UserResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                Log.d("TAG", "LoginViewModel-Login owner with request: ${request.email}, ${request.password}")
+                val response = repository.login(request)
+                Log.d("TAG", "LoginViewModel-User login response: $response")
+                onSuccess(response)
+            } catch (e: Exception) {
+                Log.e("TAG", "LoginViewModel-Login failed: ${e.message}", e)
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
 
     fun updateEmail(email: String) {
         _state.value = _state.value.copy(email = email)

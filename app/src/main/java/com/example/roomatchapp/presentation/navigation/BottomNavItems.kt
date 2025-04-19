@@ -1,5 +1,8 @@
 package com.example.roomatchapp.presentation.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material3.Icon
 import com.example.roomatchapp.R
 import com.example.roomatchapp.domain.model.BottomNavItem
 
@@ -33,12 +36,12 @@ object BottomNavItems {
             selectedIcon = R.drawable.ic_matches_selected,
             unselectedIcon = R.drawable.ic_matches
         ),
-//        BottomNavItem(
-//            route = "roommate_discover",
-//            label = "Discover",
-//            selectedIcon = Icons.Filled.Favorite,
-//            unselectedIcon = Icons.Outlined.Favorite
-//        ),
+        BottomNavItem(
+            route = "roommate_discover",
+            label = "Discover",
+            selectedIcon = R.drawable.ic_discover_selected,
+            unselectedIcon =R.drawable.ic_discover
+        ),
         BottomNavItem(
             route = "roommate_profile",
             label = "Profile",
