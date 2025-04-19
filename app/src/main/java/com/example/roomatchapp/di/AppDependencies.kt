@@ -1,7 +1,7 @@
 package com.example.roomatchapp.di
 
 import com.example.roomatchapp.data.remote.api.ApiService
-import com.example.roomatchapp.data.remote.api.ApiServiceImplementation
+import com.example.roomatchapp.data.remote.api.UserApiServiceImplementation
 import com.example.roomatchapp.data.repository.UserRepositoryImpl
 import com.example.roomatchapp.domain.repository.UserRepository
 import io.ktor.client.HttpClient
@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 
 object AppDependencies {
 
-    private const val BASE_URL = "http://192.168.1.158:8080" //if your are using emultaor change ip to 10.0.2.2
+    private const val BASE_URL = "http://10.0.0.9:8080" //if your are using emultaor change ip to 10.0.2.2
 
     val httpClient: HttpClient by lazy {
         HttpClient(CIO) {
@@ -32,7 +32,7 @@ object AppDependencies {
     }
 
     val apiService: ApiService by lazy {
-        ApiServiceImplementation(httpClient, BASE_URL)
+        UserApiServiceImplementation(httpClient, BASE_URL)
     }
 
     val userRepository: UserRepository by lazy {

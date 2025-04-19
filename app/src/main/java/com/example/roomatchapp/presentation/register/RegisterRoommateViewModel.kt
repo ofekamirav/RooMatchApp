@@ -11,18 +11,18 @@ class RegisterRoommateViewModel(
     private val repository: UserRepository
 ) : ViewModel() {
 
-//    fun registerRoommate(
-//        request: RoommateUserRequest,
-//        onSuccess: (UserResponse) -> Unit,
-//        onError: (String) -> Unit
-//    ) {
-//        viewModelScope.launch {
-//            try {
-//                val response = repository.registerRoommate(request)
-//                onSuccess(response)
-//            } catch (e: Exception) {
-//                onError(e.message ?: "Unknown error")
-//            }
-//        }
-//    }
+    fun registerRoommate(
+        request: RoommateUserRequest,
+        onSuccess: (UserResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = repository.registerRoommate(request)
+                onSuccess(response)
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
 }

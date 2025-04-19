@@ -18,11 +18,13 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.generated.destinations.*
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
+import com.example.roomatchapp.data.remote.dto.RoommateUserRequest
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.example.roomatchapp.presentation.register.RegisterOwnerViewModel
+import com.example.roomatchapp.presentation.register.RegisterRoommateViewModel
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
-
+import com.example.roomatchapp.presentation.screens.main.RoommateMainScreen
 
 
 @Composable
@@ -52,9 +54,11 @@ fun WelcomeScreenComposable(navigator: DestinationsNavigator) {
 @Destination<StartGraph>
 @Composable
 fun LoginScreenComposable(navigator: DestinationsNavigator) {
-    val loginViewModel: LoginViewModel = viewModel()
+    val loginViewModel = LoginViewModel(AppDependencies.userRepository)
     LoginScreen(
-        onLoginClick = {},
+        onLoginClick = {
+//continue
+        },
         onGoogleLoginClick = {},
         onForgotPasswordClick = {},
         onRegisterClick = { navigator.navigate(RegisterScreenComposableDestination) },
@@ -119,33 +123,107 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator) {
 @Destination<StartGraph>
 @Composable
 fun RoommateStep1Composable(navigator: DestinationsNavigator) {
+    val registrationViewModel: RegistrationViewModel = viewModel()
     RoommateStep1(
         onContinue = { navigator.navigate(RoommateStep2ComposableDestination) },
-        registrationViewModel = RegistrationViewModel()
+        registrationViewModel = registrationViewModel
     )
 }
 
 @Destination<StartGraph>
 @Composable
 fun RoommateStep2Composable(navigator: DestinationsNavigator) {
+    val registrationViewModel: RegistrationViewModel = viewModel()
     RoommateStep2(
         onContinue = { navigator.navigate(RoommateStep3ComposableDestination) },
-        onBack = { navigator.navigateUp() }
+        viewModel = registrationViewModel
     )
 }
 
 @Destination<StartGraph>
 @Composable
 fun RoommateStep3Composable(navigator: DestinationsNavigator) {
+    val context = LocalContext.current
+    val registrationViewModel: RegistrationViewModel = viewModel()
+
     RoommateStep3(
-        onContinue = { /* send to server */ },
-        onBack = { navigator.navigate(RoommateStep2ComposableDestination) },
-        onAIButtonClick = {}
+        onContinue = { navigator.navigate(RoommateStep4ComposableDestination)},
+        onAIButtonClick = {setIsLoading ->
+            setIsLoading(true)
+            registrationViewModel.suggestPersonalBio(AppDependencies.userRepository) { error ->
+                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            }
+        },
+        viewModel = registrationViewModel
     )
+}
+
+@Destination<StartGraph>
+@Composable
+fun RoommateStep4Composable(navigator: DestinationsNavigator) {
+    val context = LocalContext.current
+    val registrationViewModel: RegistrationViewModel = viewModel()
+    val roommateRegisterViewModel: RegisterRoommateViewModel = viewModel()
+    val baseState = registrationViewModel.baseState.collectAsStateWithLifecycle()
+    val roommateState = registrationViewModel.roommateState.collectAsStateWithLifecycle()
+
+    RoommateStep4(
+        onSubmit = { setIsLoading ->
+            setIsLoading(true)
+            val request = RoommateUserRequest(
+                email = baseState.value.email,
+                fullName = baseState.value.fullName,
+                phoneNumber = baseState.value.phoneNumber,
+                birthDate = baseState.value.birthDate,
+                password = baseState.value.password,
+                profilePicture = roommateState.value.profilePicture,
+                work = roommateState.value.work,
+                attributes = roommateState.value.attributes,
+                hobbies = roommateState.value.hobbies,
+                lookingForRoomies = roommateState.value.lookingForRoomies,
+                lookingForCondo = roommateState.value.lookingForCondo,
+                roommatesNumber = roommateState.value.roommatesNumber,
+                minPropertySize = roommateState.value.minPropertySize,
+                maxPropertySize = roommateState.value.maxPropertySize,
+                minPrice = roommateState.value.minPrice,
+                maxPrice = roommateState.value.maxPrice,
+                personalBio = roommateState.value.personalBio
+            )
+
+            roommateRegisterViewModel.registerRoommate(
+                request,
+                onSuccess = {
+                    setIsLoading(false)
+                    Log.d("TAG", "RegisterRoommateViewModel-Registration successful!")
+                    navigator.navigate(RoommateMainScreenDestination) {
+                        popUpTo(NavGraphs.root) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                    Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+                },
+                onError = {
+                    setIsLoading(false)
+                    Log.d("TAG", "RegisterRoommateViewModel-Registration Error: $it")
+                    Toast.makeText(context, "Error: $it", Toast.LENGTH_LONG).show()
+                }
+            )
+
+        },
+        viewModel = registrationViewModel
+    )
+
 }
 
 @Destination<OwnerGraph>(start = true)
 @Composable
 fun OwnerMainScreenComposable() {
     OwnerMainScreen()
+}
+
+@Destination<RoommateGraph>(start = true)
+@Composable
+fun RoommateMainScreenComposable() {
+    RoommateMainScreen()
 }

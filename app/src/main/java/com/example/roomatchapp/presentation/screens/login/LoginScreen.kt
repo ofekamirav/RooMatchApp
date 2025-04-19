@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.R
+import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.example.roomatchapp.presentation.navigation.StartGraph
@@ -191,6 +192,6 @@ fun PreviewLoginScreen() {
         onGoogleLoginClick = {},
         onForgotPasswordClick = {},
         onRegisterClick = {},
-        loginViewModel = LoginViewModel()
+        loginViewModel = LoginViewModel(AppDependencies.userRepository)
     )
 }
