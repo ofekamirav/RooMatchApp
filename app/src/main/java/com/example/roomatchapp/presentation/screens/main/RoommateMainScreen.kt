@@ -1,11 +1,60 @@
 package com.example.roomatchapp.presentation.screens.main
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.roomatchapp.presentation.navigation.BottomNavItems
+import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
 import com.example.roomatchapp.presentation.navigation.RoommateGraph
+import com.example.roomatchapp.presentation.screens.roommate.DiscoverScreen
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination<RoommateGraph>
 @Composable
 fun RoommateMainScreen() {
+    val navController = rememberNavController()
+    val navBackStackEntry = navController.currentBackStackEntryAsState().value
+    val currentRoute = navBackStackEntry?.destination?.route
 
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navController,
+                items = BottomNavItems.roommateItems,
+                currentRoute = currentRoute
+            )
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "favorites",
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            composable("favorites") {
+                // rommate favorites screen
+            }
+            composable("explor") {
+                // rommate explore screen
+            }
+            composable("profile") {
+                // rommate profile screen
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyScreen() {
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RoommateMainScreenPreview() {
+    RoommateMainScreen()
 }
