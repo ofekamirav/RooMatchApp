@@ -25,7 +25,7 @@ fun CountSelector(
     count: Int,
     onCountChange: (Int) -> Unit,
     min: Int = 1,
-    max: Int = 10
+    max: Int = 10,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,

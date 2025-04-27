@@ -22,7 +22,8 @@ fun CapsuleTextField(
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(50),
     isError: Boolean = false,
-    supportingText: String? = null
+    supportingText: String? = null,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
@@ -43,7 +44,8 @@ fun CapsuleTextField(
             cursorColor = Color.Black,
             focusedTextColor = Color.Black,
             unfocusedTextColor = Color.Black
-        )
+        ),
+        enabled = enabled
     )
         if (supportingText != null) {
             Text(

@@ -9,14 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
-import com.example.roomatchapp.data.remote.dto.Attribute
+import com.example.roomatchapp.data.model.Attribute
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
@@ -28,8 +27,6 @@ import com.example.roomatchapp.presentation.theme.Secondary
 fun RoommateStep3(
     onContinue: () -> Unit,
     viewModel: RegistrationViewModel,
-    stepIndex: Int = 2,
-    totalSteps: Int = 4,
     onAIButtonClick: (isLoadingSetter: (Boolean) -> Unit) -> Unit
 ) {
     val state by viewModel.roommateState.collectAsState()
@@ -49,9 +46,6 @@ fun RoommateStep3(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Blur layer only if loading
-        //val blurModifier = if (viewModel.isLoadingBio) Modifier.blur(12.dp) else Modifier
-
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -76,16 +70,22 @@ fun RoommateStep3(
                     val isSelected = state.lookingForRoomies.any { it.attribute == attr }
 
                     Button(
-                        onClick = { viewModel.toggleLookingForRoomies(attr) },
+                        onClick = {
+                            if (!viewModel.isLoadingBio) {
+                                viewModel.toggleLookingForRoomies(attr)
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isSelected) Primary else Secondary,
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
                         ),
                         shape = RoundedCornerShape(50),
                         modifier = Modifier
                             .padding(4.dp)
                             .height(42.dp)
-                            .width(112.dp)
+                            .width(112.dp),
+                        enabled = !viewModel.isLoadingBio
                     ) {
                         Text(
                             text = attr.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
@@ -118,6 +118,7 @@ fun RoommateStep3(
                     .height(170.dp)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(20),
+                enabled = !viewModel.isLoadingBio
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -136,16 +137,18 @@ fun RoommateStep3(
                 Button(
                     onClick = {
                         if (!viewModel.isLoadingBio) {
-                            onAIButtonClick { isLoading -> viewModel.isLoadingBio = isLoading }
+                            // Set loading state immediately
+                            viewModel.isLoadingBio = true
+                            onAIButtonClick { isLoading -> viewModel.isLoadingBio = true }
                             Log.d("TAG", "RoommateStep3: AI Button Clicked")
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Secondary,
+                        disabledContainerColor = Secondary.copy(alpha = 0.5f)
                     ),
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .size(65.dp),
+                    modifier = Modifier.size(65.dp),
                     enabled = !viewModel.isLoadingBio
                 ) {
                     Image(
@@ -165,7 +168,9 @@ fun RoommateStep3(
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Secondary,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
                 ),
             ) {
                 Text(
@@ -179,11 +184,12 @@ fun RoommateStep3(
         if (viewModel.isLoadingBio) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .background(Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
                 LoadingAnimation(
-                    isLoading = viewModel.isLoadingBio,
+                    isLoading = true,
                     animationResId = R.raw.gemini_animation
                 )
             }

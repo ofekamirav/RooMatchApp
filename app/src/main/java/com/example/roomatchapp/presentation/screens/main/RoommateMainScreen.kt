@@ -33,24 +33,21 @@ fun RoommateMainScreen() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = "favorites",
+            startDestination = "roommate_discover",
             modifier = Modifier.padding(paddingValues)
         ) {
-            composable("favorites") {
-                // rommate favorites screen
+            composable("roommate_matches") {
+                // roommate matches screen
             }
-            composable("explor") {
-                // rommate explore screen
+            composable("roommate_discover") {
+                // roommate discover screen
+                DiscoverScreen()
             }
-            composable("profile") {
-                // rommate profile screen
+            composable("roommate_profile") {
+                // roommate profile screen
             }
         }
     }
-}
-
-@Composable
-fun EmptyScreen() {
 }
 
 @Preview(showBackground = true)

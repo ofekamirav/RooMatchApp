@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.model.Gender
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.LoadingAnimation
@@ -40,14 +41,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun RoommateStep1(
     onContinue: () -> Unit,
-    registrationViewModel: RegistrationViewModel,
-    stepIndex: Int = 0,
-    totalSteps: Int = 4,
+    viewModel: RegistrationViewModel,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val state by registrationViewModel.roommateState.collectAsState()
-    val genders = listOf("Men", "Women", "Other")
+    val state by viewModel.roommateState.collectAsState()
+    val genders = Gender.entries
     var selectedGender by remember { mutableStateOf(state.work) }
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
@@ -59,16 +58,16 @@ fun RoommateStep1(
             bitmap.value = ImageDecoder.decodeBitmap(source)
             bitmap.value?.let { bmp ->
                 coroutineScope.launch {
-                    registrationViewModel.setUploadingImageUploading(true)
+                    viewModel.isUploadingImage = true
                     CloudinaryModel().uploadImage(
                         bitmap = bmp,
                         name = "roommate_${System.currentTimeMillis()}",
                         folder = "roomatchapp/roommates",
-                        onSuccess = { url -> registrationViewModel.updateProfilePicture(url.toString()) },
+                        onSuccess = { url -> viewModel.updateProfilePicture(url.toString()) },
                         onError = { Log.e("TAG", "Upload Error: $it") },
                         context = context
                     )
-                    registrationViewModel.setUploadingImageUploading(false)
+                    viewModel.isUploadingImage = false
                 }
             }
         }
@@ -78,16 +77,16 @@ fun RoommateStep1(
         bmp?.let {
             bitmap.value = it
             coroutineScope.launch {
-                registrationViewModel.setUploadingImageUploading(true)
+                viewModel.isUploadingImage = true
                 CloudinaryModel().uploadImage(
                     bitmap = it,
                     name = "roommate_${System.currentTimeMillis()}",
                     folder = "roomatchapp/roommates",
-                    onSuccess = { url -> registrationViewModel.updateProfilePicture(url.toString()) },
+                    onSuccess = { url -> viewModel.updateProfilePicture(url.toString()) },
                     onError = { Log.e("TAG", "Upload Error: $it") },
                     context = context
                 )
-                registrationViewModel.setUploadingImageUploading(false)
+                viewModel.isUploadingImage = false
             }
         }
     }
@@ -122,11 +121,11 @@ fun RoommateStep1(
             Text("Gender:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light)
             Spacer(modifier = Modifier.height(8.dp))
             genders.forEach { gender ->
-                val isSelected = gender.uppercase() == state.gender
+                val isSelected = gender == state.gender
                 Button(
                     onClick = {
-                        selectedGender = gender
-                        registrationViewModel.updateGender(gender.uppercase())
+                        selectedGender = gender.name
+                        viewModel.updateGender(gender)
                     },
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
@@ -138,7 +137,7 @@ fun RoommateStep1(
                         .padding(vertical = 4.dp)
                         .height(48.dp)
                 ) {
-                    Text(gender, fontWeight = FontWeight.Light)
+                    Text(gender.lable, fontWeight = FontWeight.Light)
                 }
             }
 
@@ -148,7 +147,7 @@ fun RoommateStep1(
             Spacer(modifier = Modifier.height(8.dp))
             CapsuleTextField(
                 value = state.work,
-                onValueChange = registrationViewModel::updateWork,
+                onValueChange = viewModel::updateWork,
                 placeholder = "Work place",
                 isError = state.workError != null,
                 supportingText = state.workError
@@ -167,9 +166,9 @@ fun RoommateStep1(
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (registrationViewModel.isUploadingImage) {
+                if (viewModel.isUploadingImage) {
                     LoadingAnimation(
-                        isLoading = registrationViewModel.isUploadingImage,
+                        isLoading = viewModel.isUploadingImage,
                         animationResId = R.raw.loading_animation
                     )
                 } else {
@@ -177,7 +176,8 @@ fun RoommateStep1(
                         painter = if (state.profilePicture.isNotBlank()) rememberAsyncImagePainter(state.profilePicture)
                         else painterResource(id = R.drawable.avatar),
                         contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 }
             }
@@ -217,13 +217,22 @@ fun RoommateStep1(
 
             Button(
                 onClick = onContinue,
-                enabled = registrationViewModel.isRoommateStep1Valid() && !registrationViewModel.isUploadingImage,
-                colors = ButtonDefaults.buttonColors(containerColor = Secondary, contentColor = Color.White),
+                enabled = viewModel.isRoommateStep1Valid() && !viewModel.isUploadingImage,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Secondary,
+                    contentColor = Color.White,
+                    disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Continue", fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.SansSerif)
+                Text(
+                    text= "Continue",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                )
             }
         }
     }
@@ -232,5 +241,5 @@ fun RoommateStep1(
 @Preview(showBackground = true)
 @Composable
 fun RoommateStep1Preview() {
-    RoommateStep1(onContinue = {}, registrationViewModel = RegistrationViewModel())
+    RoommateStep1(onContinue = {}, viewModel = RegistrationViewModel())
 }

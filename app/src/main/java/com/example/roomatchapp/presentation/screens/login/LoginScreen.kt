@@ -155,7 +155,8 @@ fun LoginScreen(
                         ,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Primary,
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = Primary.copy(alpha = 0.5f)
                         ),
                     ) {
                         Text("Log in",

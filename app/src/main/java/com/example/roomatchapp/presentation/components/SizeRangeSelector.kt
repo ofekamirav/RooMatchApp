@@ -13,7 +13,8 @@ import com.example.roomatchapp.presentation.theme.Secondary
 @Composable
 fun SizeRangeSelector(
     sizeRange: ClosedFloatingPointRange<Float>,
-    onValueChange: (ClosedFloatingPointRange<Float>) -> Unit
+    onValueChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    enabled: Boolean = true
 ) {
     Column {
         Text("Size Range: ${sizeRange.start.toInt()}m² - ${sizeRange.endInclusive.toInt()}m²",
@@ -28,7 +29,8 @@ fun SizeRangeSelector(
                 thumbColor = Primary,
                 activeTrackColor = Primary,
                 inactiveTrackColor = Secondary
-            )
+            ),
+            enabled = enabled
         )
     }
 }
