@@ -6,17 +6,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.roomatchapp.data.remote.dto.Attribute
-import com.example.roomatchapp.data.remote.dto.CondoPreference
-import com.example.roomatchapp.data.remote.dto.Hobby
-import com.example.roomatchapp.data.remote.dto.LookingForCondoPreference
-import com.example.roomatchapp.data.remote.dto.LookingForRoomiesPreference
-import com.example.roomatchapp.data.remote.dto.RoommateUserRequest
+import com.example.roomatchapp.data.model.Attribute
+import com.example.roomatchapp.data.model.CondoPreference
+import com.example.roomatchapp.data.model.Gender
+import com.example.roomatchapp.data.model.Hobby
+import com.example.roomatchapp.data.model.LookingForCondoPreference
+import com.example.roomatchapp.data.model.LookingForRoomiesPreference
+import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.domain.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 data class BaseRegistrationState(
@@ -35,7 +38,7 @@ data class BaseRegistrationState(
 )
 
 data class RoommateRegistrationState(
-    val gender: String = "",
+    val gender: Gender ?= null,
     val work: String = "",
     val workError: String? = null,
     val profilePicture: String = "",
@@ -57,16 +60,37 @@ data class RoommateRegistrationState(
 
 class RegistrationViewModel : ViewModel() {
     private val _baseState = MutableStateFlow(BaseRegistrationState())
-    val baseState: StateFlow<BaseRegistrationState> = _baseState.asStateFlow()
+    val baseState = _baseState.asStateFlow()
 
     private val _roommateState = MutableStateFlow(RoommateRegistrationState())
-    val roommateState: StateFlow<RoommateRegistrationState> = _roommateState.asStateFlow()
+    val roommateState = _roommateState.asStateFlow()
+
+    var isLoading by mutableStateOf(false)
+        public set
+
+    var isLoadingBio by mutableStateOf(false)
+        public set
 
     var isUploadingImage by mutableStateOf(false)
-        private set
+        public set
 
-    fun updateGender(genderValue: String?) {
-        _roommateState.value = _roommateState.value.copy(gender = genderValue ?: "")
+
+    private val _navigateToMain = MutableStateFlow(false)
+    val navigateToMain: StateFlow<Boolean> = _navigateToMain.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    fun resetNavigation() {
+        _navigateToMain.value = false
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
+    fun updateGender(genderValue: Gender?) {
+        _roommateState.value = _roommateState.value.copy(gender = genderValue)
     }
 
     fun updateWork(workValue: String) {
@@ -81,10 +105,6 @@ class RegistrationViewModel : ViewModel() {
         _baseState.value = newState
     }
 
-
-    fun setUploadingImageUploading(isUploading: Boolean) {
-        isUploadingImage = isUploading
-    }
 
     fun updatePersonalBio(bio: String) {
         _roommateState.value = _roommateState.value.copy(personalBio = bio)
@@ -126,7 +146,7 @@ class RegistrationViewModel : ViewModel() {
         _roommateState.value = RoommateRegistrationState()
     }
 
-    fun clearState() {
+    fun clearBaseState() {
         _baseState.value = BaseRegistrationState()
     }
 
@@ -171,7 +191,7 @@ class RegistrationViewModel : ViewModel() {
 //-----------------------------RoommateStep1---------------------------------------------------------------------------------
     fun isRoommateStep1Valid(): Boolean {
         val state = _roommateState.value
-        return state.gender.isNotBlank() &&
+        return state.gender != null &&
                 state.work.isNotBlank() &&
                 state.profilePicture.isNotBlank()
         Log.d("TAG", "RegistrationViewModel- Registration state status: ${roommateState.value.gender}, ${roommateState.value.work}, ${roommateState.value.profilePicture}")
@@ -206,7 +226,6 @@ class RegistrationViewModel : ViewModel() {
 
 //----------------------------RoommateStep3---------------------------------------------------------------------------------
 
-    var isLoadingBio by mutableStateOf(false)
 
     fun suggestPersonalBio(userRepository: UserRepository, onError: (String) -> Unit) {
         val state = _roommateState.value
@@ -216,8 +235,8 @@ class RegistrationViewModel : ViewModel() {
             try {
                 val response = userRepository.geminiSuggestClicked(
                     fullName = _baseState.value.fullName,
-                    attributes = state.attributes,
-                    hobbies = state.hobbies,
+                    attributes = state.attributes.map { it.name },
+                    hobbies = state.hobbies.map { it.name },
                     work = state.work
                 )
                 Log.d("TAG", "RegistrationViewModel-AI Suggest Response: ${response.generatedBio}")
@@ -268,41 +287,54 @@ class RegistrationViewModel : ViewModel() {
         }
         _roommateState.value = _roommateState.value.copy(lookingForCondo = current)
     }
-
-    fun submitRoommate(
-        userRepository: UserRepository,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val base = _baseState.value
-        val roommate = _roommateState.value
-
-        val request = RoommateUserRequest(
-            email = base.email,
-            fullName = base.fullName,
-            phoneNumber = base.phoneNumber,
-            birthDate = base.birthDate,
-            password = base.password,
-            profilePicture = roommate.profilePicture,
-            work = roommate.work,
-            attributes = roommate.attributes,
-            hobbies = roommate.hobbies,
-            lookingForRoomies = roommate.lookingForRoomies,
-            lookingForCondo = roommate.lookingForCondo,
-            roommatesNumber = roommate.roommatesNumber,
-            minPropertySize = roommate.minPropertySize,
-            maxPropertySize = roommate.maxPropertySize,
-            minPrice = roommate.minPrice,
-            maxPrice = roommate.maxPrice,
-            personalBio = roommate.personalBio
-        )
-
+    fun submitRoommate(userRepository: UserRepository) {
         viewModelScope.launch {
+            isLoading = true
             try {
-                userRepository.registerRoommate(request)
-                onSuccess()
+                val base = _baseState.value
+                val roommate = _roommateState.value
+
+                val request = RoommateUser(
+                    email = base.email,
+                    fullName = base.fullName,
+                    phoneNumber = base.phoneNumber,
+                    birthDate = base.birthDate,
+                    password = base.password,
+                    profilePicture = roommate.profilePicture,
+                    work = roommate.work,
+                    attributes = roommate.attributes,
+                    hobbies = roommate.hobbies,
+                    lookingForRoomies = roommate.lookingForRoomies,
+                    lookingForCondo = roommate.lookingForCondo,
+                    roommatesNumber = roommate.roommatesNumber,
+                    minPropertySize = roommate.minPropertySize,
+                    maxPropertySize = roommate.maxPropertySize,
+                    minPrice = roommate.minPrice,
+                    maxPrice = roommate.maxPrice,
+                    personalBio = roommate.personalBio,
+                    gender = roommate.gender,
+                    preferredRadiusKm = roommate.preferredRadiusKm,
+                    latitude = roommate.latitude,
+                    longitude = roommate.longitude
+                )
+
+                val response = withContext(Dispatchers.IO) {
+                    userRepository.registerRoommate(request)
+                }
+
+                Log.d("TAG", "RegistrationViewModel-SubmitRoommate Response: $response")
+
+                //save the token in local db
+
+                clearBaseState()
+                clearRoommateState()
+                _navigateToMain.value = true
+
             } catch (e: Exception) {
-                onError(e.message ?: "Unknown error")
+                Log.e("RegistrationViewModel", "SubmitRoommate Error", e)
+                _errorMessage.value = e.message ?: "Unknown error occurred"
+            } finally {
+                isLoading = false
             }
         }
     }

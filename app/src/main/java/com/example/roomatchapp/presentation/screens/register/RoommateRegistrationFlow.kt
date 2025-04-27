@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.register
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,129 +21,113 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.di.AppDependencies
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.navigation.StartGraph
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
-import com.example.roomatchapp.presentation.screens.register.RoommateStep1
-import com.example.roomatchapp.presentation.screens.register.RoommateStep2
-import com.example.roomatchapp.presentation.screens.register.RoommateStep3
-import com.example.roomatchapp.presentation.screens.register.RoommateStep4
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.RoommateMainScreenComposableDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.example.roomatchapp.R
 
 @OptIn(ExperimentalAnimationApi::class)
 @Destination<StartGraph>
 @Composable
 fun RoommateFlowScreen(
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
+    viewModel: RegistrationViewModel
 ) {
-    val viewModel = viewModel<RegistrationViewModel>()
+    val context = LocalContext.current
     var stepIndex by rememberSaveable { mutableStateOf(0) }
+    val isLoading = viewModel.isLoading
+    val navigateToMain by viewModel.navigateToMain.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    LaunchedEffect(navigateToMain) {
+        if (navigateToMain) {
+            navigator.navigate(RoommateMainScreenComposableDestination) {
+                popUpTo(NavGraphs.root) { inclusive = true }
+                launchSingleTop = true
+            }
+            viewModel.resetNavigation()
+        }
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .padding(8.dp)
+        modifier = Modifier.fillMaxSize().background(Background).padding(8.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Back Button on top
+        Column {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 22.dp),
-                horizontalArrangement = Arrangement.Start,
+                Modifier.fillMaxWidth().padding(top = 22.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = {
-                        if (stepIndex > 0) {
-                            stepIndex--
-                        } else {
-                            viewModel.clearRoommateState()
-                            navigator.popBackStack()
-                        }
-                    }
-                ) {
-                   Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Primary,
-                        modifier = Modifier.size(40.dp)
-                    )
+                IconButton(onClick = {
+                    if (stepIndex > 0) stepIndex-- else navigator.popBackStack()
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Primary, modifier = Modifier.size(40.dp))
                 }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
-
-            // Top progress bar
             SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = 4)
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Content
             AnimatedContent(
                 targetState = stepIndex,
                 transitionSpec = {
-                    slideInHorizontally { width -> width } + fadeIn() with
-                            slideOutHorizontally { width -> -width } + fadeOut()
+                    slideInHorizontally { it } + fadeIn() with slideOutHorizontally { -it } + fadeOut()
                 },
                 modifier = Modifier.weight(1f)
-            ) { currentStep ->
-                when (currentStep) {
+            ) { page ->
+                when (page) {
                     0 -> RoommateStep1(
-                        registrationViewModel = viewModel,
-                        onContinue = { stepIndex++ },
-                        stepIndex = stepIndex,
-                        totalSteps = 4
+                        viewModel = viewModel,
+                        onContinue = { stepIndex++ }
                     )
                     1 -> RoommateStep2(
                         viewModel = viewModel,
-                        onContinue = { stepIndex++ },
-                        stepIndex = stepIndex,
-                        totalSteps = 4
+                        onContinue = { stepIndex++ }
                     )
                     2 -> RoommateStep3(
                         viewModel = viewModel,
                         onContinue = { stepIndex++ },
-                        stepIndex = stepIndex,
-                        totalSteps = 4,
-                        onAIButtonClick = { setIsLoading ->
-                            setIsLoading(true)
-                            viewModel.suggestPersonalBio(AppDependencies.userRepository) {
-                                setIsLoading(false)
-                            }
+                        onAIButtonClick = {
+                            viewModel.suggestPersonalBio(
+                                AppDependencies.userRepository,
+                                onError = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+                            )
                         }
                     )
                     3 -> RoommateStep4(
                         viewModel = viewModel,
                         onSubmit = {
-                            viewModel.submitRoommate(
-                                userRepository = AppDependencies.userRepository,
-                                onSuccess = {
-                                    navigator.navigate(RoommateMainScreenComposableDestination) {
-                                        popUpTo(NavGraphs.root) { inclusive = true }
-                                    }
-                                },
-                                onError = {
-                                }
-                            )
-                        },
-                        stepIndex = stepIndex,
-                        totalSteps = 4
+                            Log.d("TAG","RoommateFlowScreen: Submit button clicked")
+                            viewModel.submitRoommate(AppDependencies.userRepository)
+                        }
                     )
                 }
             }
+        }
+
+        if (isLoading) {
+            LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
         }
     }
 }

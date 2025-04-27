@@ -13,7 +13,8 @@ import com.example.roomatchapp.presentation.theme.Secondary
 @Composable
 fun PriceRangeSelector(
     priceRange: ClosedFloatingPointRange<Float>,
-    onValueChange: (ClosedFloatingPointRange<Float>) -> Unit
+    onValueChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    enabled: Boolean = true
 ) {
     Column {
         Text("Price Range: ${priceRange.start.toInt()}₪ - ${priceRange.endInclusive.toInt()}₪",
@@ -28,7 +29,8 @@ fun PriceRangeSelector(
                 thumbColor = Primary,
                 activeTrackColor = Primary,
                 inactiveTrackColor = Secondary
-            )
+            ),
+            enabled = enabled
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.navigation
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -22,14 +23,20 @@ import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.*
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.navigation.dependency
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController()
 ) {
+    val registrationViewModel: RegistrationViewModel = viewModel()
+
     DestinationsNavHost(
         navGraph = NavGraphs.root,
-        navController = navController
+        navController = navController,
+        dependenciesContainerBuilder = {
+            dependency(registrationViewModel)
+        }
     )
 }
 
@@ -62,8 +69,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator) {
 
 @Destination<StartGraph>
 @Composable
-fun RegisterScreenComposable(navigator: DestinationsNavigator) {
-    val registrationViewModel: RegistrationViewModel = viewModel()
+fun RegisterScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
     RegisterScreen(
         onRegisterClick = { navigator.navigate(ChooseTypeUserScreenComposableDestination) },
         onLoginClick = { navigator.navigate(LoginScreenComposableDestination) },
@@ -73,10 +79,9 @@ fun RegisterScreenComposable(navigator: DestinationsNavigator) {
 
 @Destination<StartGraph>
 @Composable
-fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator) {
+fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
     val context = LocalContext.current
     val ownerViewModel = RegisterOwnerViewModel(AppDependencies.userRepository)
-    val registrationViewModel: RegistrationViewModel = viewModel()
     val state = registrationViewModel.baseState.collectAsStateWithLifecycle()
 
     ChooseTypeUserScreen(
@@ -126,6 +131,6 @@ fun OwnerMainScreenComposable() {
 
 @Destination<StartGraph>
 @Composable
-fun RoommateFlowScreenDestination(navigator: DestinationsNavigator) {
-    RoommateFlowScreen(navigator = navigator)
+fun RoommateFlowScreenDestination(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
+    RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }

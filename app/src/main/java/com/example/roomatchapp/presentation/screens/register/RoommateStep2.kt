@@ -10,14 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import com.example.roomatchapp.data.model.Attribute
+import com.example.roomatchapp.data.model.Hobby
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
@@ -27,13 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
-import com.example.roomatchapp.data.remote.dto.Attribute
-import com.example.roomatchapp.data.remote.dto.Hobby
-import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
@@ -43,8 +38,6 @@ import com.example.roomatchapp.presentation.theme.Secondary
 fun RoommateStep2(
     onContinue: () -> Unit,
     viewModel: RegistrationViewModel,
-    stepIndex: Int = 1,
-    totalSteps: Int = 4
 ){
 
     val state by viewModel.roommateState.collectAsState()
@@ -147,9 +140,10 @@ fun RoommateStep2(
                 ,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Secondary,
-                    contentColor = Color.White
-                ),
-
+                    contentColor = Color.White,
+                    disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                )
                 ) {
                 Text(
                     "Continue",

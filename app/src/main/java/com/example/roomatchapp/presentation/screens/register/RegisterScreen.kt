@@ -41,6 +41,7 @@ import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import androidx.compose.material3.ColorScheme
 import com.example.roomatchapp.presentation.components.PasswordTextField
+import com.example.roomatchapp.presentation.theme.Secondary
 import com.example.roomatchapp.presentation.theme.cardBackground
 
 
@@ -189,7 +190,8 @@ fun RegisterScreen(
                         ,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Primary,
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = Primary.copy(alpha = 0.5f)
                         ),
                         enabled = registrationViewModel.validateAllFields()
                     ) {

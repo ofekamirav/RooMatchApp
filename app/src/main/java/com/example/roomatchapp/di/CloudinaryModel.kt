@@ -8,6 +8,7 @@ import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
 import com.cloudinary.android.policy.GlobalUploadPolicy
+import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.utils.toFile
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
@@ -36,8 +37,8 @@ class CloudinaryModel {
         bitmap: Bitmap,
         name: String,
         folder: String,
-        onSuccess: (String?) -> Unit,
-        onError: (String?) -> Unit,
+        onSuccess: StringCallback,
+        onError: StringCallback,
         context: Context
     ): Boolean {
         return suspendCancellableCoroutine { continuation ->

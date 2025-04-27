@@ -1,5 +1,8 @@
 package com.example.roomatchapp.di
 
+import android.content.Context
+import androidx.room.Room
+import com.example.roomatchapp.data.local.AppLocalDB
 import com.example.roomatchapp.data.remote.api.ApiService
 import com.example.roomatchapp.data.remote.api.ApiServiceImplementation
 import com.example.roomatchapp.data.repository.UserRepositoryImpl
@@ -11,10 +14,12 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import kotlin.getValue
+import kotlin.jvm.java
 
 object AppDependencies {
 
-    private const val BASE_URL = "http://10.0.0.9:8080" //if your are using emultaor change ip to 10.0.2.2
+    private const val BASE_URL = "http://10.0.0.20:8080" //if your are using emultaor change ip to 10.0.2.2
 
     val httpClient: HttpClient by lazy {
         HttpClient(CIO) {
@@ -38,4 +43,5 @@ object AppDependencies {
     val userRepository: UserRepository by lazy {
         UserRepositoryImpl(apiService)
     }
+
 }

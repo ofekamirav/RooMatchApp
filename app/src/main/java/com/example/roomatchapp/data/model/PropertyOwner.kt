@@ -1,9 +1,13 @@
-package com.example.roomatchapp.data.remote.dto
+package com.example.roomatchapp.data.model
 
+import androidx.room.Entity
+import com.example.roomatchapp.data.base.Constants.Collections.OWNERS
 import kotlinx.serialization.Serializable
 
+@Entity(tableName = OWNERS)
 @Serializable
-data class PropertyOwnerUserRequest(
+data class PropertyOwner(
+    val id: String,
     val email: String,
     val fullName: String,
     val phoneNumber: String,
@@ -12,4 +16,5 @@ data class PropertyOwnerUserRequest(
     val refreshToken: String?=null,
     val profilePicture: String?=null,
     val resetToken: String? = null,
-    val resetTokenExpiration: Long? = null)
+    val resetTokenExpiration: Long? = null
+)

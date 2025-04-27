@@ -1,16 +1,22 @@
-package com.example.roomatchapp.data.remote.dto
+package com.example.roomatchapp.data.model
 
+import androidx.room.Entity
+import com.example.roomatchapp.data.base.Constants.Collections.ROOMMATES
 import kotlinx.serialization.Serializable
 
+@Entity(tableName = ROOMMATES)
 @Serializable
-data class RoommateUserRequest(
+data class Roommate(
+    val id: String,
     val email: String,
     val fullName: String,
     val phoneNumber: String,
     val birthDate: String,
     val password: String,
+    val refreshToken: String?=null,
     val profilePicture: String? = null, //Optional, can be null and will set by user later
     val work: String,
+    val gender: Gender,
     val attributes: List<Attribute>,
     val hobbies: List<Hobby>,
     val lookingForRoomies: List<LookingForRoomiesPreference>,
@@ -21,14 +27,19 @@ data class RoommateUserRequest(
     val minPrice: Int,
     val maxPrice: Int,
     val personalBio: String? = null,
+    val preferredRadiusKm: Int = 10,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val resetToken: String? = null,
+    val resetTokenExpiration: Long? = null
 )
 
 
 @Serializable
-enum class Gender {
-    MALE,
-    FEMALE,
-    OTHER
+enum class Gender(val lable: String) {
+    MALE("Male"),
+    FEMALE("Female"),
+    OTHER("Other")
 }
 
 @Serializable
@@ -93,4 +104,5 @@ data class LookingForRoomiesPreference(
     val weight: Double,
     val setWeight: Boolean,
 )
+
 
