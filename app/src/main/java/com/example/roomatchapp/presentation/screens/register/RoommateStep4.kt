@@ -172,6 +172,7 @@ fun RoommateStep4(
                 valueRange = 0.5f..100f,
                 steps = 49,
                 modifier = Modifier.fillMaxWidth(),
+                enabled = !viewModel.isLoading,
                 colors = SliderDefaults.colors(
                     thumbColor = Primary,
                     activeTrackColor = Primary,

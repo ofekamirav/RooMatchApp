@@ -2,13 +2,13 @@ package com.example.roomatchapp.data.remote.api
 
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
-import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
+import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 
 interface ApiService {
 
-    suspend fun registerOwner(request: PropertyOwnerUserRequest): UserResponse
+    suspend fun registerOwner(request: PropertyOwnerUser): UserResponse
 
     suspend fun login(request: LoginRequest): UserResponse
 

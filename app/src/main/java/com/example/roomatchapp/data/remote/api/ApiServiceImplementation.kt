@@ -4,7 +4,7 @@ import android.util.Log
 import com.example.roomatchapp.data.remote.dto.BioRequest
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
-import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
+import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import io.ktor.client.HttpClient
@@ -19,7 +19,7 @@ class ApiServiceImplementation(
     private val client: HttpClient,
     private val baseUrl: String
 ) : ApiService {
-    override suspend fun registerOwner(request: PropertyOwnerUserRequest): UserResponse {
+    override suspend fun registerOwner(request: PropertyOwnerUser): UserResponse {
         try {
             Log.d("TAG", "ApiService-Sending POST to $baseUrl/owners/register with body: $request")
             val response = client.post("$baseUrl/owners/register") {
@@ -38,20 +38,19 @@ class ApiServiceImplementation(
         request: LoginRequest
     ): UserResponse {
         try {
-            Log.d("TAG", "ApiService-Sending POST to $baseUrl/login with body: ${request.email}, $request.password}")
+            Log.d("TAG", "ApiService-Sending POST to $baseUrl/login with body: $request")
             val response = client.post("$baseUrl/login") {
                 contentType(ContentType.Application.Json)
-                setBody(mapOf("email" to request.email, "password" to request.password))
+                setBody(request)
             }.body<UserResponse>()
             Log.d("TAG", "ApiService-Response received: $response")
             return response
         } catch (e: Exception) {
             Log.e("TAG", "ApiService-API call failed: ${e.message}", e)
             throw e
-
         }
-
     }
+
 
     override suspend fun registerRoommate(request: RoommateUser): UserResponse {
         try {

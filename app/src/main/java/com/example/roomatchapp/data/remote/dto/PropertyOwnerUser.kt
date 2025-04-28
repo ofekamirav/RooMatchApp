@@ -3,7 +3,7 @@ package com.example.roomatchapp.data.remote.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PropertyOwnerUserRequest(
+data class PropertyOwnerUser(
     val email: String,
     val fullName: String,
     val phoneNumber: String,
