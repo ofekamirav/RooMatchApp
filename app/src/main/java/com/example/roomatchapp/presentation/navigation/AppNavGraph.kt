@@ -8,6 +8,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.roomatchapp.data.remote.dto.LoginRequest
+import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.presentation.screens.login.LoginScreen
 import com.example.roomatchapp.presentation.screens.main.OwnerMainScreen
 import com.example.roomatchapp.presentation.screens.main.RoommateMainScreen
@@ -16,7 +18,6 @@ import com.example.roomatchapp.presentation.screens.welcome.WelcomeScreen
 import com.example.roomatchapp.presentation.register.RegisterOwnerViewModel
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.di.AppDependencies
-import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.NavGraphs
@@ -56,9 +57,56 @@ fun WelcomeScreenComposable(navigator: DestinationsNavigator) {
 @Composable
 fun LoginScreenComposable(navigator: DestinationsNavigator) {
     val loginViewModel = LoginViewModel(AppDependencies.userRepository)
+    val context = LocalContext.current
+    val state = loginViewModel.state.collectAsStateWithLifecycle()
+
     LoginScreen(
         onLoginClick = {
-            // TODO: Add login logic
+            loginViewModel.isLoading =true
+
+            val request = LoginRequest(
+                email = state.value.email,
+                password = state.value.password
+            )
+
+            loginViewModel.login(
+                request = request,
+                onSuccess = { response ->
+                    loginViewModel.isLoading =false
+                    Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+
+                    when (response.userType) {
+                        "Roommate" -> {
+                            navigator.navigate(RoommateMainScreenComposableDestination) {
+                                popUpTo(NavGraphs.root) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                        "PropertyOwner" -> {
+                            navigator.navigate(OwnerMainScreenComposableDestination) {
+                                popUpTo(NavGraphs.root) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                        else -> {
+                            Toast.makeText(context, "Unknown user type", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onError = { error ->
+                    loginViewModel.isLoading =false
+                    val errorMessage = if (error.contains("Invalid password", ignoreCase = true) ||
+                        error.contains("User is not exists", ignoreCase = true)
+                    ) {
+                        "Incorrect email or password"
+                    } else {
+                        "Server error: $error"
+                    }
+
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    Log.e("LoginScreenComposable", "Login error: $error")
+                }
+            )
         },
         onGoogleLoginClick = {},
         onForgotPasswordClick = {},
@@ -90,7 +138,7 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
         },
         onOwnerClick = { setIsLoading ->
             setIsLoading(true)
-            val request = PropertyOwnerUserRequest(
+            val request = PropertyOwnerUser(
                 email = state.value.email,
                 fullName = state.value.fullName,
                 phoneNumber = state.value.phoneNumber,
@@ -102,7 +150,7 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
                 request,
                 onSuccess = {
                     setIsLoading(false)
-                    Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Registration owner successful!", Toast.LENGTH_SHORT).show()
                     navigator.navigate(OwnerMainScreenDestination) {
                         popUpTo(NavGraphs.root) { inclusive = true }
                         launchSingleTop = true

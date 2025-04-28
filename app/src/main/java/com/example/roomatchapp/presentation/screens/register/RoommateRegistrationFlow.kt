@@ -120,6 +120,7 @@ fun RoommateFlowScreen(
                         onSubmit = {
                             Log.d("TAG","RoommateFlowScreen: Submit button clicked")
                             viewModel.submitRoommate(AppDependencies.userRepository)
+                            Toast.makeText(context, "Roommate submitted!", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }

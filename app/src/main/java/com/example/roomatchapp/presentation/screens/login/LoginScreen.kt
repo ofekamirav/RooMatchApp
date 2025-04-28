@@ -44,6 +44,7 @@ import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.R
 import com.example.roomatchapp.di.AppDependencies
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.example.roomatchapp.presentation.navigation.StartGraph
@@ -60,6 +61,7 @@ fun LoginScreen(
     loginViewModel: LoginViewModel
 ){
     val state by loginViewModel.state.collectAsState()
+    val isLoading = loginViewModel.isLoading
 
     Box(
         modifier = Modifier
@@ -180,6 +182,10 @@ fun LoginScreen(
                         )
                     }
                 }
+            }
+
+            if (isLoading) {
+                LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
             }
         }
     }

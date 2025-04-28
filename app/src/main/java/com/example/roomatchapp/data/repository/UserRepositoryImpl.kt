@@ -3,7 +3,7 @@ package com.example.roomatchapp.data.repository
 import com.example.roomatchapp.data.remote.api.ApiService
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
-import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
+import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import com.example.roomatchapp.domain.repository.UserRepository
@@ -11,7 +11,7 @@ import com.example.roomatchapp.domain.repository.UserRepository
 class UserRepositoryImpl(
     private val apiService: ApiService
 ): UserRepository {
-    override suspend fun registerOwner(request: PropertyOwnerUserRequest): UserResponse {
+    override suspend fun registerOwner(request: PropertyOwnerUser): UserResponse {
         return apiService.registerOwner(request)
     }
 

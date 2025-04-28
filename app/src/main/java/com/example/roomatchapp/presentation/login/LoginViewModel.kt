@@ -1,10 +1,12 @@
 package com.example.roomatchapp.presentation.login
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.remote.dto.LoginRequest
-import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +18,7 @@ data class LoginState(
     val email: String = "",
     val emailError: String? = null,
     val password: String = "",
-    val passwordError: String? = null
+    val passwordError: String? = null,
 )
 
 class LoginViewModel(
@@ -24,6 +26,9 @@ class LoginViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
+
+    var isLoading by mutableStateOf(false)
+        public set
 
     fun login(
         request: LoginRequest,
@@ -36,9 +41,11 @@ class LoginViewModel(
                 val response = repository.login(request)
                 Log.d("TAG", "LoginViewModel-User login response: $response")
                 onSuccess(response)
+                clearState()
             } catch (e: Exception) {
                 Log.e("TAG", "LoginViewModel-Login failed: ${e.message}", e)
                 onError(e.message ?: "Unknown error")
+                clearState()
             }
         }
     }

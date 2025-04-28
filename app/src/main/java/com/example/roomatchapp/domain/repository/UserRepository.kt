@@ -2,12 +2,12 @@ package com.example.roomatchapp.domain.repository
 
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
-import com.example.roomatchapp.data.remote.dto.PropertyOwnerUserRequest
+import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 
 interface UserRepository {
-    suspend fun registerOwner(request: PropertyOwnerUserRequest): UserResponse
+    suspend fun registerOwner(request: PropertyOwnerUser): UserResponse
 
     suspend fun registerRoommate(request: RoommateUser): UserResponse
 

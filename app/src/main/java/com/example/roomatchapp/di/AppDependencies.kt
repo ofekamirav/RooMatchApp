@@ -19,7 +19,7 @@ import kotlin.jvm.java
 
 object AppDependencies {
 
-    private const val BASE_URL = "http://10.0.0.20:8080" //if your are using emultaor change ip to 10.0.2.2
+    private const val BASE_URL = "http://192.168.1.158:8080" //if your are using emultaor change ip to 10.0.2.2
 
     val httpClient: HttpClient by lazy {
         HttpClient(CIO) {
