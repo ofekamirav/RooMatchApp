@@ -15,3 +15,4 @@ annotation class OwnerGraph
 
 @NavGraph<StartGraph>
 annotation class RoommateGraph
+
