@@ -1,8 +1,15 @@
 package com.example.roomatchapp.presentation.screens.main
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -11,15 +18,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.roomatchapp.presentation.navigation.BottomNavItems
 import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
-import com.example.roomatchapp.presentation.navigation.RoommateGraph
 import com.example.roomatchapp.presentation.screens.roommate.DiscoverScreen
 import com.example.roomatchapp.presentation.screens.roommate.ProfileScreen
 import com.example.roomatchapp.data.model.*
-import com.ramcosta.composedestinations.annotation.Destination
+import com.example.roomatchapp.di.AppDependencies
+import com.example.roomatchapp.presentation.roommate.DiscoverViewModel
 
-@Destination<RoommateGraph>
+
 @Composable
-fun RoommateMainScreen() {
+fun RoommateMainScreen(
+    seekerId: String
+) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
@@ -36,14 +45,25 @@ fun RoommateMainScreen() {
         NavHost(
             navController = navController,
             startDestination = "roommate_discover",
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeWindowInsets(paddingValues)
         ) {
             composable("roommate_matches") {
                 // roommate matches screen
             }
             composable("roommate_discover") {
-                DiscoverScreen()
+                if (seekerId.isNotBlank()) {
+                    val viewModel = remember(seekerId) {
+                        DiscoverViewModel(
+                            matchRepository = AppDependencies.matchRepository,
+                            seekerId = seekerId
+                        )
+                    }
+                    DiscoverScreen(viewModel = viewModel)
+                }
             }
+
             composable("roommate_profile") {
                 ProfileScreen(
                     roommate = getMockRoommate()
@@ -56,7 +76,7 @@ fun RoommateMainScreen() {
 @Preview(showBackground = true)
 @Composable
 fun RoommateMainScreenPreview() {
-    RoommateMainScreen()
+    RoommateMainScreen(seekerId = "preview")
 }
 
 fun getMockRoommate(): Roommate {

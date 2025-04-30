@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    kotlin("kapt")
 }
 
 android {
@@ -87,10 +88,11 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
     //Data-Base and Cloud
+    //implementation(libs.androidx.room.runtime)
+    //kapt(libs.androidx.room.compiler)
+    //implementation(libs.androidx.room.ktx)
     implementation(libs.cloudinary.android)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -103,4 +105,6 @@ dependencies {
 
 ksp {
     arg("compose-destinations.mode", "navgraphs")
+    arg("compose-destinations.moduleName", "app")
 }
+

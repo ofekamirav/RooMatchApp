@@ -37,20 +37,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roomatchapp.presentation.theme.Background
-import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.login.LoginViewModel
-import com.example.roomatchapp.presentation.navigation.StartGraph
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.cardBackground
-import com.ramcosta.composedestinations.annotation.Destination
 
 @Composable
 fun LoginScreen(
@@ -184,9 +181,14 @@ fun LoginScreen(
                 }
             }
 
-            if (isLoading) {
-                LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
-            }
+        }
+        if (isLoading) {
+            LoadingAnimation(
+                isLoading = true,
+                animationResId = R.raw.loading_animation,
+                modifier = Modifier
+                    .size(120.dp)
+                    .align(Alignment.Center)            )
         }
     }
 }
@@ -194,11 +196,11 @@ fun LoginScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewLoginScreen() {
-    LoginScreen(
-        onLoginClick = {},
-        onGoogleLoginClick = {},
-        onForgotPasswordClick = {},
-        onRegisterClick = {},
-        loginViewModel = LoginViewModel(AppDependencies.userRepository)
-    )
+//    LoginScreen(
+//        onLoginClick = {},
+//        onGoogleLoginClick = {},
+//        onForgotPasswordClick = {},
+//        onRegisterClick = {},
+//        loginViewModel = LoginViewModel(AppDependencies.userRepository, sessionManager = UserSessionManager())
+//    )
 }

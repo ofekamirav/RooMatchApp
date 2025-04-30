@@ -4,6 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -109,16 +112,27 @@ fun ProfileScreen(roommate: Roommate) {
             Spacer(modifier = Modifier.height(24.dp))
 
             LookingForSection(roommate)
+
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(
+                onClick = { /* Handle edit button click */ },
+                modifier = Modifier
+                    .size(60.dp)
+                    .align(Alignment.End)
+                    .padding(bottom = 16.dp, end = 16.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_edit),
+                    contentDescription = "Edit Icon",
+                    tint = Color.Unspecified,
+                    modifier = Modifier
+                        .size(60.dp)
+                )
+            }
         }
 
-        Image(
-            painter = painterResource(id = R.drawable.ic_edit),
-            contentDescription = "Edit Icon",
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 34.dp, bottom = 34.dp)
-                .size(50.dp)
-        )
     }
 }
 

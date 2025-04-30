@@ -30,18 +30,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
-import com.example.roomatchapp.presentation.navigation.StartGraph
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.generated.NavGraphs
-import com.ramcosta.composedestinations.generated.destinations.RoommateMainScreenComposableDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.example.roomatchapp.R
+import com.example.roomatchapp.presentation.navigation.RootNavGraph
+import com.ramcosta.composedestinations.generated.app.AppNavGraphs
+import com.ramcosta.composedestinations.generated.app.destinations.RoommateMainScreenComposableDestination
 
 @OptIn(ExperimentalAnimationApi::class)
-@Destination<StartGraph>
 @Composable
 fun RoommateFlowScreen(
     navigator: DestinationsNavigator,
@@ -56,7 +55,7 @@ fun RoommateFlowScreen(
     LaunchedEffect(navigateToMain) {
         if (navigateToMain) {
             navigator.navigate(RoommateMainScreenComposableDestination) {
-                popUpTo(NavGraphs.root) { inclusive = true }
+                popUpTo(AppNavGraphs.root) { inclusive = true }
                 launchSingleTop = true
             }
             viewModel.resetNavigation()

@@ -1,12 +1,13 @@
-package com.example.roomatchapp.data.remote.api
+package com.example.roomatchapp.data.remote.api.user
 
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
+import com.example.roomatchapp.data.remote.dto.RefreshTokenResponse
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 
-interface ApiService {
+interface UserApiService {
 
     suspend fun registerOwner(request: PropertyOwnerUser): UserResponse
 
@@ -15,5 +16,7 @@ interface ApiService {
     suspend fun registerRoommate(request: RoommateUser): UserResponse
 
     suspend fun geminiSuggestClicked(fullName: String, attributes: List<String>, hobbies: List<String>, work: String): BioResponse
+
+    suspend fun refreshToken(refreshToken: String): RefreshTokenResponse
 
 }
