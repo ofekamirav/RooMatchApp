@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.presentation.screens.login.LoginScreen
@@ -18,45 +19,73 @@ import com.example.roomatchapp.presentation.screens.welcome.WelcomeScreen
 import com.example.roomatchapp.presentation.register.RegisterOwnerViewModel
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.di.AppDependencies
+import androidx.compose.runtime.getValue
+import com.ramcosta.composedestinations.generated.app.AppNavGraphs
+import androidx.compose.runtime.rememberCoroutineScope
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.generated.NavGraphs
-import com.ramcosta.composedestinations.generated.destinations.*
+import com.ramcosta.composedestinations.generated.app.destinations.*
 import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.annotation.NavHostGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.dependency
+import kotlinx.coroutines.launch
+
+@NavHostGraph
+annotation class RootNavGraph
 
 @Composable
 fun AppNavGraph(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    sessionManager: UserSessionManager
 ) {
     val registrationViewModel: RegistrationViewModel = viewModel()
 
+    val hasSeenWelcome by sessionManager.hasSeenWelcomeFlow.collectAsStateWithLifecycle(initialValue = false)
+    val userType by sessionManager.userTypeFlow.collectAsStateWithLifecycle(initialValue = null)
+    val isLoggedIn by sessionManager.isLoggedInFlow.collectAsStateWithLifecycle(initialValue = false)
+
+    val startRoute = when {
+        !hasSeenWelcome -> WelcomeScreenComposableDestination
+        isLoggedIn && userType == "Roommate" -> RoommateMainScreenComposableDestination
+        isLoggedIn && userType == "PropertyOwner" -> OwnerMainScreenComposableDestination
+        else -> LoginScreenComposableDestination
+    }
+
     DestinationsNavHost(
-        navGraph = NavGraphs.root,
+        navGraph = AppNavGraphs.root,
         navController = navController,
+        start = startRoute,
         dependenciesContainerBuilder = {
             dependency(registrationViewModel)
+            dependency(sessionManager)
         }
     )
 }
 
-@Destination<StartGraph>(start = true)
+@Destination<RootNavGraph>(start = true)
 @Composable
-fun WelcomeScreenComposable(navigator: DestinationsNavigator) {
+fun WelcomeScreenComposable(
+    navigator: DestinationsNavigator,
+    sessionManager: UserSessionManager) {
+    val scope = rememberCoroutineScope()
     WelcomeScreen(
         onGetStartedClick = {
-            navigator.navigate(LoginScreenComposableDestination) {
-                popUpTo(WelcomeScreenComposableDestination) { inclusive = true }
+            scope.launch {
+                sessionManager.setHasSeenWelcome(true)
+                navigator.navigate(LoginScreenComposableDestination) {
+                    popUpTo(WelcomeScreenComposableDestination) { inclusive = true }
+                }
             }
+
         }
     )
 }
 
-@Destination<StartGraph>
+@Destination<RootNavGraph>
 @Composable
-fun LoginScreenComposable(navigator: DestinationsNavigator) {
-    val loginViewModel = LoginViewModel(AppDependencies.userRepository)
+fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserSessionManager) {
+    val loginViewModel = LoginViewModel(AppDependencies.userRepository,sessionManager)
     val context = LocalContext.current
     val state = loginViewModel.state.collectAsStateWithLifecycle()
 
@@ -78,13 +107,13 @@ fun LoginScreenComposable(navigator: DestinationsNavigator) {
                     when (response.userType) {
                         "Roommate" -> {
                             navigator.navigate(RoommateMainScreenComposableDestination) {
-                                popUpTo(NavGraphs.root) { inclusive = true }
+                                popUpTo(AppNavGraphs.root) { inclusive = true }
                                 launchSingleTop = true
                             }
                         }
                         "PropertyOwner" -> {
                             navigator.navigate(OwnerMainScreenComposableDestination) {
-                                popUpTo(NavGraphs.root) { inclusive = true }
+                                popUpTo(AppNavGraphs.root) { inclusive = true }
                                 launchSingleTop = true
                             }
                         }
@@ -115,7 +144,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator) {
     )
 }
 
-@Destination<StartGraph>
+@Destination<RootNavGraph>
 @Composable
 fun RegisterScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
     RegisterScreen(
@@ -125,7 +154,7 @@ fun RegisterScreenComposable(navigator: DestinationsNavigator,registrationViewMo
     )
 }
 
-@Destination<StartGraph>
+@Destination<RootNavGraph>
 @Composable
 fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
     val context = LocalContext.current
@@ -134,7 +163,7 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
 
     ChooseTypeUserScreen(
         onRoommateClick = {
-            navigator.navigate(RoommateFlowScreenDestination)
+            navigator.navigate(RoommateFlowScreenComposableDestination)
         },
         onOwnerClick = { setIsLoading ->
             setIsLoading(true)
@@ -151,8 +180,8 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
                 onSuccess = {
                     setIsLoading(false)
                     Toast.makeText(context, "Registration owner successful!", Toast.LENGTH_SHORT).show()
-                    navigator.navigate(OwnerMainScreenDestination) {
-                        popUpTo(NavGraphs.root) { inclusive = true }
+                    navigator.navigate(OwnerMainScreenComposableDestination) {
+                        popUpTo(AppNavGraphs.root) { inclusive = true }
                         launchSingleTop = true
                     }
                 },
@@ -164,21 +193,23 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
         }
     )
 }
-
-@Destination<RoommateGraph>(start = true)
+@Destination<RootNavGraph>
 @Composable
-fun RoommateMainScreenComposable() {
-    RoommateMainScreen()
+fun RoommateMainScreenComposable(sessionManager: UserSessionManager) {
+    val seekerId by sessionManager.userIdFlow.collectAsStateWithLifecycle(initialValue = null)
+    RoommateMainScreen(seekerId = seekerId ?: "")
 }
 
-@Destination<OwnerGraph>(start = true)
+@Destination<RootNavGraph>
 @Composable
 fun OwnerMainScreenComposable() {
     OwnerMainScreen()
 }
 
-@Destination<StartGraph>
+@Destination<RootNavGraph>
 @Composable
-fun RoommateFlowScreenDestination(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
+fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
     RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }
+
+

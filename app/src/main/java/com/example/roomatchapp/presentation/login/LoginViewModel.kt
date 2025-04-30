@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import com.example.roomatchapp.domain.repository.UserRepository
@@ -22,7 +23,9 @@ data class LoginState(
 )
 
 class LoginViewModel(
-    private val repository: UserRepository
+    private val repository: UserRepository,
+    private val sessionManager: UserSessionManager
+
 ) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
@@ -40,6 +43,15 @@ class LoginViewModel(
                 Log.d("TAG", "LoginViewModel-Login owner with request: ${request.email}, ${request.password}")
                 val response = repository.login(request)
                 Log.d("TAG", "LoginViewModel-User login response: $response")
+
+                // Save session before proceeding
+                sessionManager.saveUserSession(
+                    token = response.token,
+                    refreshToken = response.refreshToken,
+                    userId = response.userId.toString(),
+                    userType = response.userType
+                )
+
                 onSuccess(response)
                 clearState()
             } catch (e: Exception) {
@@ -76,9 +88,7 @@ class LoginViewModel(
     }
 
     fun isValidPassword(password: String): Boolean {
-        val hasLetters = password.any { it.isLetter() }
-        val hasDigits = password.any { it.isDigit() }
-        return password.length >= 6 && hasLetters && hasDigits
+        return password.length >= 6
     }
 
     // Check all fields

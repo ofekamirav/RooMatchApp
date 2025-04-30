@@ -1,10 +1,10 @@
 package com.example.roomatchapp.data.model
 
-import androidx.room.Entity
-import com.example.roomatchapp.data.base.Constants.Collections.OWNERS
+//import androidx.room.Entity
+//import com.example.roomatchapp.data.base.Constants.Collections.OWNERS
 import kotlinx.serialization.Serializable
 
-@Entity(tableName = OWNERS)
+//@Entity(tableName = OWNERS)
 @Serializable
 data class PropertyOwner(
     val id: String,

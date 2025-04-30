@@ -1,10 +1,12 @@
-package com.example.roomatchapp.data.remote.api
+package com.example.roomatchapp.data.remote.api.user
 
 import android.util.Log
 import com.example.roomatchapp.data.remote.dto.BioRequest
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
+import com.example.roomatchapp.data.remote.dto.RefreshTokenRequest
+import com.example.roomatchapp.data.remote.dto.RefreshTokenResponse
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import io.ktor.client.HttpClient
@@ -15,10 +17,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 // Implementation of the ApiService interface methods
-class ApiServiceImplementation(
+class UserApiServiceImplementation(
     private val client: HttpClient,
     private val baseUrl: String
-) : ApiService {
+) : UserApiService {
     override suspend fun registerOwner(request: PropertyOwnerUser): UserResponse {
         try {
             Log.d("TAG", "ApiService-Sending POST to $baseUrl/owners/register with body: $request")
@@ -96,6 +98,25 @@ class ApiServiceImplementation(
             throw e
         }
     }
+
+
+    override suspend fun refreshToken(refreshToken: String): RefreshTokenResponse {
+        try {
+            Log.d("TAG", "ApiService-Sending refresh token request with: $refreshToken")
+
+            val response = client.post("$baseUrl/auth/refresh") {
+                contentType(ContentType.Application.Json)
+                setBody(RefreshTokenRequest(refreshToken))
+            }.body<RefreshTokenResponse>()
+
+            Log.d("TAG", "ApiService-Received refreshed tokens: $response")
+            return response
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-Failed to refresh token: ${e.message}", e)
+            throw e
+        }
+    }
+
 
 
 }

@@ -1,6 +1,9 @@
 package com.example.roomatchapp.presentation.screens.main
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,10 +14,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.roomatchapp.presentation.navigation.BottomNavItems
 import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
-import com.example.roomatchapp.presentation.navigation.OwnerGraph
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<OwnerGraph>
 @Composable
 fun OwnerMainScreen() {
     val navController = rememberNavController()
@@ -33,7 +33,9 @@ fun OwnerMainScreen() {
         NavHost(
             navController = navController,
             startDestination = "owner_properties",
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier
+                .padding(paddingValues)
+                .statusBarsPadding()
         ) {
             composable("owner_properties") {
                 // Owner properties screen
