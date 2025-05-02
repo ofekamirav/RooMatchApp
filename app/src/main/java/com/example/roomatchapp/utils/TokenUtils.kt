@@ -1,8 +1,9 @@
-package com.example.roomatchapp.data.remote.utils
+package com.example.roomatchapp.utils
 
 import android.util.Base64
 import android.util.Log
 import com.example.roomatchapp.data.local.session.UserSessionManager
+import com.example.roomatchapp.data.remote.dto.RefreshTokenRequest
 import com.example.roomatchapp.di.AppDependencies
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -15,12 +16,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 object TokenUtils {
 
     private const val baseUrl = AppDependencies.BASE_URL
-    private const val REFRESH_ENDPOINT = "http://$baseUrl/auth/refresh"
+    private const val REFRESH_ENDPOINT = "$baseUrl/auth/refresh"
+    private val httpClient = AppDependencies.httpClient
 
     fun isTokenAboutToExpire(token: String?, thresholdInSeconds: Long = 30): Boolean {
         return try {
@@ -28,7 +33,7 @@ object TokenUtils {
             val parts = token.split(".")
             if (parts.size != 3) return true
             val payloadJson = String(Base64.decode(parts[1], Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING))
-            val json = Json.parseToJsonElement(payloadJson).jsonObject
+            val json = Json.Default.parseToJsonElement(payloadJson).jsonObject
             val exp = json["exp"]?.jsonPrimitive?.longOrNull ?: return true
             val now = System.currentTimeMillis() / 1000
             exp - now < thresholdInSeconds
@@ -49,12 +54,12 @@ object TokenUtils {
 
         //Send request to refresh token
         try {
-            val response: HttpResponse = HttpClient(CIO).post(REFRESH_ENDPOINT) {
+            val response: HttpResponse = httpClient.post(REFRESH_ENDPOINT) {
                 contentType(ContentType.Application.Json)
-                setBody(mapOf("refreshToken" to refreshToken))
+                setBody(RefreshTokenRequest(refreshToken))
             }
 
-            if (response.status == HttpStatusCode.OK) {
+            if (response.status == HttpStatusCode.Companion.OK) {
                 val json = Json { ignoreUnknownKeys = true }
                 val body = json.decodeFromString<Map<String, String>>(response.bodyAsText())
                 val newToken = body["token"]

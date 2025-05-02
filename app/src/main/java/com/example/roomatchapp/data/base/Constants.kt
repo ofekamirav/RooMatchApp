@@ -9,5 +9,7 @@ object Constants {
         const val ROOMMATES = "roommates"
         const val OWNERS = "owners"
         const val PROPERTIES = "properties"
+        const val MATCHES = "matches"
+        const val CACHE_ENTITIES = "cache_entities"
     }
 }

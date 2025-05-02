@@ -88,9 +88,9 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
     //Data-Base and Cloud
-    //implementation(libs.androidx.room.runtime)
-    //kapt(libs.androidx.room.compiler)
-    //implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.datastore.preferences)
 
