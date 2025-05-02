@@ -1,13 +1,14 @@
 package com.example.roomatchapp.data.model
 
-//import androidx.room.Entity
-//import com.example.roomatchapp.data.base.Constants.Collections.PROPERTIES
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.example.roomatchapp.data.base.Constants.Collections.PROPERTIES
 import kotlinx.serialization.Serializable
 
-//@Entity(tableName = PROPERTIES)
+@Entity(tableName = PROPERTIES)
 @Serializable
 data class Property(
-    val id: String,
+    @PrimaryKey val id: String,
     val ownerId: String?=null,
     val available: Boolean?=null,
     val type: PropertyType,

@@ -1,5 +1,14 @@
 package com.example.roomatchapp.data.repository
 
+import android.util.Log
+import androidx.collection.emptyLongSet
+import com.example.roomatchapp.data.local.dao.CacheDao
+import com.example.roomatchapp.data.local.dao.PropertyOwnerDao
+import com.example.roomatchapp.data.local.dao.RoommateDao
+import com.example.roomatchapp.data.model.CacheEntity
+import com.example.roomatchapp.data.model.CacheType
+import com.example.roomatchapp.data.model.PropertyOwner
+import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.data.remote.api.user.UserApiService
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
@@ -9,7 +18,10 @@ import com.example.roomatchapp.data.remote.dto.UserResponse
 import com.example.roomatchapp.domain.repository.UserRepository
 
 class UserRepositoryImpl(
-    private val apiService: UserApiService
+    private val apiService: UserApiService,
+    private val roommateDao: RoommateDao,
+    private val propertyOwnerDao: PropertyOwnerDao,
+    private val cacheDao: CacheDao
 ): UserRepository {
     override suspend fun registerOwner(request: PropertyOwnerUser): UserResponse {
         return apiService.registerOwner(request)
@@ -30,6 +42,66 @@ class UserRepositoryImpl(
         work: String
     ): BioResponse {
         return apiService.geminiSuggestClicked(fullName, attributes, hobbies, work)
+    }
+
+    override suspend fun getPropertyOwner(
+        propertyOwnerId: String,
+        forceRefresh: Boolean,
+        maxCacheAgeMillis: Long,
+    ): PropertyOwner? {
+        val cacheEntry = cacheDao.getByIdAndType(propertyOwnerId, CacheType.PROPERTY_OWNER)
+        val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
+        Log.d("TAG", "UserRepositoryImp- getOwner -isCacheValid: $isCacheValid")
+        if (isCacheValid && !forceRefresh){
+            return propertyOwnerDao.getById(propertyOwnerId)
+        } else {
+            val propertyOwner = apiService.getPropertyOwner(propertyOwnerId)
+            if(propertyOwner != null){
+                propertyOwnerDao.insert(propertyOwner)
+                cacheDao.insert(
+                    CacheEntity(
+                        type = CacheType.PROPERTY_OWNER,
+                        entityId = propertyOwner.id,
+                        lastUpdatedAt = System.currentTimeMillis()
+                    )
+                )
+            }
+            return propertyOwner
+        }
+    }
+
+
+    override suspend fun getRoommate(
+        roommateId: String,
+        forceRefresh: Boolean,
+        maxCacheAgeMillis: Long,
+    ): Roommate? {
+
+        val cacheEntry = cacheDao.getByIdAndType(roommateId, CacheType.ROOMMATE)
+        val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
+        Log.d("TAG", "UserRepositoryImp- getRoommate -isCacheValid: $isCacheValid")
+        if (isCacheValid && !forceRefresh){
+            return roommateDao.getById(roommateId)
+        }
+        else{
+            val roommate = apiService.getRoommate(roommateId)
+            if(roommate != null){
+                roommateDao.insert(roommate)
+                cacheDao.insert(
+                    CacheEntity(
+                        type = CacheType.ROOMMATE,
+                        entityId = roommate.id,
+                        lastUpdatedAt = System.currentTimeMillis()
+                    )
+                )
+            }
+            return roommate
+        }
+
+    }
+
+    override suspend fun getAllRoommatesRemote(): List<Roommate>? {
+        return apiService.getAllRoommates()
     }
 
 

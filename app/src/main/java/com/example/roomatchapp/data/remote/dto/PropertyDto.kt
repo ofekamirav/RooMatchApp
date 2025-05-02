@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PropertyDto(
-    val id: String,
     val ownerId: String? = null,
     val available: Boolean? = null,
     val type: PropertyTypeDto,

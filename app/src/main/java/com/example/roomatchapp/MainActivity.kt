@@ -27,8 +27,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Initialize ROOM, Cloudinary and UserSessionManager
         sessionManager = UserSessionManager(applicationContext)
         AppDependencies.sessionManager = sessionManager
+        AppDependencies.init(applicationContext)
         CloudinaryModel.init(this)
 
         window.statusBarColor = android.graphics.Color.TRANSPARENT

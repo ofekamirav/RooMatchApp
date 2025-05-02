@@ -34,11 +34,11 @@ fun ProfileScreen(roommate: Roommate) {
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-    ) {
+            .padding(16.dp)
+        ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 0.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -48,8 +48,6 @@ fun ProfileScreen(roommate: Roommate) {
                     .width(200.dp)
                     .height(100.dp)
             )
-
-            Spacer(modifier = Modifier.height(0.dp))
 
             val profilePainter = if (roommate.profilePicture != null) {
                 rememberAsyncImagePainter(roommate.profilePicture)

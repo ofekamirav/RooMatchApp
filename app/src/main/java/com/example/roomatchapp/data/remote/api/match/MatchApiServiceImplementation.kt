@@ -5,8 +5,8 @@ import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.Roommate
-import com.example.roomatchapp.data.remote.utils.TokenUtils
-import com.example.roomatchapp.data.remote.utils.TokenUtils.refreshTokenIfNeeded
+import com.example.roomatchapp.utils.TokenUtils
+import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -101,6 +101,20 @@ class MatchApiServiceImplementation(
             Log.d("TAG", "MatchApiService- getProperty failed")
             return null
         }
+    }
+
+    //Get all matches that specific roommate has liked
+    override suspend fun getRoommateMatches(seekerId: String): List<Match>? {
+        Log.d("TAG","MatchApiService- getRoommateMatches called")
+        val response = client.get("$baseUrl/likes/$seekerId")
+        if(response.status.value == 200){
+            Log.d("TAG","MatchApiService- getRoommateMatches success")
+            return response.body()
+        }else{
+            Log.d("TAG","MatchApiService- getRoommateMatches failed")
+            return null
+        }
+
     }
 
 

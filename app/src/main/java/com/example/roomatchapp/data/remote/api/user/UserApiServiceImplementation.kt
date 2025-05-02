@@ -1,6 +1,8 @@
 package com.example.roomatchapp.data.remote.api.user
 
 import android.util.Log
+import com.example.roomatchapp.data.model.PropertyOwner
+import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.data.remote.dto.BioRequest
 import com.example.roomatchapp.data.remote.dto.BioResponse
 import com.example.roomatchapp.data.remote.dto.LoginRequest
@@ -11,6 +13,7 @@ import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -117,6 +120,48 @@ class UserApiServiceImplementation(
         }
     }
 
+    override suspend fun getPropertyOwner(propertyOwnerId: String): PropertyOwner? {
+        try {
+            Log.d("TAG", "ApiService-Sending GET request to $baseUrl/owners/$propertyOwnerId")
+            val response = client.get("$baseUrl/owners/$propertyOwnerId"){
+                contentType(ContentType.Application.Json)
+            }.body<PropertyOwner>()
+            Log.d("TAG", "ApiService-GET Owner Response received: $response")
+            return response
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-GET Owner API call failed: ${e.message}", e)
+            throw e
+
+        }
+    }
+
+    override suspend fun getRoommate(roommateId: String): Roommate? {
+        try {
+            Log.d("TAG", "ApiService-Sending GET request to $baseUrl/roommates/$roommateId")
+            val response = client.get("$baseUrl/roommates/$roommateId") {
+                contentType(ContentType.Application.Json)
+            }.body<Roommate>()
+            Log.d("TAG", "ApiService-GET Roommate Response received: $response")
+            return response
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-GET Roommate API call failed: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun getAllRoommates(): List<Roommate>? {
+        try {
+            Log.d("TAG", "ApiService-Sending GET request to $baseUrl/roommates")
+            val response = client.get("$baseUrl/roommates") {
+                contentType(ContentType.Application.Json)
+            }.body<List<Roommate>>()
+            Log.d("TAG", "ApiService-GET All Roommates Response received: $response")
+            return response
+        } catch (e: Exception){
+            Log.e("TAG", "ApiService-GET All Roommates API call failed: ${e.message}", e)
+            throw e
+        }
+    }
 
 
 }
