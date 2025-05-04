@@ -27,4 +27,6 @@ interface UserApiService {
 
     suspend fun getAllRoommates(): List<Roommate>?
 
+    suspend fun googleSignIn(idToken: String): UserResponse
+
 }
