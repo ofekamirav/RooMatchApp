@@ -3,6 +3,7 @@ package com.example.roomatchapp.presentation.navigation
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -84,10 +85,43 @@ fun WelcomeScreenComposable(
 
 @Destination<RootNavGraph>
 @Composable
-fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserSessionManager) {
+fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserSessionManager, registrationViewModel: RegistrationViewModel) {
     val loginViewModel = LoginViewModel(AppDependencies.userRepository,sessionManager)
     val context = LocalContext.current
     val state = loginViewModel.state.collectAsStateWithLifecycle()
+    val googleState = loginViewModel.googleSignInStatus.collectAsStateWithLifecycle()
+
+    LaunchedEffect(googleState.value) {
+        when (googleState.value) {
+            "SUCCESS_ROOMMATE" -> {
+                navigator.navigate(RoommateMainScreenComposableDestination) {
+                    popUpTo(AppNavGraphs.root) { inclusive = true }
+                    launchSingleTop = true
+                }
+                loginViewModel.resetGoogleSignInStatus()
+            }
+
+            "SUCCESS_OWNER" -> {
+                navigator.navigate(OwnerMainScreenComposableDestination) {
+                    popUpTo(AppNavGraphs.root) { inclusive = true }
+                    launchSingleTop = true
+                }
+                loginViewModel.resetGoogleSignInStatus()
+            }
+
+            "NEED_REGISTRATION" -> {
+                navigator.navigate(RegisterCompletionScreenComposableDestination)
+                loginViewModel.resetGoogleSignInStatus()
+            }
+            is String -> {
+                if (googleState.value?.startsWith("ERROR") == true) {
+                    val errorMsg = googleState.value?.removePrefix("ERROR:") ?: "Unknown error"
+                    Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                    loginViewModel.resetGoogleSignInStatus()
+                }
+            }
+        }
+    }
 
     LoginScreen(
         onLoginClick = {
@@ -137,10 +171,10 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                 }
             )
         },
-        onGoogleLoginClick = {},
         onForgotPasswordClick = {},
         onRegisterClick = { navigator.navigate(RegisterScreenComposableDestination) },
-        loginViewModel = loginViewModel
+        loginViewModel = loginViewModel,
+        registrationViewModel = registrationViewModel
     )
 }
 
@@ -150,6 +184,15 @@ fun RegisterScreenComposable(navigator: DestinationsNavigator,registrationViewMo
     RegisterScreen(
         onRegisterClick = { navigator.navigate(ChooseTypeUserScreenComposableDestination) },
         onLoginClick = { navigator.navigate(LoginScreenComposableDestination) },
+        registrationViewModel = registrationViewModel
+    )
+}
+
+@Destination<RootNavGraph>
+@Composable
+fun RegisterCompletionScreenComposable(navigator: DestinationsNavigator, registrationViewModel: RegistrationViewModel){
+    RegisterCompletionScreen(
+        onRegisterClick = { navigator.navigate(ChooseTypeUserScreenComposableDestination) },
         registrationViewModel = registrationViewModel
     )
 }
