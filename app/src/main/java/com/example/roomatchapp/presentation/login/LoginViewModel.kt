@@ -91,6 +91,7 @@ class LoginViewModel(
         idToken: String,
         registerViewModel: RegistrationViewModel,
     ) {
+        Log.d("TAG", "LoginViewModel-Google sign in with token: $idToken")
         viewModelScope.launch {
             isLoading = true
             try {
@@ -108,13 +109,14 @@ class LoginViewModel(
                     userType = response.userType
                 )
             } catch (e: IncompleteRegistrationException) {
+                Log.e("TAG", "LoginViewModel-Google sign in catch: ${e.message}", e)
 
                 registerViewModel.prefillGoogleData(
                     e.email,
                     e.fullName,
                     e.profilePicture
                 )
-                _googleSignInStatus.value = "NEED_REGISTRETION"
+                _googleSignInStatus.value = "NEED_REGISTRATION"
             } catch (e: Exception) {
                 _googleSignInStatus.value = "ERROR $e"
             } finally {
