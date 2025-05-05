@@ -181,24 +181,40 @@ class UserApiServiceImplementation(
                 setBody(requestBody)
             }
 
-            return response.body()
-            } catch (e: ClientRequestException) {
-            if (e.response.status == HttpStatusCode.Accepted) {
-                val errorBody = e.response.bodyAsText()
-                val jsonElement = Json.parseToJsonElement(errorBody).jsonObject
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    return response.body<UserResponse>()
+                }
+                HttpStatusCode.Accepted -> {
+                    val responseBodyText = response.bodyAsText()
+                    val jsonElement = Json.parseToJsonElement(responseBodyText).jsonObject
 
-                val email = jsonElement["email"]?.jsonPrimitive?.content ?: ""
-                val fullName = jsonElement["fullName"]?.jsonPrimitive?.content ?: ""
-                val profilePicture = jsonElement["profilePicture"]?.jsonPrimitive?.contentOrNull
+                    val email = jsonElement["email"]?.jsonPrimitive?.content ?: ""
+                    val fullName = jsonElement["fullName"]?.jsonPrimitive?.content ?: ""
+                    val profilePicture = jsonElement["profilePicture"]?.jsonPrimitive?.contentOrNull // Handle null correctly
 
-                throw IncompleteRegistrationException(
-                    email = email,
-                    fullName = fullName,
-                    profilePicture = profilePicture
-                )
-            } else {
-                throw e
+                    throw IncompleteRegistrationException(
+                        email = email,
+                        fullName = fullName,
+                        profilePicture = profilePicture
+                    )
+                }
+                else -> {
+                    val errorMsg = try {
+                        response.body<Map<String,String>>()["error"] ?: "Unknown error"
+                    } catch (e: Exception) {
+                        "Server returned status ${response.status}"
+                    }
+                    throw Exception("Google Sign-In failed: Status ${response.status} - $errorMsg") // זרוק חריגה כללית או ספציפית יותר
+                }
             }
+
+        } catch (e: Exception) {
+            Log.e("TAG", "UserApiServiceImplementation-Google Sign In failed", e)
+            if (e is IncompleteRegistrationException) {
+                throw e // Throw it again so ViewModel can catch it specifically
+            }
+            throw Exception("Google Sign-In failed: ${e.message}", e)
         }
     }
 }

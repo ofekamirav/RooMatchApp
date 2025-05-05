@@ -1,5 +1,8 @@
 package com.example.roomatchapp.data.remote.dto
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class IncompleteRegistrationException(
     val email: String,
     val fullName: String,

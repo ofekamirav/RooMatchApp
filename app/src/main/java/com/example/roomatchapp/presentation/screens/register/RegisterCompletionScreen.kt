@@ -163,7 +163,7 @@ fun RegisterCompletionScreen(
                             contentColor = Color.White,
                             disabledContainerColor = Primary.copy(alpha = 0.5f)
                         ),
-                        enabled = registrationViewModel.validateAllFields()
+                        enabled = registrationViewModel.validateCompleteFields()
                     ) {
                         Text("Registration",
                             fontSize = MaterialTheme.typography.titleLarge.fontSize,

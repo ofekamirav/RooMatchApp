@@ -46,11 +46,16 @@ fun AppNavGraph(
     val userType by sessionManager.userTypeFlow.collectAsStateWithLifecycle(initialValue = null)
     val isLoggedIn by sessionManager.isLoggedInFlow.collectAsStateWithLifecycle(initialValue = false)
 
-    val startRoute = when {
-        !hasSeenWelcome -> WelcomeScreenComposableDestination
-        isLoggedIn && userType == "Roommate" -> RoommateMainScreenComposableDestination
-        isLoggedIn && userType == "PropertyOwner" -> OwnerMainScreenComposableDestination
-        else -> LoginScreenComposableDestination
+    val startRoute = if (!hasSeenWelcome) {
+        WelcomeScreenComposableDestination
+    } else if (isLoggedIn) {
+        when (userType) {
+            "Roommate" -> RoommateMainScreenComposableDestination
+            "PropertyOwner" -> OwnerMainScreenComposableDestination
+            else -> LoginScreenComposableDestination
+        }
+    } else {
+        LoginScreenComposableDestination
     }
 
     DestinationsNavHost(
@@ -64,7 +69,7 @@ fun AppNavGraph(
     )
 }
 
-@Destination<RootNavGraph>(start = true)
+@Destination<RootNavGraph>
 @Composable
 fun WelcomeScreenComposable(
     navigator: DestinationsNavigator,
@@ -83,7 +88,7 @@ fun WelcomeScreenComposable(
     )
 }
 
-@Destination<RootNavGraph>
+@Destination<RootNavGraph>(start = true)
 @Composable
 fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserSessionManager, registrationViewModel: RegistrationViewModel) {
     val loginViewModel = LoginViewModel(AppDependencies.userRepository,sessionManager)
@@ -153,6 +158,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                         }
                         else -> {
                             Toast.makeText(context, "Unknown user type", Toast.LENGTH_SHORT).show()
+                            Log.e("TAG", "AppNavGraph-LoginScreenComposable-Unknown user type: ${response.userType}")
                         }
                     }
                 },
@@ -167,7 +173,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                     }
 
                     Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
-                    Log.e("LoginScreenComposable", "Login error: $error")
+                    Log.e("TAG", "AppNavGraph-LoginScreenComposable-Login error: $error")
                 }
             )
         },

@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.login
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -33,7 +34,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -45,8 +45,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.cloudinary.api.exceptions.ApiException
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.R
-import com.example.roomatchapp.data.local.session.UserSessionManager
-import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.login.LoginViewModel
@@ -72,7 +70,7 @@ fun LoginScreen(
         GoogleSignIn.getClient(
             context,
             GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("941016882704-a75hubtir8eji6pm4fjrl0ir5aavvajg.apps.googleusercontent.com")
+                .requestIdToken("366891104441-vcv1o33mkv628rggcfetj4ekipc0thmi.apps.googleusercontent.com")
                 .requestEmail()
                 .build()
         )
@@ -83,7 +81,7 @@ fun LoginScreen(
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken
             if (idToken != null) {
-                loginViewModel.googleSignIn(idToken,registrationViewModel)
+                loginViewModel.googleSignIn(idToken.toString(),registrationViewModel)
             }
         } catch (e: ApiException) {
 

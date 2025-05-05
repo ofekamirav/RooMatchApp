@@ -187,6 +187,15 @@ class RegistrationViewModel : ViewModel() {
                 isValidPassword(_baseState.value.password) &&
                 doPasswordsMatch(_baseState.value.password, _baseState.value.confirmPassword)
     }
+
+    //Check complete fields
+    fun validateCompleteFields(): Boolean {
+        return isValidFullName(_baseState.value.fullName) &&
+                isValidPhoneNumber(_baseState.value.phoneNumber) &&
+                isValidBirthDate(_baseState.value.birthDate) &&
+                isValidEmail(_baseState.value.email)
+    }
+
 //-----------------------------GoogleSignin---------------------------------------------------------------------------------
 fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) {
     _baseState.value = _baseState.value.copy(
