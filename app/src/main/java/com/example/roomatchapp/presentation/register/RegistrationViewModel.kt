@@ -187,7 +187,16 @@ class RegistrationViewModel : ViewModel() {
                 isValidPassword(_baseState.value.password) &&
                 doPasswordsMatch(_baseState.value.password, _baseState.value.confirmPassword)
     }
-
+//-----------------------------GoogleSignin---------------------------------------------------------------------------------
+fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) {
+    _baseState.value = _baseState.value.copy(
+        email = email,
+        fullName = fullName
+    )
+    if (!profilePicture.isNullOrBlank()) {
+        _roommateState.value = _roommateState.value.copy(profilePicture = profilePicture)
+    }
+}
 //-----------------------------RoommateStep1---------------------------------------------------------------------------------
     fun isRoommateStep1Valid(): Boolean {
         val state = _roommateState.value

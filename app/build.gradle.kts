@@ -83,6 +83,7 @@ dependencies {
     ksp(libs.compose.destinations.ksp)
     implementation(libs.bottom.sheet)
     //Google API
+    implementation (libs.play.services.auth)
     implementation(libs.places)
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)

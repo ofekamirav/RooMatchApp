@@ -22,4 +22,6 @@ interface UserRepository {
     suspend fun getRoommate(roommateId: String, forceRefresh: Boolean = false, maxCacheAgeMillis: Long = 1 * 60 * 60 * 1000): Roommate?
 
     suspend fun getAllRoommatesRemote(): List<Roommate>?
+
+    suspend fun googleSignIn(idToken: String): UserResponse
 }

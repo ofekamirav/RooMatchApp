@@ -25,6 +25,7 @@ materialIconsExtended = "1.7.8"
 navigationCompose = "2.8.9"
 lottieCompose= "6.3.0"
 places = "4.2.0"
+playServicesAuth = "21.3.0"
 playServicesMaps = "19.2.0"
 playServicesLocation = "21.3.0"
 retrofit = "2.9.0"
@@ -73,6 +74,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 places = { module = "com.google.android.libraries.places:places", version.ref = "places" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }

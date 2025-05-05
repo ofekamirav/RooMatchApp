@@ -1,5 +1,7 @@
 package com.example.roomatchapp.presentation.screens.login
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,8 +39,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
+import com.cloudinary.api.exceptions.ApiException
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.local.session.UserSessionManager
@@ -46,19 +50,45 @@ import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.login.LoginViewModel
+import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.cardBackground
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 @Composable
 fun LoginScreen(
     onLoginClick: () -> Unit,
-    onGoogleLoginClick: () -> Unit,
     onForgotPasswordClick: () -> Unit,
     onRegisterClick: () -> Unit,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    registrationViewModel: RegistrationViewModel
 ){
     val state by loginViewModel.state.collectAsState()
     val isLoading = loginViewModel.isLoading
+    val context = LocalContext.current
+
+    val googleSignInClient = remember {
+        GoogleSignIn.getClient(
+            context,
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("941016882704-a75hubtir8eji6pm4fjrl0ir5aavvajg.apps.googleusercontent.com")
+                .requestEmail()
+                .build()
+        )
+    }
+   val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken != null) {
+                loginViewModel.googleSignIn(idToken,registrationViewModel)
+            }
+        } catch (e: ApiException) {
+
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -93,7 +123,10 @@ fun LoginScreen(
 
                     // Google Sign in
                     Button(
-                        onClick = onGoogleLoginClick,
+                        onClick = {val signinIntent = googleSignInClient.signInIntent
+                                  launcher.launch(signinIntent)},
+
+
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5FB)),
                         modifier = Modifier.fillMaxWidth().height(55.dp)
                     ) {

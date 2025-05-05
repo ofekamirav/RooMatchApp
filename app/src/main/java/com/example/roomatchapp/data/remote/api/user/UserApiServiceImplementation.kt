@@ -5,6 +5,7 @@ import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.data.remote.dto.BioRequest
 import com.example.roomatchapp.data.remote.dto.BioResponse
+import com.example.roomatchapp.data.remote.dto.IncompleteRegistrationException
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.data.remote.dto.RefreshTokenRequest
@@ -13,11 +14,18 @@ import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 // Implementation of the ApiService interface methods
 class UserApiServiceImplementation(
@@ -163,5 +171,34 @@ class UserApiServiceImplementation(
         }
     }
 
+    override suspend fun googleSignIn(idToken: String): UserResponse {
+        try {
+            Log.d("TAG", "ApiService-GoogleSignIn Request to $baseUrl/login/oauth/google")
+            val requestBody = mapOf("idToken" to idToken)
 
+            val response = client.post("$baseUrl/login/oauth/google") {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+
+            return response.body()
+            } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.Accepted) {
+                val errorBody = e.response.bodyAsText()
+                val jsonElement = Json.parseToJsonElement(errorBody).jsonObject
+
+                val email = jsonElement["email"]?.jsonPrimitive?.content ?: ""
+                val fullName = jsonElement["fullName"]?.jsonPrimitive?.content ?: ""
+                val profilePicture = jsonElement["profilePicture"]?.jsonPrimitive?.contentOrNull
+
+                throw IncompleteRegistrationException(
+                    email = email,
+                    fullName = fullName,
+                    profilePicture = profilePicture
+                )
+            } else {
+                throw e
+            }
+        }
+    }
 }

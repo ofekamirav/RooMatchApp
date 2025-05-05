@@ -104,5 +104,9 @@ class UserRepositoryImpl(
         return apiService.getAllRoommates()
     }
 
+    override suspend fun googleSignIn(idToken: String): UserResponse {
+        return apiService.googleSignIn(idToken)
+    }
+
 
 }

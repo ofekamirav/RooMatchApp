@@ -7,9 +7,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.local.session.UserSessionManager
+import com.example.roomatchapp.data.remote.dto.IncompleteRegistrationException
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.UserResponse
+import com.example.roomatchapp.di.AppDependencies.userRepository
 import com.example.roomatchapp.domain.repository.UserRepository
+import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +32,8 @@ class LoginViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
+    val _googleSignInStatus = MutableStateFlow<String?>(null)
+    val googleSignInStatus = _googleSignInStatus.asStateFlow()
 
     var isLoading by mutableStateOf(false)
         public set
@@ -80,6 +85,46 @@ class LoginViewModel(
 
     fun clearState() {
         _state.value = LoginState()
+    }
+
+    fun googleSignIn(
+        idToken: String,
+        registerViewModel: RegistrationViewModel,
+    ) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                val response = userRepository.googleSignIn(idToken)
+                when(response.userType) {
+                    "Roommate" ->
+                        _googleSignInStatus.value = "ROOMMATE_SUCCESS"
+                    "PropertyOwner" ->
+                        _googleSignInStatus.value = "OWNER_SUCCESS"
+                }
+                    sessionManager.saveUserSession(
+                    token = response.token,
+                    refreshToken = response.refreshToken,
+                    userId = response.userId.toString(),
+                    userType = response.userType
+                )
+            } catch (e: IncompleteRegistrationException) {
+
+                registerViewModel.prefillGoogleData(
+                    e.email,
+                    e.fullName,
+                    e.profilePicture
+                )
+                _googleSignInStatus.value = "NEED_REGISTRETION"
+            } catch (e: Exception) {
+                _googleSignInStatus.value = "ERROR $e"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun resetGoogleSignInStatus(){
+        _googleSignInStatus.value = null
     }
 
     //Validation
