@@ -23,6 +23,7 @@ import com.example.roomatchapp.presentation.screens.roommate.ProfileScreen
 import com.example.roomatchapp.data.model.*
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.roommate.DiscoverViewModel
+import com.example.roomatchapp.presentation.roommate.ProfileViewModel
 
 
 @Composable
@@ -65,9 +66,15 @@ fun RoommateMainScreen(
             }
 
             composable("roommate_profile") {
-                ProfileScreen(
-                    roommate = getMockRoommate()
-                )
+                if (seekerId.isNotBlank()) {
+                    val viewModel = remember(seekerId) {
+                        ProfileViewModel(
+                            userRepository = AppDependencies.userRepository,
+                            seekerId = seekerId
+                        )
+                    }
+                    ProfileScreen(viewModel = viewModel)
+                }
             }
         }
     }

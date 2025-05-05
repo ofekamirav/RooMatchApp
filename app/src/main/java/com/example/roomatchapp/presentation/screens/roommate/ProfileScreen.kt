@@ -4,13 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,22 +18,40 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.*
+import com.example.roomatchapp.presentation.roommate.ProfileViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun ProfileScreen(roommate: Roommate) {
+fun ProfileScreen(viewModel: ProfileViewModel) {
+    val roommate by viewModel.roommate.collectAsState()
+
+    if (roommate != null) {
+        ProfileContent(roommate = roommate!!)
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Loading...", color = Color.Gray)
+        }
+    }
+}
+
+@Composable
+fun ProfileContent(roommate: Roommate) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
             .padding(16.dp)
-        ) {
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -96,26 +109,19 @@ fun ProfileScreen(roommate: Roommate) {
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
             DividerSection()
-
             Spacer(modifier = Modifier.height(24.dp))
-
             LetsConnectSection(roommate)
-
             Spacer(modifier = Modifier.height(24.dp))
-
             DividerSection()
-
             Spacer(modifier = Modifier.height(24.dp))
-
             LookingForSection(roommate)
-
+            Spacer(modifier = Modifier.height(24.dp))
 
             Spacer(modifier = Modifier.weight(1f))
 
             IconButton(
-                onClick = { /* Handle edit button click */ },
+                onClick = { /* Handle edit icon click */ },
                 modifier = Modifier
                     .size(60.dp)
                     .align(Alignment.End)
@@ -125,12 +131,10 @@ fun ProfileScreen(roommate: Roommate) {
                     painter = painterResource(id = R.drawable.ic_edit),
                     contentDescription = "Edit Icon",
                     tint = Color.Unspecified,
-                    modifier = Modifier
-                        .size(60.dp)
+                    modifier = Modifier.size(60.dp)
                 )
             }
         }
-
     }
 }
 
@@ -173,9 +177,7 @@ fun LetsConnectSection(roommate: Roommate) {
 
 @Composable
 fun ConnectItem(iconRes: Int, text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Image(
             painter = painterResource(id = iconRes),
             contentDescription = null,
@@ -286,32 +288,32 @@ fun calculateAge(birthDate: String): Int {
 
 @Preview(showBackground = true)
 @Composable
-fun ProfileScreenPreview() {
-    ProfileScreen(
-        roommate = Roommate(
-            id = "1",
-            email = "test@example.com",
-            fullName = "Ofek Amirav",
-            phoneNumber = "123456789",
-            birthDate = "1998-05-20",
-            password = "password",
-            work = "Developer",
-            gender = Gender.MALE,
-            attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
-            hobbies = emptyList(),
-            lookingForRoomies = listOf(
-                LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
-                LookingForRoomiesPreference(Attribute.QUIET, 1.0, true)
-            ),
-            lookingForCondo = emptyList(),
-            roommatesNumber = 2,
-            minPropertySize = 50,
-            maxPropertySize = 120,
-            minPrice = 2000,
-            maxPrice = 4000,
-            personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
-            profilePicture = null
-        )
+fun ProfileContentPreview() {
+    val sampleRoommate = Roommate(
+        id = "1",
+        email = "test@example.com",
+        fullName = "Bar Kobi",
+        phoneNumber = "123456789",
+        birthDate = "1998-05-20",
+        password = "password",
+        work = "Developer",
+        gender = Gender.FEMALE,
+        attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
+        hobbies = emptyList(),
+        lookingForRoomies = listOf(
+            LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
+            LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
+            LookingForRoomiesPreference(Attribute.VEGGIE, 1.0, true)
+        ),
+        lookingForCondo = emptyList(),
+        roommatesNumber = 2,
+        minPropertySize = 50,
+        maxPropertySize = 120,
+        minPrice = 2000,
+        maxPrice = 4000,
+        personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
+        profilePicture = null
     )
-}
 
+    ProfileContent(roommate = sampleRoommate)
+}
