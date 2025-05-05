@@ -30,6 +30,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import io.ktor.http.isSuccess
 
 // Implementation of the ApiService interface methods
 class UserApiServiceImplementation(
@@ -174,6 +175,43 @@ class UserApiServiceImplementation(
             throw e
         }
     }
+
+    override suspend fun sendResetToken(email: String, userType: String): Result<String> {
+        return try {
+            val response = client.post("http://10.0.2.2:8080/api/auth/request-reset-token") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("email" to email, "userType" to userType))
+            }
+            if (response.status.isSuccess()) {
+                val message = response.bodyAsText()
+                Result.success(message)
+            } else {
+                Result.failure(Exception("Failed to send reset token"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String> {
+        return try {
+            val response = client.post("http://10.0.2.2:8080/api/auth/reset-password") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("token" to token, "newPassword" to newPassword, "userType" to userType))
+            }
+            if (response.status.isSuccess()) {
+                val message = response.bodyAsText()
+                Result.success(message)
+            } else {
+                Result.failure(Exception("Failed to reset password"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+
 
     override suspend fun googleSignIn(idToken: String): UserResponse {
         try {

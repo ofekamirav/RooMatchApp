@@ -36,6 +36,16 @@ import com.ramcosta.composedestinations.annotation.NavHostGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.dependency
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.roomatchapp.presentation.screens.login.ForgotPasswordScreen
+import com.example.roomatchapp.presentation.screens.login.ResetPasswordScreen
+import androidx.compose.runtime.remember
+import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
+import com.example.roomatchapp.presentation.screens.login.ForgotPasswordViewModel
+
 
 @NavHostGraph
 annotation class RootNavGraph
@@ -74,6 +84,9 @@ fun AppNavGraph(
             LoginScreenComposableDestination
         }
     }
+
+
+
 
     startRoute?.let {
         DestinationsNavHost(
@@ -213,6 +226,7 @@ fun RegisterScreenComposable(navigator: DestinationsNavigator,registrationViewMo
     )
 }
 
+
 @Destination<RootNavGraph>
 @Composable
 fun RegisterCompletionScreenComposable(navigator: DestinationsNavigator, registrationViewModel: RegistrationViewModel){
@@ -313,5 +327,4 @@ fun OwnerMainScreenComposable(navigator:DestinationsNavigator, sessionManager: U
 fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
     RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }
-
 
