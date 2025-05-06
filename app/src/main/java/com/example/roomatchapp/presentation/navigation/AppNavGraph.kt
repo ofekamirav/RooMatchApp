@@ -40,7 +40,7 @@ fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
     sessionManager: UserSessionManager
 ) {
-    val registrationViewModel: RegistrationViewModel = viewModel()
+    val registrationViewModel = RegistrationViewModel(sessionManager)
 
     val hasSeenWelcome by sessionManager.hasSeenWelcomeFlow.collectAsStateWithLifecycle(initialValue = false)
     val userType by sessionManager.userTypeFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -205,10 +205,11 @@ fun RegisterCompletionScreenComposable(navigator: DestinationsNavigator, registr
 
 @Destination<RootNavGraph>
 @Composable
-fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel) {
+fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registrationViewModel: RegistrationViewModel,sessionManager: UserSessionManager) {
     val context = LocalContext.current
     val ownerViewModel = RegisterOwnerViewModel(AppDependencies.userRepository)
     val state = registrationViewModel.baseState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     ChooseTypeUserScreen(
         onRoommateClick = {
@@ -229,6 +230,14 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
                 onSuccess = {
                     setIsLoading(false)
                     Toast.makeText(context, "Registration owner successful!", Toast.LENGTH_SHORT).show()
+                    scope.launch {
+                        sessionManager.saveUserSession(
+                            token = it.token,
+                            refreshToken = it.refreshToken,
+                            userId = it.userId.toString(),
+                            userType = it.userType
+                        )
+                    }
                     navigator.navigate(OwnerMainScreenComposableDestination) {
                         popUpTo(AppNavGraphs.root) { inclusive = true }
                         launchSingleTop = true

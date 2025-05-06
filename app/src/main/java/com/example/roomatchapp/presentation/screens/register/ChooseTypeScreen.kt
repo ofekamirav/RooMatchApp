@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.theme.Background
@@ -139,7 +140,8 @@ fun OptionCard(
                 Text(
                     text = title,
                     color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                    fontSize = 26.sp,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))

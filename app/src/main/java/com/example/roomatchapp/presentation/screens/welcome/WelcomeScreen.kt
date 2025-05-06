@@ -76,16 +76,14 @@ fun WelcomeScreen(
 
             Text(
                 text = "Meet RooMatch – your smart way to find the right place and the right people to live with." ,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                fontFamily = FontFamily.SansSerif,
-                color = Color(0xFF01999E),
+                style = MaterialTheme.typography.titleMedium,
+                color = Primary,
                 )
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text ="No stress, just perfect matches for your next home and roommates.",
-                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                fontFamily = FontFamily.SansSerif,
+                style = MaterialTheme.typography.titleSmall,
                 color = Color.DarkGray
                 )
 
@@ -104,9 +102,7 @@ fun WelcomeScreen(
             ) {
                 Text(
                     text = "Get Started",
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontFamily = FontFamily.SansSerif
+                    style = MaterialTheme.typography.titleMedium,
                 )
             }
         }

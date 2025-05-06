@@ -196,9 +196,9 @@ fun RegisterScreen(
                         enabled = registrationViewModel.validateAllFields()
                     ) {
                         Text("Registration",
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.SansSerif)
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White
+                        )
                     }
 
                     // Have an account? Login
@@ -228,9 +228,9 @@ fun RegisterScreen(
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview(){
-    RegisterScreen(
-        onRegisterClick = {},
-        onLoginClick = {},
-        registrationViewModel = RegistrationViewModel()
-    )
+//    RegisterScreen(
+//        onRegisterClick = {},
+//        onLoginClick = {},
+//        registrationViewModel = RegistrationViewModel()
+//    )
 }

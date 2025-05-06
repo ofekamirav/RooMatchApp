@@ -14,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Attribute
 import com.example.roomatchapp.presentation.components.CapsuleTextField
@@ -53,14 +54,15 @@ fun RoommateStep3(
         ) {
             Text(
                 "Which roomies are you looking for...",
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                fontSize = 26.sp,
+                lineHeight = 32.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 "Select at least 3 attributes",
-                fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                fontWeight = FontWeight.Light,
+                style = MaterialTheme.typography.labelMedium,
                 color = Color.Gray
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -89,8 +91,8 @@ fun RoommateStep3(
                     ) {
                         Text(
                             text = attr.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
+                            color = Color.White,
                             maxLines = 1,
                             softWrap = false,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Visible
@@ -104,8 +106,7 @@ fun RoommateStep3(
             Text(
                 "Personal Bio:",
                 modifier = Modifier.align(Alignment.Start),
-                fontWeight = FontWeight.Light,
-                fontSize = MaterialTheme.typography.titleMedium.fontSize
+                style = MaterialTheme.typography.titleSmall
             )
             Spacer(modifier = Modifier.height(8.dp))
             CapsuleTextField(
@@ -129,8 +130,7 @@ fun RoommateStep3(
             ) {
                 Text(
                     text = "Get help generating your bio",
-                    fontWeight = FontWeight.Light,
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    style = MaterialTheme.typography.labelMedium,
                     color = Color.Gray
                 )
                 Spacer(modifier = Modifier.width(16.dp))
@@ -167,7 +167,7 @@ fun RoommateStep3(
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Secondary,
+                    containerColor = Primary,
                     contentColor = Color.White,
                     disabledContainerColor = Secondary.copy(alpha = 0.5f),
                     disabledContentColor = Color.White.copy(alpha = 0.5f)
@@ -175,8 +175,8 @@ fun RoommateStep3(
             ) {
                 Text(
                     "Continue",
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.ExtraBold
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
                 )
             }
         }
@@ -200,9 +200,9 @@ fun RoommateStep3(
 @Preview(showBackground = true)
 @Composable
 fun RoommateStep3Preview() {
-    RoommateStep3(
-        onContinue = {},
-        onAIButtonClick = {},
-        viewModel = RegistrationViewModel()
-    )
+//    RoommateStep3(
+//        onContinue = {},
+//        onAIButtonClick = {},
+//        viewModel = RegistrationViewModel()
+//    )
 }

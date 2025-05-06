@@ -45,6 +45,7 @@ import android.Manifest
 import android.util.Log
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.presentation.components.CountSelector
@@ -128,7 +129,12 @@ fun RoommateStep4(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.alpha(if (viewModel.isLoading) 0.5f else 1f)
         ) {
-            Text("Which condo are you looking for...", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Which condo are you looking for...",
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                fontSize = 26.sp,
+                lineHeight = 32.sp,
+                fontWeight = FontWeight.Bold)
 
             Spacer(Modifier.height(16.dp))
 
@@ -152,7 +158,7 @@ fun RoommateStep4(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                Text("Rooms number:", fontWeight = FontWeight.Light)
+                Text("Rooms number:", style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.width(8.dp))
                 CountSelector(
                     count = roomsCount,
@@ -164,7 +170,7 @@ fun RoommateStep4(
 
             Spacer(Modifier.height(16.dp))
 
-            Text("Preferred search radius: ${preferredRadius}km", fontWeight = FontWeight.Light)
+            Text("Preferred search radius: ${preferredRadius}km", style = MaterialTheme.typography.titleSmall)
 
             Slider(
                 value = preferredRadius.toFloat(),
@@ -199,8 +205,8 @@ fun RoommateStep4(
                     ) {
                         Text(
                             text = pref.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                            fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
+                            color = Color.White,
                             maxLines = 1,
                             softWrap = false,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Visible
@@ -224,7 +230,7 @@ fun RoommateStep4(
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Secondary,
+                    containerColor = Primary,
                     contentColor = Color.White,
                     disabledContainerColor = Secondary.copy(alpha = 0.5f),
                     disabledContentColor = Color.White.copy(alpha = 0.5f)
@@ -232,8 +238,8 @@ fun RoommateStep4(
             ) {
                 Text(
                     "Continue",
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.ExtraBold
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
                 )
             }
         }
@@ -243,9 +249,9 @@ fun RoommateStep4(
 @Composable
 fun RoommateStep4Preview() {
     RooMatchAppTheme {
-        RoommateStep4(
-            onSubmit = {},
-            viewModel = RegistrationViewModel()
-        )
+//        RoommateStep4(
+//            onSubmit = {},
+//            viewModel = RegistrationViewModel()
+//        )
     }
 }
