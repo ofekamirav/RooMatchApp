@@ -180,8 +180,8 @@ fun RegisterCompletionScreen(
 @Preview(showBackground = true)
 @Composable
 fun RegisterCompletionScreenPreview(){
-    RegisterCompletionScreen(
-        onRegisterClick = {},
-        registrationViewModel = RegistrationViewModel()
-    )
+//    RegisterCompletionScreen(
+//        onRegisterClick = {},
+//        registrationViewModel = RegistrationViewModel()
+//    )
 }

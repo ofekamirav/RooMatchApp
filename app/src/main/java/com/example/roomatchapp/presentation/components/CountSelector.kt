@@ -46,7 +46,7 @@ fun CountSelector(
         Text(
             text = "$count",
             modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall ,
             color = Primary
         )
 

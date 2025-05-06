@@ -26,7 +26,7 @@ fun CustomAlertDialog(
         onDismissRequest = { onDismiss() },
         shape = RoundedCornerShape(20.dp),
         containerColor = dialogBackgroundColor,
-        title = { Text(text = title, style = MaterialTheme.typography.titleLarge,color = Primary) },
+        title = { Text(text = title, style = MaterialTheme.typography.titleMedium,color = Primary) },
         text = { Text(text = message, style = MaterialTheme.typography.bodyLarge,) },
         confirmButton = {
             Row(

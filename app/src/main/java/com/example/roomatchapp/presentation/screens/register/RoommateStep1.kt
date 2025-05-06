@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Gender
@@ -112,13 +113,14 @@ fun RoommateStep1(
         ) {
             Text(
                 text = "About you..",
-                style = MaterialTheme.typography.titleLarge,
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.Start)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Gender:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light)
+            Text("Gender:", modifier = Modifier.align(Alignment.Start), style = MaterialTheme.typography.titleSmall)
             Spacer(modifier = Modifier.height(8.dp))
             genders.forEach { gender ->
                 val isSelected = gender == state.gender
@@ -137,13 +139,13 @@ fun RoommateStep1(
                         .padding(vertical = 4.dp)
                         .height(48.dp)
                 ) {
-                    Text(gender.lable, fontWeight = FontWeight.Light)
+                    Text(gender.lable, fontFamily = MaterialTheme.typography.labelMedium.fontFamily, color = Color.White)
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Work:", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.Light)
+            Text("Work:", modifier = Modifier.align(Alignment.Start), style = MaterialTheme.typography.titleSmall)
             Spacer(modifier = Modifier.height(8.dp))
             CapsuleTextField(
                 value = state.work,
@@ -155,9 +157,9 @@ fun RoommateStep1(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("Your Profile Avatar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Your Profile Avatar", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Please upload your profile picture", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
+            Text("Please upload your profile picture", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
 
             Spacer(modifier = Modifier.height(8.dp))
             Box(
@@ -219,7 +221,7 @@ fun RoommateStep1(
                 onClick = onContinue,
                 enabled = viewModel.isRoommateStep1Valid() && !viewModel.isUploadingImage,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Secondary,
+                    containerColor = Primary,
                     contentColor = Color.White,
                     disabledContainerColor = Secondary.copy(alpha = 0.5f),
                     disabledContentColor = Color.White.copy(alpha = 0.5f)
@@ -230,8 +232,8 @@ fun RoommateStep1(
             ) {
                 Text(
                     text= "Continue",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
                 )
             }
         }
@@ -241,5 +243,5 @@ fun RoommateStep1(
 @Preview(showBackground = true)
 @Composable
 fun RoommateStep1Preview() {
-    RoommateStep1(onContinue = {}, viewModel = RegistrationViewModel())
+//    RoommateStep1(onContinue = {}, viewModel = RegistrationViewModel())
 }

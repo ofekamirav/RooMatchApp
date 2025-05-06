@@ -189,9 +189,9 @@ fun LoginScreen(
                         ),
                     ) {
                         Text("Log in",
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.SansSerif)
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White
+                        )
                     }
 
                     // No account? Register

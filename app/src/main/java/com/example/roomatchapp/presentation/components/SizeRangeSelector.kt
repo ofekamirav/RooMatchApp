@@ -18,13 +18,13 @@ fun SizeRangeSelector(
 ) {
     Column {
         Text("Size Range: ${sizeRange.start.toInt()}m² - ${sizeRange.endInclusive.toInt()}m²",
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight.Light)
+            style = MaterialTheme.typography.titleSmall
+        )
         RangeSlider(
             value = sizeRange,
             onValueChange = onValueChange,
             valueRange = 10f..200f,
-            steps = 15,
+            steps = 19,
             colors = SliderDefaults.colors(
                 thumbColor = Primary,
                 activeTrackColor = Primary,

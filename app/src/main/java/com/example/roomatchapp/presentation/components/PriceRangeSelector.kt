@@ -18,13 +18,13 @@ fun PriceRangeSelector(
 ) {
     Column {
         Text("Price Range: ${priceRange.start.toInt()}₪ - ${priceRange.endInclusive.toInt()}₪",
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight.Light)
+            style = MaterialTheme.typography.titleSmall
+        )
         RangeSlider(
             value = priceRange,
             onValueChange = onValueChange,
-            valueRange = 1000f..15000f,
-            steps = 15,
+            valueRange = 1000f..12000f,
+            steps = 55,
             colors = SliderDefaults.colors(
                 thumbColor = Primary,
                 activeTrackColor = Primary,

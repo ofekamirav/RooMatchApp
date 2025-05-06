@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Attribute
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.Gender
@@ -58,7 +59,9 @@ data class RoommateRegistrationState(
     val lookingForCondo: List<LookingForCondoPreference> = emptyList()
 )
 
-class RegistrationViewModel : ViewModel() {
+class RegistrationViewModel(
+    private val userSessionManager: UserSessionManager
+) : ViewModel() {
     private val _baseState = MutableStateFlow(BaseRegistrationState())
     val baseState = _baseState.asStateFlow()
 
@@ -342,7 +345,13 @@ fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) 
 
                 Log.d("TAG", "RegistrationViewModel-SubmitRoommate Response: $response")
 
-                //save the token in local db
+                //Save in local DataStore
+                userSessionManager.saveUserSession(
+                    token = response.token,
+                    refreshToken = response.refreshToken,
+                    userId = response.userId.toString(),
+                    userType = "Roommate"
+                )
 
                 clearBaseState()
                 clearRoommateState()
