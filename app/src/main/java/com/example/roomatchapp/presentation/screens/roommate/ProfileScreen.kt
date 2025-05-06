@@ -1,15 +1,19 @@
 package com.example.roomatchapp.presentation.screens.roommate
 
+import CustomAlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,18 +22,47 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.*
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.roommate.ProfileViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import com.example.roomatchapp.presentation.theme.Primary
+import com.example.roomatchapp.presentation.theme.Third
+import com.google.common.io.Files.append
 
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel) {
+fun ProfileScreen(
+    viewModel: ProfileViewModel,
+    onLogout: () -> Unit,
+) {
     val roommate by viewModel.roommate.collectAsState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     if (roommate != null) {
-        ProfileContent(roommate = roommate!!)
+        ProfileContent(
+            roommate = roommate!!,
+            onLogoutClick = {
+                showLogoutDialog = true
+            }
+        )
+        if (showLogoutDialog) {
+            CustomAlertDialog(
+                title = "Log Out",
+                message = "Are you sure you want to log out?",
+                onDismiss = { showLogoutDialog = false },
+                onConfirm = {
+                    showLogoutDialog = false
+                    onLogout()
+                },
+                dialogBackgroundColor = Background
+            )
+        }
     } else {
         Box(
             modifier = Modifier
@@ -37,29 +70,32 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 .background(Background),
             contentAlignment = Alignment.Center
         ) {
-            Text("Loading...", color = Color.Gray)
+            LoadingAnimation(true, animationResId = R.raw.loading_animation)
         }
     }
-}
 
+}
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileContent(roommate: Roommate) {
+fun ProfileContent(
+    roommate: Roommate,
+    onLogoutClick: () -> Unit = {}) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize().background(Background)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(Background)
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.profile_title),
-                contentDescription = "Profile Title",
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(100.dp)
+            Spacer(modifier = Modifier.height(22.dp))
+            Text(
+                text = "Profile",
+                style = MaterialTheme.typography.titleLarge,
+                color = Primary,
             )
 
             val profilePainter = if (roommate.profilePicture != null) {
@@ -68,12 +104,15 @@ fun ProfileContent(roommate: Roommate) {
                 painterResource(id = R.drawable.avatar)
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             Image(
                 painter = profilePainter,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
-                    .size(110.dp)
-                    .clip(CircleShape)
+                    .size(120.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -94,38 +133,61 @@ fun ProfileContent(roommate: Roommate) {
             ) {
                 Text(
                     text = "Personal Bio",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF319795)
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Third
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = roommate.personalBio ?: "No bio provided.",
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             DividerSection()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             LetsConnectSection(roommate)
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DividerSection()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             LookingForSection(roommate)
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            DividerSection()
+            Spacer(modifier = Modifier.height(16.dp))
+            HobbiesSection(roommate)
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 56.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                )
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            FloatingActionButton(
+                onClick = { onLogoutClick() },
+                modifier = Modifier.size(60.dp),
+                containerColor = Color.Transparent,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_logout),
+                    contentDescription = "Logout Icon",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(
-                onClick = { /* Handle edit icon click */ },
-                modifier = Modifier
-                    .size(60.dp)
-                    .align(Alignment.End)
-                    .padding(bottom = 16.dp, end = 16.dp)
+            FloatingActionButton(
+                onClick = { /* Edit logic */ },
+                modifier = Modifier.size(60.dp),
+                containerColor = Color.Transparent,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_edit),
@@ -149,6 +211,7 @@ fun DividerSection() {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LetsConnectSection(roommate: Roommate) {
     Column(
@@ -158,19 +221,22 @@ fun LetsConnectSection(roommate: Roommate) {
     ) {
         Text(
             text = "Let's Connect",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF319795)
+            style = MaterialTheme.typography.titleMedium,
+            color = Third
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        roommate.attributes.forEach { attribute ->
-            ConnectItem(
-                iconRes = getIconForAttribute(attribute),
-                text = getDisplayLabelForAttribute(attribute)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+        FlowRow(
+            maxItemsInEachRow = 3,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            roommate.attributes.forEach { attribute ->
+                ConnectItem(
+                    iconRes = getIconForAttribute(attribute),
+                    text = getDisplayLabelForAttribute(attribute)
+                )
+            }
         }
     }
 }
@@ -178,15 +244,16 @@ fun LetsConnectSection(roommate: Roommate) {
 @Composable
 fun ConnectItem(iconRes: Int, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
+        Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
+            tint = Color.Black
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = text,
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
     }
@@ -201,9 +268,8 @@ fun LookingForSection(roommate: Roommate) {
     ) {
         Text(
             text = "I'm Looking For",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF319795)
+            style = MaterialTheme.typography.titleMedium,
+            color = Third
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -220,9 +286,37 @@ fun LookingForSection(roommate: Roommate) {
 
         Text(
             text = sentence,
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
+    }
+}
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun HobbiesSection(roommate: Roommate) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+    ){
+        Text(
+            text = "In My Free Time",
+            style = MaterialTheme.typography.titleMedium,
+            color = Third
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(
+            maxItemsInEachRow = 3,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            roommate.hobbies.forEach { hobby->
+                ConnectItem(
+                    iconRes = getIconForHobbie(hobby),
+                    text = getDisplayLabelForHobby(hobby)
+                )
+            }
+        }
+
     }
 }
 
@@ -255,6 +349,39 @@ fun getDisplayLabelForAttribute(attribute: Attribute): String {
     }
 }
 
+fun getDisplayLabelForHobby(hobby: Hobby): String {
+    return when (hobby) {
+        Hobby.MUSICIAN -> "Musician"
+        Hobby.SPORT -> "Sport"
+        Hobby.COOKER -> "Cooker"
+        Hobby.PARTY -> "Party"
+        Hobby.TV -> "TV"
+        Hobby.GAMER -> "Gamer"
+        Hobby.ARTIST -> "Artist"
+        Hobby.DANCER -> "Dancer"
+        Hobby.WRITER -> "Writer"
+        Hobby.YOGA -> "Yoga"
+        Hobby.READER -> "Reader"
+        Hobby.TRAVELER -> "Traveler"
+    }
+}
+
+fun getIconForHobbie(hobby: Hobby): Int {
+    return when (hobby) {
+        Hobby.MUSICIAN -> R.drawable.ic_musician
+        Hobby.SPORT -> R.drawable.ic_sport
+        Hobby.COOKER -> R.drawable.ic_cooker
+        Hobby.PARTY -> R.drawable.ic_party
+        Hobby.TV -> R.drawable.ic_tv
+        Hobby.GAMER -> R.drawable.ic_gamer
+        Hobby.ARTIST -> R.drawable.ic_artist
+        Hobby.DANCER -> R.drawable.ic_dancer
+        Hobby.WRITER -> R.drawable.ic_writer
+        Hobby.YOGA -> R.drawable.ic_yoga
+        Hobby.READER -> R.drawable.ic_reader
+        Hobby.TRAVELER -> R.drawable.ic_traveler
+    }
+}
 fun getIconForAttribute(attribute: Attribute): Int {
     return when (attribute) {
         Attribute.SMOKER -> R.drawable.smoker
@@ -277,11 +404,12 @@ fun getIconForAttribute(attribute: Attribute): Int {
 
 fun calculateAge(birthDate: String): Int {
     return try {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val birth = LocalDate.parse(birthDate, formatter)
         val today = LocalDate.now()
         ChronoUnit.YEARS.between(birth, today).toInt()
     } catch (e: Exception) {
+        println("Error parsing date: ${e.message}")
         0
     }
 }
@@ -299,7 +427,7 @@ fun ProfileContentPreview() {
         work = "Developer",
         gender = Gender.FEMALE,
         attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
-        hobbies = emptyList(),
+        hobbies = listOf(Hobby.MUSICIAN, Hobby.SPORT, Hobby.PARTY),
         lookingForRoomies = listOf(
             LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
             LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
@@ -314,6 +442,6 @@ fun ProfileContentPreview() {
         personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
         profilePicture = null
     )
+        ProfileContent(roommate = sampleRoommate)
 
-    ProfileContent(roommate = sampleRoommate)
 }
