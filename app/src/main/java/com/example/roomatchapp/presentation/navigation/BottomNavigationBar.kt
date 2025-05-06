@@ -30,7 +30,7 @@ fun BottomNavigationBar(
     currentRoute: String?
 ) {
     NavigationBar(
-        modifier = Modifier.height(56.dp),
+        modifier = Modifier.height(60.dp),
         containerColor = Background,
         tonalElevation = 2.dp
     ) {

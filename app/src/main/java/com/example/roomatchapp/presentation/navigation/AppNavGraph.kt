@@ -244,9 +244,21 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
 }
 @Destination<RootNavGraph>
 @Composable
-fun RoommateMainScreenComposable(sessionManager: UserSessionManager) {
+fun RoommateMainScreenComposable(navigator:DestinationsNavigator, sessionManager: UserSessionManager) {
     val seekerId by sessionManager.userIdFlow.collectAsStateWithLifecycle(initialValue = null)
-    RoommateMainScreen(seekerId = seekerId ?: "")
+    val scope = rememberCoroutineScope()
+    RoommateMainScreen(
+        seekerId = seekerId?:"",
+        onLogout = {
+            scope.launch {
+                sessionManager.clearUserSession()
+                navigator.navigate(LoginScreenComposableDestination) {
+                    popUpTo(AppNavGraphs.root) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    )
 }
 
 @Destination<RootNavGraph>

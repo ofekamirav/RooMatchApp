@@ -122,9 +122,8 @@ fun LoginScreen(
                     // Google Sign in
                     Button(
                         onClick = {val signinIntent = googleSignInClient.signInIntent
-                                  launcher.launch(signinIntent)},
-
-
+                                  launcher.launch(signinIntent)
+                                  },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5FB)),
                         modifier = Modifier.fillMaxWidth().height(55.dp)
                     ) {

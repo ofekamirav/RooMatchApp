@@ -28,7 +28,8 @@ import com.example.roomatchapp.presentation.roommate.ProfileViewModel
 
 @Composable
 fun RoommateMainScreen(
-    seekerId: String
+    seekerId: String,
+    onLogout: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
@@ -73,7 +74,12 @@ fun RoommateMainScreen(
                             seekerId = seekerId
                         )
                     }
-                    ProfileScreen(viewModel = viewModel)
+                    ProfileScreen(
+                        viewModel = viewModel,
+                        onLogout = {
+                            onLogout()
+                        }
+                    )
                 }
             }
         }
@@ -83,7 +89,7 @@ fun RoommateMainScreen(
 @Preview(showBackground = true)
 @Composable
 fun RoommateMainScreenPreview() {
-    RoommateMainScreen(seekerId = "preview")
+    RoommateMainScreen(seekerId = "preview", onLogout = {})
 }
 
 fun getMockRoommate(): Roommate {

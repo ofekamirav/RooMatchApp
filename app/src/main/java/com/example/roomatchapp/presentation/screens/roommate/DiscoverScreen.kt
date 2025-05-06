@@ -69,12 +69,11 @@ fun DiscoverScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo_name),
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(100.dp)
+            Spacer(modifier = Modifier.height(22.dp))
+            Text(
+                text = "roomatch",
+                style = MaterialTheme.typography.titleLarge,
+                color = Primary,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -86,7 +85,7 @@ fun DiscoverScreen(
                 state.matches.isEmpty() && state.endOfMatches -> {
                     Text(
                         text = "No more matches available!",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = Primary,
                         modifier = Modifier
                             .padding(16.dp)
