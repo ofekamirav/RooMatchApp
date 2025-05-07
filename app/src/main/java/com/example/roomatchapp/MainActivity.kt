@@ -17,6 +17,7 @@ import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.navigation.AppNavGraph
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
+import com.google.android.libraries.places.api.Places
 import javax.inject.Inject
 
 
@@ -26,6 +27,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!Places.isInitialized()) {
+            Places.initialize(applicationContext, BuildConfig.GOOGLE_PLACES_API_KEY)
+            Log.d("PlacesInitialization", "Is Places initialized: ${Places.isInitialized()}")
+        }
         enableEdgeToEdge()
         // Initialize ROOM, Cloudinary and UserSessionManager
         sessionManager = UserSessionManager(applicationContext)
@@ -48,6 +53,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
 

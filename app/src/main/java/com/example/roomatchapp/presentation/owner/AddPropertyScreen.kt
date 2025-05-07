@@ -1,7 +1,11 @@
 package com.example.roomatchapp.presentation.owner
 
-import androidx.compose.foundation.Image
+
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,42 +18,45 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButtonDefaults.colors
-import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.PropertyType
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -87,8 +94,17 @@ fun AddPropertyScreen(
                 viewModel.updateAddress(address, lat, lng)
             }
         )
+//        @Suppress("DEPRECATION")
+//        PlacesAutoComplete { place ->
+//            viewModel.updateAddress(
+//                place.address ?: "",
+//                place.latLng?.latitude ?: 0.0,
+//                place.latLng?.longitude ?: 0.0
+//            )
+//        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+
+        Spacer(modifier = Modifier.height(40.dp))
 
         Text("Choose Type:",
             style = MaterialTheme.typography.titleMedium,
@@ -96,7 +112,7 @@ fun AddPropertyScreen(
             fontWeight = FontWeight.Bold)
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PropertyType.values().forEach { type ->
+            PropertyType.entries.forEach { type ->
                 FilterChip(
                     selected = state.type == type,
                     onClick = { viewModel.updateType(type) },
@@ -111,7 +127,7 @@ fun AddPropertyScreen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Text(
             text = "Choose the features your property offers:",
@@ -155,27 +171,135 @@ fun AddPropertyScreen(
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Secondary)
         ) {
-            Text("Next")
+            Text("Continue")
         }
     }
 }
+
+//@Composable
+//fun PlacesAutoComplete(
+//    onPlaceSelected: (Place) -> Unit
+//) {
+//    val context = LocalContext.current
+//    val placesClient = remember { Places.createClient(context) }
+//
+//    var selectedAddress by remember { mutableStateOf("") }
+//    var predictions by remember { mutableStateOf(listOf<AutocompletePrediction>()) }
+//
+//
+//    Column {
+//        TextField(
+//            value = selectedAddress,
+//            onValueChange = { newValue ->
+//                selectedAddress = newValue
+//                if (selectedAddress.isNotEmpty()) {
+//                    val request = FindAutocompletePredictionsRequest.builder()
+//                        .setQuery(selectedAddress)
+//                        .build()
+//                    placesClient.findAutocompletePredictions(request)
+//                        .addOnSuccessListener { response ->
+//                            predictions = response.autocompletePredictions
+//                        }
+//                        .addOnFailureListener {
+//                            predictions = emptyList()
+//                        }
+//                } else {
+//                    predictions = emptyList()
+//                }
+//            },
+//            label = { Text("Search for a place") },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        predictions.forEach { prediction ->
+//            val fullText = prediction.getFullText(null).toString()
+//            Text(
+//                text = fullText,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable {
+//                        val placeId = prediction.placeId
+//                        @Suppress("DEPRECATION")
+//                        val placeFields = listOf(
+//                            Place.Field.ID,
+//                            Place.Field.NAME,
+//                            Place.Field.LAT_LNG,
+//                            Place.Field.ADDRESS
+//                        )
+//                        val request = FetchPlaceRequest.builder(placeId, placeFields).build()
+//                        placesClient.fetchPlace(request)
+//                            .addOnSuccessListener { response ->
+//                                onPlaceSelected(response.place)
+//                            }
+//                    }
+//                    .padding(12.dp)
+//            )
+//        }
+//    }
+//}
+
+
 
 @Composable
 fun GooglePlacesSearchBar(
     onPlaceSelected: (address: String, lat: Double, lng: Double) -> Unit
 ) {
-    // Placeholder until real Google Places Autocomplete is integrated
+    val context = LocalContext.current
+    val selectedAddressState = remember { mutableStateOf("") }
+    var selectedAddress = selectedAddressState.value
+
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val data = result.data
+        if (result.resultCode == Activity.RESULT_OK && data != null) {
+            val place = Autocomplete.getPlaceFromIntent(data)
+            val address = place.address ?: ""
+            val latLng = place.latLng
+            if (latLng != null) {
+                selectedAddress = address
+                onPlaceSelected(address, latLng.latitude, latLng.longitude)
+            }
+        }
+    }
+
+    val fields = listOf(
+        Place.Field.ID,
+        Place.Field.NAME,
+        Place.Field.ADDRESS,
+        Place.Field.LAT_LNG
+    )
+
+    val intent = remember {
+        Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
+            .build(context)
+    }
+
+    // Styled search bar
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(56.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable { launcher.launch(intent) },
+        contentAlignment = Alignment.CenterStart
     ) {
-        Text("Google Places Autocomplete Placeholder")
+        Text(
+            text = if (selectedAddress.isNotBlank()) selectedAddress else "Search for location...",
+            modifier = Modifier.padding(start = 16.dp),
+            color = if (selectedAddress.isNotBlank())
+                MaterialTheme.colorScheme.onSurface
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
+
+
 
 
 @Preview(showBackground = true)

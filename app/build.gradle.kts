@@ -23,6 +23,7 @@ android {
         buildConfigField("String", "CLOUD_NAME", "\"${project.properties["CLOUD_NAME"]?: ""}\"")
         buildConfigField("String", "API_KEY", "\"${project.properties["API_KEY"]?: ""}\"")
         buildConfigField("String", "API_SECRET", "\"${project.properties["API_SECRET"]?: ""}\"")
+        buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"${project.properties["GOOGLE_PLACES_API_KEY"]?: ""}\"")
     }
 
     buildTypes {
@@ -106,6 +107,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //Google Places API
+    implementation("com.google.android.libraries.places:places:4.2.0")
+
 }
 
 ksp {
