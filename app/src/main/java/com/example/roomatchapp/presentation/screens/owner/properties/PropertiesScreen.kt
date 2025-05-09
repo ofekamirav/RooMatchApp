@@ -1,4 +1,4 @@
-package com.example.roomatchapp.presentation.owner
+package com.example.roomatchapp.presentation.screens.owner.properties
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,10 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Property
+import com.example.roomatchapp.presentation.owner.PropertiesViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
@@ -53,7 +54,8 @@ import com.example.roomatchapp.presentation.theme.cardBackground
 @Composable
 fun PropertiesScreen(
     onAddProperty: () -> Unit,
-    viewModel: PropertiesViewModel = viewModel()
+    onPropertyClick: (String) -> Unit, // PropertID
+    viewModel: PropertiesViewModel
 ) {
     val properties by viewModel.properties.collectAsState()
     val navigateToAdd by viewModel.navigateToAddProperty.collectAsState()
@@ -103,20 +105,17 @@ fun PropertiesScreen(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Primary,
-                    contentColor = Color.White
-                ),
-                onClick = { viewModel.onAddPropertyClick() }
+            FloatingActionButton(
+                onClick = {onAddProperty() },
+                containerColor = Color.Unspecified,
+                contentColor = Color.Unspecified,
+                shape = RoundedCornerShape(50),
+                elevation = FloatingActionButtonDefaults.elevation(0.dp)
             ) {
-                Text(
-                    text = "Add Property",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_add),
+                    contentDescription = "Add Property",
+                    modifier = Modifier.size(60.dp)
                 )
             }
         }
@@ -160,14 +159,14 @@ fun PropertyRow(property: Property) {
                 Column {
                     Text(
                         text = property.title ?: "Property Title",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = property.address ?: "Property Address",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
+                        fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                        color = Color.Gray,
+                        fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
                     )
                 }
             }
@@ -215,6 +214,6 @@ fun PropertyRow(property: Property) {
 @Composable
 fun PropertiesScreenPreview(){
     RooMatchAppTheme {
-        PropertiesScreen(onAddProperty = {})
+//        PropertiesScreen(onAddProperty = {})
     }
 }

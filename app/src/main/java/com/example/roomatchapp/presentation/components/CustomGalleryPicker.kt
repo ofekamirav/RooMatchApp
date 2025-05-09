@@ -1,4 +1,4 @@
-package com.example.roomatchapp.presentation.owner
+package com.example.roomatchapp.presentation.components
 
 import android.content.ContentUris
 import android.content.Context

@@ -1,6 +1,7 @@
 package com.example.roomatchapp
 
 import android.os.Bundle
+import android.util.Log
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,7 +30,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         if (!Places.isInitialized()) {
             Places.initialize(applicationContext, BuildConfig.GOOGLE_PLACES_API_KEY)
-            Log.d("PlacesInitialization", "Is Places initialized: ${Places.isInitialized()}")
+            Log.d("TAG", "Is Places initialized: ${Places.isInitialized()}")
         }
         enableEdgeToEdge()
         // Initialize ROOM, Cloudinary and UserSessionManager

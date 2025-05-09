@@ -15,7 +15,6 @@ import com.example.roomatchapp.data.model.PropertyType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.ByteArrayOutputStream
 
 data class AddPropertyFormState(
     val available: Boolean = true,
@@ -40,21 +39,30 @@ class AddPropertyViewModel : ViewModel() {
     private val _state = MutableStateFlow(AddPropertyFormState())
     val state: StateFlow<AddPropertyFormState> = _state.asStateFlow()
 
-    private val _selectedUris = MutableStateFlow<List<android.net.Uri>>(emptyList())
-    val selectedUris: StateFlow<List<android.net.Uri>> = _selectedUris.asStateFlow()
+    private val _selectedUris = MutableStateFlow<List<Uri>>(emptyList())
+    val selectedUris: StateFlow<List<Uri>> = _selectedUris.asStateFlow()
 
     var isUploadingImage by mutableStateOf(false)
         public set
 
-    fun addPhotoUri(uri: android.net.Uri) {
+    var isLoading by mutableStateOf(false)
+        public set
+
+    fun addPhotoUri(uri: Uri) {
         if (!_selectedUris.value.contains(uri) && _selectedUris.value.size < 6) {
             _selectedUris.value = _selectedUris.value + uri
         }
     }
 
-    fun removePhotoUri(uri: android.net.Uri) {
+    fun removePhotoUri(uri: Uri) {
         _selectedUris.value = _selectedUris.value - uri
+        _state.value = _state.value.copy(photos = _state.value.photos - uri.toString())
     }
+
+    fun updateRoomType(type: PropertyType) {
+        _state.value = _state.value.copy(type = type)
+    }
+
 
     fun clearPhotoUris() {
         _selectedUris.value = emptyList()
@@ -63,10 +71,6 @@ class AddPropertyViewModel : ViewModel() {
 
     fun updateTitle(title: String) {
         _state.value = _state.value.copy(title = title)
-    }
-
-    fun updateType(type: PropertyType) {
-        _state.value = _state.value.copy(type = type)
     }
 
     fun updateAddress(address: String, lat: Double?, lng: Double?) {
@@ -82,9 +86,6 @@ class AddPropertyViewModel : ViewModel() {
         _state.value = _state.value.copy(roomsNumber = num)
     }
 
-    fun updateBathrooms(count: Int) {
-        _state.value = _state.value.copy(bathrooms = count)
-    }
     fun updateFloor(floor: Int) {
         _state.value = _state.value.copy(floor = floor)
     }
@@ -121,28 +122,6 @@ class AddPropertyViewModel : ViewModel() {
             )
         }
         _state.value = _state.value.copy(lookingForCondo = current)
-    }
-
-    fun getImageUriFromBitmap(context: Context, bitmap: Bitmap): Uri? {
-        val filename = "IMG_${System.currentTimeMillis()}.jpg"
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, filename)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            put(MediaStore.Images.Media.IS_PENDING, 1)
-        }
-
-        val resolver = context.contentResolver
-        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        uri?.let {
-            resolver.openOutputStream(it)?.use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
-            }
-            values.clear()
-            values.put(MediaStore.Images.Media.IS_PENDING, 0)
-            resolver.update(uri, values, null, null)
-        }
-
-        return uri
     }
 
 

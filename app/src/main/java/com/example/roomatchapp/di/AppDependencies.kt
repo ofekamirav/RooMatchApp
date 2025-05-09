@@ -28,7 +28,7 @@ import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "10.0.0.26" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "10.0.2.2" //if your are using emulator change ip to 10.0.2.2
 
     internal const val BASE_URL = "http://$computerIP:8080"
 
@@ -65,8 +65,7 @@ object AppDependencies {
             userApiService,
             localDB.roommateDao(),
             localDB.propertyOwnerDao(),
-            localDB.cacheDao(),
-            localDB.ownerAnalyticsDao()
+            localDB.cacheDao()
         )
     }
 

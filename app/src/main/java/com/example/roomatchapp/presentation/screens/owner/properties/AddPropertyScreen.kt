@@ -1,4 +1,4 @@
-package com.example.roomatchapp.presentation.owner
+package com.example.roomatchapp.presentation.screens.owner.properties
 
 
 import android.app.Activity
@@ -28,14 +28,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
@@ -47,21 +45,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.PropertyType
+import com.example.roomatchapp.presentation.components.AutocompleteTextField
+import com.example.roomatchapp.presentation.owner.AddPropertyViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.FetchPlaceRequest
-import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddPropertyScreen(
-    viewModel: AddPropertyViewModel = viewModel(),
+    viewModel: AddPropertyViewModel,
     onNext: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
@@ -76,8 +72,9 @@ fun AddPropertyScreen(
     ) {
         Text(
             text = "Property Details",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.ExtraBold
+            fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -94,16 +91,6 @@ fun AddPropertyScreen(
                 viewModel.updateAddress(address, lat, lng)
             }
         )
-//        @Suppress("DEPRECATION")
-//        PlacesAutoComplete { place ->
-//            viewModel.updateAddress(
-//                place.address ?: "",
-//                place.latLng?.latitude ?: 0.0,
-//                place.latLng?.longitude ?: 0.0
-//            )
-//        }
-
-
         Spacer(modifier = Modifier.height(40.dp))
 
         Text("Choose Type:",
@@ -111,11 +98,12 @@ fun AddPropertyScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold)
 
+        // Type selection chips
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PropertyType.entries.forEach { type ->
                 FilterChip(
                     selected = state.type == type,
-                    onClick = { viewModel.updateType(type) },
+                    onClick = { viewModel.updateRoomType(type) },
                     label = { Text(type.name) },
                     modifier = Modifier
                         .padding(4.dp)
@@ -127,6 +115,24 @@ fun AddPropertyScreen(
                 )
             }
         }
+
+        if (state.type == PropertyType.ROOM) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Select Room Subtype:",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AutocompleteTextField(
+                suggestionsList = listOf("Single Room", "Double Room", "Shared", "Studio"),
+                placeHolder = "e.g., Studio")
+        }
+
         Spacer(modifier = Modifier.height(40.dp))
 
         Text(
@@ -167,79 +173,27 @@ fun AddPropertyScreen(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Secondary)
+            onClick = { onNext()
+            },
+//            enabled = isStepValid && !viewModel.isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Primary,
+                contentColor = Color.White,
+                disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                disabledContentColor = Color.White.copy(alpha = 0.5f)
+            ),
         ) {
-            Text("Continue")
+            Text(
+                "Continue",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
         }
     }
 }
-
-//@Composable
-//fun PlacesAutoComplete(
-//    onPlaceSelected: (Place) -> Unit
-//) {
-//    val context = LocalContext.current
-//    val placesClient = remember { Places.createClient(context) }
-//
-//    var selectedAddress by remember { mutableStateOf("") }
-//    var predictions by remember { mutableStateOf(listOf<AutocompletePrediction>()) }
-//
-//
-//    Column {
-//        TextField(
-//            value = selectedAddress,
-//            onValueChange = { newValue ->
-//                selectedAddress = newValue
-//                if (selectedAddress.isNotEmpty()) {
-//                    val request = FindAutocompletePredictionsRequest.builder()
-//                        .setQuery(selectedAddress)
-//                        .build()
-//                    placesClient.findAutocompletePredictions(request)
-//                        .addOnSuccessListener { response ->
-//                            predictions = response.autocompletePredictions
-//                        }
-//                        .addOnFailureListener {
-//                            predictions = emptyList()
-//                        }
-//                } else {
-//                    predictions = emptyList()
-//                }
-//            },
-//            label = { Text("Search for a place") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        predictions.forEach { prediction ->
-//            val fullText = prediction.getFullText(null).toString()
-//            Text(
-//                text = fullText,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .clickable {
-//                        val placeId = prediction.placeId
-//                        @Suppress("DEPRECATION")
-//                        val placeFields = listOf(
-//                            Place.Field.ID,
-//                            Place.Field.NAME,
-//                            Place.Field.LAT_LNG,
-//                            Place.Field.ADDRESS
-//                        )
-//                        val request = FetchPlaceRequest.builder(placeId, placeFields).build()
-//                        placesClient.fetchPlace(request)
-//                            .addOnSuccessListener { response ->
-//                                onPlaceSelected(response.place)
-//                            }
-//                    }
-//                    .padding(12.dp)
-//            )
-//        }
-//    }
-//}
-
 
 
 @Composable
@@ -300,14 +254,12 @@ fun GooglePlacesSearchBar(
 }
 
 
-
-
 @Preview(showBackground = true)
 @Composable
 fun AddPropertyScreenPreview() {
-    AddPropertyScreen(
-        onNext = {}
-    )
+//    AddPropertyScreen(
+//        onNext = {}
+//    )
 }
 
 
