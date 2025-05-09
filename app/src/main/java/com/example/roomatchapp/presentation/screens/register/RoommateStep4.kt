@@ -237,7 +237,7 @@ fun RoommateStep4(
                 ),
             ) {
                 Text(
-                    "Continue",
+                    "Submit",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White
                 )

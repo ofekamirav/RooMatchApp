@@ -3,8 +3,10 @@ package com.example.roomatchapp.data.repository
 import android.util.Log
 import androidx.collection.emptyLongSet
 import com.example.roomatchapp.data.local.dao.CacheDao
+import com.example.roomatchapp.data.local.dao.OwnerAnalyticsDao
 import com.example.roomatchapp.data.local.dao.PropertyOwnerDao
 import com.example.roomatchapp.data.local.dao.RoommateDao
+import com.example.roomatchapp.data.model.AnalyticsResponse
 import com.example.roomatchapp.data.model.CacheEntity
 import com.example.roomatchapp.data.model.CacheType
 import com.example.roomatchapp.data.model.PropertyOwner
@@ -21,7 +23,8 @@ class UserRepositoryImpl(
     private val apiService: UserApiService,
     private val roommateDao: RoommateDao,
     private val propertyOwnerDao: PropertyOwnerDao,
-    private val cacheDao: CacheDao
+    private val cacheDao: CacheDao,
+    private val ownerAnalyticsDao: OwnerAnalyticsDao
 ): UserRepository {
     override suspend fun registerOwner(request: PropertyOwnerUser): UserResponse {
         return apiService.registerOwner(request)
@@ -108,5 +111,34 @@ class UserRepositoryImpl(
         return apiService.googleSignIn(idToken)
     }
 
+    override suspend fun getOwnerAnalytics(
+        ownerId: String,
+        forceRefresh: Boolean,
+        maxCacheAgeMillis: Long,
+    ): AnalyticsResponse? {
+        val cacheEntry = cacheDao.getByIdAndType(ownerId, CacheType.OWNER_ANALYTICS)
+        val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
+        Log.d("TAG", "UserRepositoryImp- getOwnerAnalytics -isCacheValid: $isCacheValid")
 
+        if (isCacheValid && !forceRefresh){
+            return ownerAnalyticsDao.getOwnerAnalytics(ownerId)
+        }
+        else{
+            val analytics = apiService.getOwnerAnalytics(ownerId)
+            if(analytics != null){
+                ownerAnalyticsDao.insert(analytics)
+                cacheDao.insert(
+                    CacheEntity(
+                        type = CacheType.OWNER_ANALYTICS,
+                        entityId = ownerId,
+                        lastUpdatedAt = System.currentTimeMillis()
+                    )
+                )
+            }else{
+                Log.d("TAG", "UserRepositoryImp- getOwnerAnalytics - analytics is null")
+                return null
+            }
+            return analytics
+        }
+    }
 }
