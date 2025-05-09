@@ -62,7 +62,7 @@ fun AddPropertyScreen2(
                 val uri = viewModel.getImageUriFromBitmap(context, bitmap)
 
                 uri?.let { safeUri ->
-                    viewModel.addPhotoUri(safeUri) // ✅ This updates the grid
+                    viewModel.addPhotoUri(safeUri)
                     viewModel.isUploadingImage = true
 
                     CloudinaryModel().uploadImage(
@@ -193,9 +193,9 @@ fun AddPropertyScreen2(
                             IconButton(
                                 onClick = { viewModel.removePhotoUri(uri) },
                                 modifier = Modifier
-                                    .padding(12.dp)
-                                    .size(24.dp)
-                                    .background(Secondary.copy(alpha = 0.8f), shape = CircleShape)
+                                    .padding(16.dp)
+                                    .size(20.dp)
+                                    .background(Primary.copy(alpha = 0.8f), shape = CircleShape)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
