@@ -68,6 +68,10 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.accompanist.navigation.material)
     implementation(libs.androidx.runtime.saveable)
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.core)
+    implementation(libs.charts)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)
