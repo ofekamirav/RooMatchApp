@@ -87,4 +87,18 @@ object RooMatchConverters {
     fun toCondoPreferenceList(value: String): List<CondoPreference> {
         return json.decodeFromString(value)
     }
+
+    // ---- List<PropertyMatchAnalytics> ----
+    @TypeConverter
+    fun fromPropertyMatchAnalyticsList(value: List<PropertyMatchAnalytics>?): String {
+        return json.encodeToString(value ?: emptyList())
+    }
+
+    @TypeConverter
+    fun toPropertyMatchAnalyticsList(value: String): List<PropertyMatchAnalytics> {
+        return json.decodeFromString(value)
+    }
+
+
+
 }

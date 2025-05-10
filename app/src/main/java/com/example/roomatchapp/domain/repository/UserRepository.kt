@@ -1,5 +1,6 @@
 package com.example.roomatchapp.domain.repository
 
+import com.example.roomatchapp.data.model.AnalyticsResponse
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.data.remote.dto.BioResponse
@@ -24,4 +25,6 @@ interface UserRepository {
     suspend fun getAllRoommatesRemote(): List<Roommate>?
 
     suspend fun googleSignIn(idToken: String): UserResponse
+
+    suspend fun getOwnerAnalytics(ownerId: String, forceRefresh: Boolean = false, maxCacheAgeMillis: Long = 5 * 60 * 1000): AnalyticsResponse?
 }

@@ -16,10 +16,10 @@ object BottomNavItems {
             unselectedIcon = R.drawable.ic_owner_properties_selected
         ),
         BottomNavItem(
-            route = "owner_matches",
-            label = "Matches",
-            selectedIcon = R.drawable.ic_matches_selected,
-            unselectedIcon = R.drawable.ic_matches
+            route = "owner_analytics",
+            label = "Analytics",
+            selectedIcon = R.drawable.ic_analytices_selected,
+            unselectedIcon = R.drawable.ic_analytics
         ),
         BottomNavItem(
             route = "owner_profile",

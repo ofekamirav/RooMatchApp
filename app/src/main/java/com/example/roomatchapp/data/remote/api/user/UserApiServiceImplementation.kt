@@ -1,6 +1,7 @@
 package com.example.roomatchapp.data.remote.api.user
 
 import android.util.Log
+import com.example.roomatchapp.data.model.AnalyticsResponse
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.data.remote.dto.BioRequest
@@ -18,10 +19,12 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -215,6 +218,50 @@ class UserApiServiceImplementation(
                 throw e // Throw it again so ViewModel can catch it specifically
             }
             throw Exception("Google Sign-In failed: ${e.message}", e)
+        }
+    }
+
+    override suspend fun getOwnerAnalytics(ownerId: String): AnalyticsResponse? {
+        Log.d("TAG", "ApiService-Sending GET request to $baseUrl/owners/analytics/$ownerId")
+        try {
+            val response: HttpResponse = client.get("$baseUrl/owners/analytics/$ownerId")
+            Log.d("TAG", "ApiService-GET Owner Analytics Response status: ${response.status}")
+
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    try {
+                        val analyticsData = response.body<AnalyticsResponse>()
+                        Log.d("TAG", "ApiService-GET Owner Analytics successfully parsed for 200 OK.")
+                        return analyticsData
+                    } catch (e: SerializationException) {
+                        Log.e("TAG", "ApiService-GET Owner Analytics (200 OK) - Failed to parse response body: ${e.message}", e)
+                        throw Exception("Failed to parse successful response (200 OK) from server: ${e.message}", e)
+                    }
+                }
+                HttpStatusCode.NoContent -> {
+                    val messageBody = response.bodyAsText()
+                    Log.i("TAG", "ApiService-GET Owner Analytics: No content (204). Server message: \"$messageBody\". No data found for owner $ownerId.")
+                    return null
+                }
+                HttpStatusCode.BadRequest -> {
+                    val errorPayload = response.bodyAsText()
+                    Log.e("TAG", "ApiService-GET Owner Analytics API call failed (400 Bad Request): $errorPayload")
+                    throw Exception("Bad request to server (400): $errorPayload")
+                }
+                HttpStatusCode.InternalServerError -> {
+                    val errorPayload = response.bodyAsText()
+                    Log.e("TAG", "ApiService-GET Owner Analytics API call failed (500 Internal Server Error): $errorPayload")
+                    throw Exception("Internal server error (500): $errorPayload")
+                }
+                else -> {
+                    val errorPayload = response.bodyAsText()
+                    Log.e("TAG", "ApiService-GET Owner Analytics API call failed (Status: ${response.status}): $errorPayload")
+                    throw Exception("Unhandled server response (Status: ${response.status}): $errorPayload")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-GET Owner Analytics API call failed (Outer Catch): ${e.message}", e)
+            throw e
         }
     }
 }

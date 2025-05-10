@@ -15,6 +15,7 @@ enum class CacheType {
     ROOMMATE,
     PROPERTY,
     PROPERTY_OWNER,
-    MATCH
+    MATCH,
+    OWNER_ANALYTICS
 }
 

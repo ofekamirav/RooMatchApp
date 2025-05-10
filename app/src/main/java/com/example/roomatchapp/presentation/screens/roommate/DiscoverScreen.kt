@@ -311,7 +311,7 @@ fun MatchCard(
 @Composable
 fun PreviewDiscoverScreen() {
     RooMatchAppTheme {
-        val viewModel: DiscoverViewModel= viewModel()
+        val viewModel = viewModel<DiscoverViewModel>()
         DiscoverScreen(viewModel = viewModel)
     }
 }

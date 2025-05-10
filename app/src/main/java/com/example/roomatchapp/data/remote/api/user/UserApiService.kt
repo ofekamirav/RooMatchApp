@@ -1,5 +1,6 @@
 package com.example.roomatchapp.data.remote.api.user
 
+import com.example.roomatchapp.data.model.AnalyticsResponse
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.data.remote.dto.BioResponse
@@ -28,5 +29,7 @@ interface UserApiService {
     suspend fun getAllRoommates(): List<Roommate>?
 
     suspend fun googleSignIn(idToken: String): UserResponse
+
+    suspend fun getOwnerAnalytics(ownerId: String): AnalyticsResponse?
 
 }
