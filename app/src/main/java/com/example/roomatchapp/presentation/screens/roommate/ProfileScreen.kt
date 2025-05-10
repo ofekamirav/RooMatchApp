@@ -431,7 +431,7 @@ fun ProfileContentPreview() {
         lookingForRoomies = listOf(
             LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
             LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
-            LookingForRoomiesPreference(Attribute.VEGGIE, 1.0, true)
+            LookingForRoomiesPreference(Attribute.HAS_PET, 1.0, true)
         ),
         lookingForCondo = emptyList(),
         roommatesNumber = 2,
