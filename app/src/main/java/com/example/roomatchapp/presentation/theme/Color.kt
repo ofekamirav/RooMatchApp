@@ -7,6 +7,7 @@ val Primary = Color(0xFF01999E)
 val Secondary = Color(0xFF94D1CA)
 val Third = Color(0xFF319795)
 val Background = Color(0xFFEEEEE1)
+val CustomTeal = Color(0xFF49A9AA)
 val CardBackground = Color(0xFFFAF9F6)
 
 

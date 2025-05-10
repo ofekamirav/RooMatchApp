@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,8 +40,8 @@ fun DatePickerField(
     OutlinedTextField(
         value = selectedDate,
         onValueChange = {},
-        label = { Text("Birthdate") },
-        enabled = false, //Disables the text field
+        label = { Text("Birthdate", color = androidx.compose.ui.graphics.Color.Black) },
+        enabled = false, // Disables the text field
         trailingIcon = {
             Icon(
                 imageVector = Icons.Default.DateRange,
@@ -51,6 +52,11 @@ fun DatePickerField(
             )
         },
         singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            disabledTextColor = androidx.compose.ui.graphics.Color.Black,
+            disabledLabelColor = androidx.compose.ui.graphics.Color.Black,
+            disabledBorderColor = androidx.compose.ui.graphics.Color.Gray // אופציונלי
+        ),
         modifier = modifier
             .fillMaxWidth()
             .clickable { datePickerDialog.show() }
