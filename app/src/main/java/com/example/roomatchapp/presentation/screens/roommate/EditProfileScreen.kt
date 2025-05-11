@@ -5,6 +5,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.di.CloudinaryModel
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 import kotlinx.coroutines.launch
@@ -54,10 +56,10 @@ fun EditProfileScreen(roommate: Roommate) {
     var email by remember { mutableStateOf(roommate.email) }
     var phone by remember { mutableStateOf(roommate.phoneNumber) }
     var password by remember { mutableStateOf(roommate.password) }
+    var isLoadingBio by remember { mutableStateOf(false) }
     var birthDate by remember { mutableStateOf(roommate.birthDate) }
     var work by remember { mutableStateOf(roommate.work) }
     var bio by remember { mutableStateOf(roommate.personalBio ?: "") }
-    var showImagePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -65,7 +67,7 @@ fun EditProfileScreen(roommate: Roommate) {
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     var profilePictureUrl by remember { mutableStateOf(roommate.profilePicture) }
 
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
             imageUri.value = it
             val source = ImageDecoder.createSource(context.contentResolver, it)
@@ -83,30 +85,6 @@ fun EditProfileScreen(roommate: Roommate) {
                 }
             }
         }
-    }
-
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
-        bmp?.let {
-            bitmap.value = it
-            coroutineScope.launch {
-                CloudinaryModel().uploadImage(
-                    bitmap = it,
-                    name = "roommate_${System.currentTimeMillis()}",
-                    folder = "roomatchapp/roommates",
-                    onSuccess = { url -> profilePictureUrl = url.toString() },
-                    onError = { Log.e("TAG", "Upload Error: $it") },
-                    context = context
-                )
-            }
-        }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) cameraLauncher.launch(null)
-    }
-
-    val galleryPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) galleryLauncher.launch("image/*")
     }
 
     val profilePainter = if (profilePictureUrl != null) {
@@ -148,7 +126,9 @@ fun EditProfileScreen(roommate: Roommate) {
                 )
                 IconButton(
                     onClick = {
-                        showImagePicker = true
+                        mediaPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
                     },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -190,9 +170,6 @@ fun EditProfileScreen(roommate: Roommate) {
                 isExpanded = expandedSection == "Personal",
                 onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" }
             ) {
-                Text("Personal Bio", style = MaterialTheme.typography.titleMedium, color = Third)
-                EditableTextField("Bio", bio) { bio = it }
-
                 Text("Attributes", style = MaterialTheme.typography.titleMedium, color = Third)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -207,7 +184,9 @@ fun EditProfileScreen(roommate: Roommate) {
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) Primary else Secondary,
                                 contentColor = Color.White,
-                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
+                                    alpha = 0.6f
+                                )
                             ),
                             shape = RoundedCornerShape(50),
                             modifier = Modifier
@@ -226,8 +205,8 @@ fun EditProfileScreen(roommate: Roommate) {
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
 
+                Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -241,7 +220,9 @@ fun EditProfileScreen(roommate: Roommate) {
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) Primary else Secondary,
                                 contentColor = Color.White,
-                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
+                                    alpha = 0.6f
+                                )
                             ),
                             shape = RoundedCornerShape(50),
                             modifier = Modifier
@@ -258,9 +239,69 @@ fun EditProfileScreen(roommate: Roommate) {
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("Personal Bio", style = MaterialTheme.typography.titleMedium, color = Third)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CapsuleTextField(
+                    value = bio,
+                    onValueChange = { if (!isLoadingBio) bio = it },
+                    placeholder = "Personal Bio",
+                    modifier = Modifier
+                        .height(170.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(20),
+                    enabled = !isLoadingBio
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "Get help generating your bio",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Button(
+                        onClick = {
+                            isLoadingBio = true
+                            coroutineScope.launch {
+                                try {
+                                    // Replace with your real API call
+                                    val suggested = "Generated bio by Gemini AI..."
+                                    bio = suggested
+                                } catch (e: Exception) {
+                                    Log.e("AI", "Error: ${e.message}")
+                                } finally {
+                                    isLoadingBio = false
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Secondary,
+                            disabledContainerColor = Secondary.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.size(65.dp),
+                        enabled = !isLoadingBio
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_gemini),
+                            contentDescription = "AI Icon",
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(100.dp)) // Leave space for FAB
+                Spacer(modifier = Modifier.height(100.dp)) // Leave space for FAB
         }
 
         ExtendedFloatingActionButton(
@@ -276,21 +317,23 @@ fun EditProfileScreen(roommate: Roommate) {
                 .padding(24.dp)
         )
 
-        if (showImagePicker) {
-            showImagePickerDialog(
-                onDismiss = { showImagePicker = false },
-                onCameraClick = {
-                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                },
-                onGalleryClick = {
-                    galleryPermissionLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                }
-            )
+        if (isLoadingBio) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                contentAlignment = Alignment.Center
+            ) {
+                LoadingAnimation(
+                    isLoading = true,
+                    animationResId = R.raw.gemini_animation
+                )
+            }
         }
     }
 }
 
-@Composable
+        @Composable
 fun EditableTextField(
     label: String,
     value: String,
@@ -429,35 +472,6 @@ fun ExpandableSection(
         Divider()
     }
 }
-
-@Composable
-fun showImagePickerDialog(
-    onDismiss: () -> Unit,
-    onCameraClick: () -> Unit,
-    onGalleryClick: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Choose Image Source") },
-        confirmButton = {
-            TextButton(onClick = {
-                onCameraClick()
-                onDismiss()
-            }) {
-                Text("Camera")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = {
-                onGalleryClick()
-                onDismiss()
-            }) {
-                Text("Gallery")
-            }
-        }
-    )
-}
-
 
 @Preview(showBackground = true)
 @Composable
