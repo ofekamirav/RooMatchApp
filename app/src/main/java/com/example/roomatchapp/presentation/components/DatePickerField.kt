@@ -40,7 +40,7 @@ fun DatePickerField(
     OutlinedTextField(
         value = selectedDate,
         onValueChange = {},
-        label = { Text("Birthdate", color = androidx.compose.ui.graphics.Color.Black) },
+        label = { Text("Birthdate", color = Color.Black) },
         enabled = false, // Disables the text field
         trailingIcon = {
             Icon(
