@@ -115,162 +115,167 @@ fun EditProfileScreen(roommate: Roommate) {
         painterResource(id = R.drawable.avatar)
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .background(Background)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Edit Profile",
-            style = MaterialTheme.typography.titleLarge,
-            color = CustomTeal,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Image(
-                painter = profilePainter,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            IconButton(
-                onClick = {
-                    showImagePicker = true
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .background(CustomTeal, CircleShape)
-                    .size(28.dp)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Photo", tint = Color.White)
-            }
-
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        ExpandableSection(
-            title = "Account Details",
-            isExpanded = expandedSection == "Account",
-            onToggle = { expandedSection = if (expandedSection == "Account") null else "Account" }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Full Name", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Full Name", fullName) { fullName = it }
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Email", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Email", email) { email = it }
-
-            Text("Phone Number", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Phone Number", phone) { phone = it }
-
-            Text("Work", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Work", work) { work = it }
-
-            Text("Password", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Password", password, isPassword = true) { password = it }
-
-            Text("Birthdate", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableDateField(selectedDate = birthDate) { birthDate = it }
-        }
-
-        ExpandableSection(
-            title = "Personal Details",
-            isExpanded = expandedSection == "Personal",
-            onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" }
-        ) {
             Text(
-                text = "Personal Bio",style = MaterialTheme.typography.titleMedium, color = Third
+                text = "Edit Profile",
+                style = MaterialTheme.typography.titleLarge,
+                color = CustomTeal,
             )
-
-            EditableTextField("Bio", bio) { bio = it }
-            Text("Attributes", style = MaterialTheme.typography.titleMedium, color = Third)
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Attribute.entries.forEach { attr ->
-                    val isSelected = roommate.attributes.contains(attr)
-
-                    Button(
-                        onClick = { /* ADD EDIT HERE */ },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Primary else Secondary,
-                            contentColor = Color.White,
-                            disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .height(42.dp)
-                            .width(112.dp),
-                        enabled = false // TODO: edit
-                    ) {
-                        Text(
-                            text = getDisplayLabelForAttribute(attr),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Image(
+                    painter = profilePainter,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                IconButton(
+                    onClick = {
+                        showImagePicker = true
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .background(CustomTeal, CircleShape)
+                        .size(28.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Photo", tint = Color.White)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ExpandableSection(
+                title = "Account Details",
+                isExpanded = expandedSection == "Account",
+                onToggle = { expandedSection = if (expandedSection == "Account") null else "Account" }
             ) {
-                Hobby.entries.forEach { hobby ->
-                    val isSelected = roommate.hobbies.contains(hobby)
+                Text("Full Name", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Full Name", fullName) { fullName = it }
 
-                    Button(
-                        onClick = { /* add edit */ },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Primary else Secondary,
-                            contentColor = Color.White,
-                            disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .height(42.dp)
-                            .width(112.dp),
-                        enabled = false // TODO: edit
-                    ) {
-                        Text(
-                            text = getDisplayLabelForHobby(hobby),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            maxLines = 1
-                        )
+                Text("Email", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Email", email) { email = it }
+
+                Text("Phone Number", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Phone Number", phone) { phone = it }
+
+                Text("Work", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Work", work) { work = it }
+
+                Text("Password", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Password", password, isPassword = true) { password = it }
+
+                Text("Birthdate", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableDateField(selectedDate = birthDate) { birthDate = it }
+            }
+
+            ExpandableSection(
+                title = "Personal Details",
+                isExpanded = expandedSection == "Personal",
+                onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" }
+            ) {
+                Text("Personal Bio", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Bio", bio) { bio = it }
+
+                Text("Attributes", style = MaterialTheme.typography.titleMedium, color = Third)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Attribute.entries.forEach { attr ->
+                        val isSelected = roommate.attributes.contains(attr)
+
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White,
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp),
+                            enabled = false
+                        ) {
+                            Text(
+                                text = getDisplayLabelForAttribute(attr),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Hobby.entries.forEach { hobby ->
+                        val isSelected = roommate.hobbies.contains(hobby)
+
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White,
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp),
+                            enabled = false
+                        ) {
+                            Text(
+                                text = getDisplayLabelForHobby(hobby),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
 
+            Spacer(modifier = Modifier.height(100.dp)) // Leave space for FAB
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
+        ExtendedFloatingActionButton(
+            text = { Text("Save Changes") },
+            icon = { Icon(Icons.Default.Check, contentDescription = "Save Changes") },
             onClick = {
-                // Save logic
+                // TODO: Save logic here
             },
-            colors = ButtonDefaults.buttonColors(containerColor = CustomTeal)
-        ) {
-            Text("Save Changes")
-        }
+            containerColor = CustomTeal,
+            contentColor = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(24.dp)
+        )
+
         if (showImagePicker) {
             showImagePickerDialog(
                 onDismiss = { showImagePicker = false },
