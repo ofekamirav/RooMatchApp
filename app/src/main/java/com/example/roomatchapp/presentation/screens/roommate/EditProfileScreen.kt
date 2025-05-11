@@ -5,6 +5,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.di.CloudinaryModel
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 import kotlinx.coroutines.launch
@@ -54,10 +56,10 @@ fun EditProfileScreen(roommate: Roommate) {
     var email by remember { mutableStateOf(roommate.email) }
     var phone by remember { mutableStateOf(roommate.phoneNumber) }
     var password by remember { mutableStateOf(roommate.password) }
+    var isLoadingBio by remember { mutableStateOf(false) }
     var birthDate by remember { mutableStateOf(roommate.birthDate) }
     var work by remember { mutableStateOf(roommate.work) }
     var bio by remember { mutableStateOf(roommate.personalBio ?: "") }
-    var showImagePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -65,7 +67,7 @@ fun EditProfileScreen(roommate: Roommate) {
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     var profilePictureUrl by remember { mutableStateOf(roommate.profilePicture) }
 
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
             imageUri.value = it
             val source = ImageDecoder.createSource(context.contentResolver, it)
@@ -85,207 +87,253 @@ fun EditProfileScreen(roommate: Roommate) {
         }
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
-        bmp?.let {
-            bitmap.value = it
-            coroutineScope.launch {
-                CloudinaryModel().uploadImage(
-                    bitmap = it,
-                    name = "roommate_${System.currentTimeMillis()}",
-                    folder = "roomatchapp/roommates",
-                    onSuccess = { url -> profilePictureUrl = url.toString() },
-                    onError = { Log.e("TAG", "Upload Error: $it") },
-                    context = context
-                )
-            }
-        }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) cameraLauncher.launch(null)
-    }
-
-    val galleryPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) galleryLauncher.launch("image/*")
-    }
-
     val profilePainter = if (profilePictureUrl != null) {
         rememberAsyncImagePainter(profilePictureUrl)
     } else {
         painterResource(id = R.drawable.avatar)
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .background(Background)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Edit Profile",
-            style = MaterialTheme.typography.titleLarge,
-            color = CustomTeal,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Image(
-                painter = profilePainter,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            IconButton(
-                onClick = {
-                    showImagePicker = true
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .background(CustomTeal, CircleShape)
-                    .size(28.dp)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Photo", tint = Color.White)
-            }
-
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        ExpandableSection(
-            title = "Account Details",
-            isExpanded = expandedSection == "Account",
-            onToggle = { expandedSection = if (expandedSection == "Account") null else "Account" }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Full Name", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Full Name", fullName) { fullName = it }
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Email", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Email", email) { email = it }
-
-            Text("Phone Number", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Phone Number", phone) { phone = it }
-
-            Text("Work", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Work", work) { work = it }
-
-            Text("Password", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableTextField("Password", password, isPassword = true) { password = it }
-
-            Text("Birthdate", style = MaterialTheme.typography.titleMedium, color = Third)
-            EditableDateField(selectedDate = birthDate) { birthDate = it }
-        }
-
-        ExpandableSection(
-            title = "Personal Details",
-            isExpanded = expandedSection == "Personal",
-            onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" }
-        ) {
             Text(
-                text = "Personal Bio",style = MaterialTheme.typography.titleMedium, color = Third
+                text = "Edit Profile",
+                style = MaterialTheme.typography.titleLarge,
+                color = CustomTeal,
             )
-
-            EditableTextField("Bio", bio) { bio = it }
-            Text("Attributes", style = MaterialTheme.typography.titleMedium, color = Third)
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Attribute.entries.forEach { attr ->
-                    val isSelected = roommate.attributes.contains(attr)
-
-                    Button(
-                        onClick = { /* ADD EDIT HERE */ },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Primary else Secondary,
-                            contentColor = Color.White,
-                            disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .height(42.dp)
-                            .width(112.dp),
-                        enabled = false // TODO: edit
-                    ) {
-                        Text(
-                            text = getDisplayLabelForAttribute(attr),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Image(
+                    painter = profilePainter,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                IconButton(
+                    onClick = {
+                        mediaPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .background(CustomTeal, CircleShape)
+                        .size(28.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Photo", tint = Color.White)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ExpandableSection(
+                title = "Account Details",
+                isExpanded = expandedSection == "Account",
+                onToggle = { expandedSection = if (expandedSection == "Account") null else "Account" }
             ) {
-                Hobby.entries.forEach { hobby ->
-                    val isSelected = roommate.hobbies.contains(hobby)
+                Text("Full Name", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Full Name", fullName) { fullName = it }
 
+                Text("Email", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Email", email) { email = it }
+
+                Text("Phone Number", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Phone Number", phone) { phone = it }
+
+                Text("Work", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Work", work) { work = it }
+
+                Text("Password", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableTextField("Password", password, isPassword = true) { password = it }
+
+                Text("Birthdate", style = MaterialTheme.typography.titleMedium, color = Third)
+                EditableDateField(selectedDate = birthDate) { birthDate = it }
+            }
+
+            ExpandableSection(
+                title = "Personal Details",
+                isExpanded = expandedSection == "Personal",
+                onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" }
+            ) {
+                Text("Attributes", style = MaterialTheme.typography.titleMedium, color = Third)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Attribute.entries.forEach { attr ->
+                        val isSelected = roommate.attributes.contains(attr)
+
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White,
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
+                                    alpha = 0.6f
+                                )
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp),
+                            enabled = false
+                        ) {
+                            Text(
+                                text = getDisplayLabelForAttribute(attr),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Hobby.entries.forEach { hobby ->
+                        val isSelected = roommate.hobbies.contains(hobby)
+
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White,
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
+                                    alpha = 0.6f
+                                )
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp),
+                            enabled = false
+                        ) {
+                            Text(
+                                text = getDisplayLabelForHobby(hobby),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("Personal Bio", style = MaterialTheme.typography.titleMedium, color = Third)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CapsuleTextField(
+                    value = bio,
+                    onValueChange = { if (!isLoadingBio) bio = it },
+                    placeholder = "Personal Bio",
+                    modifier = Modifier
+                        .height(170.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(20),
+                    enabled = !isLoadingBio
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "Get help generating your bio",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
                     Button(
-                        onClick = { /* add edit */ },
+                        onClick = {
+                            isLoadingBio = true
+                            coroutineScope.launch {
+                                try {
+                                    // Replace with your real API call
+                                    val suggested = "Generated bio by Gemini AI..."
+                                    bio = suggested
+                                } catch (e: Exception) {
+                                    Log.e("AI", "Error: ${e.message}")
+                                } finally {
+                                    isLoadingBio = false
+                                }
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Primary else Secondary,
-                            contentColor = Color.White,
-                            disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
+                            containerColor = Secondary,
+                            disabledContainerColor = Secondary.copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .height(42.dp)
-                            .width(112.dp),
-                        enabled = false // TODO: edit
+                        modifier = Modifier.size(65.dp),
+                        enabled = !isLoadingBio
                     ) {
-                        Text(
-                            text = getDisplayLabelForHobby(hobby),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            maxLines = 1
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_gemini),
+                            contentDescription = "AI Icon",
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
                 }
             }
 
+                Spacer(modifier = Modifier.height(100.dp)) // Leave space for FAB
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
+        ExtendedFloatingActionButton(
+            text = { Text("Save Changes") },
+            icon = { Icon(Icons.Default.Check, contentDescription = "Save Changes") },
             onClick = {
-                // Save logic
+                // TODO: Save logic here
             },
-            colors = ButtonDefaults.buttonColors(containerColor = CustomTeal)
-        ) {
-            Text("Save Changes")
-        }
-        if (showImagePicker) {
-            showImagePickerDialog(
-                onDismiss = { showImagePicker = false },
-                onCameraClick = {
-                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                },
-                onGalleryClick = {
-                    galleryPermissionLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                }
-            )
+            containerColor = CustomTeal,
+            contentColor = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(24.dp)
+        )
+
+        if (isLoadingBio) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                contentAlignment = Alignment.Center
+            ) {
+                LoadingAnimation(
+                    isLoading = true,
+                    animationResId = R.raw.gemini_animation
+                )
+            }
         }
     }
 }
 
-@Composable
+        @Composable
 fun EditableTextField(
     label: String,
     value: String,
@@ -424,35 +472,6 @@ fun ExpandableSection(
         Divider()
     }
 }
-
-@Composable
-fun showImagePickerDialog(
-    onDismiss: () -> Unit,
-    onCameraClick: () -> Unit,
-    onGalleryClick: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Choose Image Source") },
-        confirmButton = {
-            TextButton(onClick = {
-                onCameraClick()
-                onDismiss()
-            }) {
-                Text("Camera")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = {
-                onGalleryClick()
-                onDismiss()
-            }) {
-                Text("Gallery")
-            }
-        }
-    )
-}
-
 
 @Preview(showBackground = true)
 @Composable

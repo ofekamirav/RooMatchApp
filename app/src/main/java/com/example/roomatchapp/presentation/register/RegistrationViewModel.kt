@@ -260,7 +260,7 @@ fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) 
                     hobbies = state.hobbies.map { it.name },
                     work = state.work
                 )
-                Log.d("TAG", "RegistrationViewModel-AI Suggest Response: ${response.generatedBio}")
+                Log.d("TAG", "RegistrationViewModels-AI Suggest Response: ${response.generatedBio}")
                 updatePersonalBio(response.generatedBio)
             } catch (e: Exception) {
                 Log.e("TAG", "RegistrationViewModel-AI Suggest Error: ${e.message}")
