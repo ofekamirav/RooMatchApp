@@ -18,6 +18,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -261,6 +262,42 @@ class UserApiServiceImplementation(
             }
         } catch (e: Exception) {
             Log.e("TAG", "ApiService-GET Owner Analytics API call failed (Outer Catch): ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateRoommate(
+        seekerId: String,
+        roommate: Roommate,
+    ): Boolean {
+        Log.d("TAG", "ApiService-Sending PUT request to $baseUrl/roommates/$seekerId")
+        try {
+            val response = client.put("$baseUrl/roommates/$seekerId") {
+                contentType(ContentType.Application.Json)
+                setBody(roommate)
+            }
+            Log.d("TAG", "ApiService-PUT Roommate Response status: ${response.status}")
+            return response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-PUT Roommate API call failed: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateOwner(
+        ownerId: String,
+        propertyOwner: PropertyOwner,
+    ): Boolean {
+        Log.d("TAG", "ApiService-Sending PUT request to $baseUrl/owners/$ownerId")
+        try {
+            val response = client.put("$baseUrl/owners/$ownerId") {
+                contentType(ContentType.Application.Json)
+                setBody(propertyOwner)
+            }
+            Log.d("TAG", "ApiService-PUT Owner Response status: ${response.status}")
+            return response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-PUT Owner API call failed: ${e.message}", e)
             throw e
         }
     }

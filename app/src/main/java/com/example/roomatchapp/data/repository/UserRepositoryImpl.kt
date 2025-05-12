@@ -141,4 +141,45 @@ class UserRepositoryImpl(
             return analytics
         }
     }
+
+    override suspend fun updateRoommate(
+        seekerId: String,
+        roommate: Roommate,
+    ): Boolean {
+        Log.d("TAG", "UserRepositoryImp- updateRoommate - seekerId: $seekerId")
+        val cacheEntry = cacheDao.getByIdAndType(seekerId, CacheType.ROOMMATE)
+        if (cacheEntry != null){
+            cacheDao.delete(cacheEntry.entityId)
+        }
+        roommateDao.insert(roommate)
+        cacheDao.insert(
+            CacheEntity(
+                type = CacheType.ROOMMATE,
+                entityId = seekerId,
+                lastUpdatedAt = System.currentTimeMillis()
+            )
+        )
+        return apiService.updateRoommate(seekerId, roommate)
+    }
+
+    override suspend fun updateOwner(
+        ownerId: String,
+        propertyOwner: PropertyOwner,
+    ): Boolean {
+        Log.d("TAG", "UserRepositoryImp- updateOwner - ownerId: $ownerId")
+        val cacheEntry = cacheDao.getByIdAndType(ownerId, CacheType.PROPERTY_OWNER)
+        if (cacheEntry != null){
+            cacheDao.delete(cacheEntry.entityId)
+        }
+        propertyOwnerDao.insert(propertyOwner)
+        cacheDao.insert(
+            CacheEntity(
+                type = CacheType.PROPERTY_OWNER,
+                entityId = ownerId,
+                lastUpdatedAt = System.currentTimeMillis()
+            )
+        )
+        return apiService.updateOwner(ownerId, propertyOwner)
+
+    }
 }
