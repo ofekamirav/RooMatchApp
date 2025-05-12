@@ -9,14 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.CountSelector
-import com.example.roomatchapp.presentation.owner.AddPropertyViewModel
+import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 import com.example.roomatchapp.presentation.theme.Secondary
 
@@ -53,7 +52,9 @@ fun AddPropertyScreen1(
         Spacer(modifier = Modifier.height(8.dp))
         CapsuleTextField(
             value = state.title,
-            onValueChange = viewModel::updateTitle,
+            onValueChange = { newText ->
+                viewModel.updateTitle(newText)
+            },
             placeholder = "Enter a title"
         )
 
@@ -89,9 +90,14 @@ fun AddPropertyScreen1(
 
         Spacer(modifier = Modifier.height(8.dp))
         CapsuleTextField(
-            value = state.title,
-            onValueChange = viewModel::updateTitle,
-            placeholder = "Enter a title"
+            value = state.pricePerMonth?.toString()?: "",
+            onValueChange = { newText->
+                val parsed = newText.toIntOrNull()
+                if (parsed != null) {
+                    viewModel.updatePrice(parsed)
+                }
+            },
+            placeholder = "Enter a price"
         )
 
         Spacer(modifier = Modifier.height(24.dp))

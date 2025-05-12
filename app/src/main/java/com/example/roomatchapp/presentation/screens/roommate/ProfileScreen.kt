@@ -162,7 +162,6 @@ fun ProfileContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 56.dp,
                     start = 16.dp,
                     end = 16.dp
                 )

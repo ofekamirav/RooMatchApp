@@ -3,7 +3,6 @@ package com.example.roomatchapp.presentation.screens.owner.properties
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,7 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Property
-import com.example.roomatchapp.presentation.owner.PropertiesViewModel
+import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
@@ -54,18 +53,10 @@ import com.example.roomatchapp.presentation.theme.cardBackground
 @Composable
 fun PropertiesScreen(
     onAddProperty: () -> Unit,
-    onPropertyClick: (String) -> Unit, // PropertID
+    onPropertyClick: (String) -> Unit, // PropertyID
     viewModel: PropertiesViewModel
 ) {
     val properties by viewModel.properties.collectAsState()
-    val navigateToAdd by viewModel.navigateToAddProperty.collectAsState()
-
-    LaunchedEffect(navigateToAdd) {
-        if (navigateToAdd) {
-            onAddProperty()
-            viewModel.resetNavigationFlag()
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -77,17 +68,16 @@ fun PropertiesScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.properties_title),
-                contentDescription = "Properties Title",
-                modifier = Modifier
-                    .size(180.dp)
-                    .align(Alignment.CenterHorizontally)
+            Spacer(modifier = Modifier.height(22.dp))
+            Text(
+                text = "Properties",
+                style = MaterialTheme.typography.titleLarge,
+                color = Primary,
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             LazyColumn(
                 modifier = Modifier

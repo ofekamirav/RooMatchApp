@@ -1,4 +1,4 @@
-package com.example.roomatchapp.presentation.owner
+package com.example.roomatchapp.presentation.owner.property
 
 import android.content.ContentUris
 import android.content.Context
@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.roomatchapp.presentation.owner.loadGalleryImages
 import com.example.roomatchapp.presentation.theme.Background
 
 @Composable

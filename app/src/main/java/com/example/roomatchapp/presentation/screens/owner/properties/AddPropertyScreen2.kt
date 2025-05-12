@@ -34,7 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.R
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.components.CustomGalleryPicker
-import com.example.roomatchapp.presentation.owner.AddPropertyViewModel
+import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
@@ -222,7 +222,7 @@ private fun SubmitButton(onClick: () -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-fun AddPropertyScreen2Preview() {
+fun AddPropertyScreen2Previews() {
     RooMatchAppTheme {
         AddPropertyScreen2(
             viewModel = viewModel(),

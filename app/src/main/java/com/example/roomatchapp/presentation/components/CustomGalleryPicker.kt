@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.presentation.theme.Background
+import com.example.roomatchapp.presentation.theme.Primary
 
 @Composable
 fun CustomGalleryPicker(
@@ -103,10 +104,18 @@ fun CustomGalleryPicker(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(onClick = onCancel) {
+            Button(
+                onClick = onCancel,
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                modifier = Modifier.height(50.dp).width(120.dp)
+                ) {
                 Text("Cancel")
             }
-            Button(onClick = { onConfirm(selectedUris) }) {
+            Button(
+                onClick = { onConfirm(selectedUris) },
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                modifier = Modifier.height(50.dp).width(120.dp),
+                ) {
                 Text("Done (${selectedUris.size}/$maxSelection)")
             }
         }

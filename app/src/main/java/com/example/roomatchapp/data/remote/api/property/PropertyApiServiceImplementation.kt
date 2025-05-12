@@ -3,6 +3,7 @@ package com.example.roomatchapp.data.remote.api.property
 import android.util.Log
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Property
+import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,13 +16,9 @@ class PropertyApiServiceImplementation(
     private val sessionManager: UserSessionManager
 ): PropertyApiService {
 
-    private suspend fun getValidToken(): String {
-        return refreshTokenIfNeeded(sessionManager) ?: throw Exception("No valid token available")
-    }
-
     override suspend fun getProperty(propertyId: String): Property? {
         Log.d("TAG","PropertyApiService- getProperty called")
-        val token = getValidToken()
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.get("$baseUrl/properties/$propertyId"){
             headers {
                 append("Authorization", "Bearer $token")
@@ -38,7 +35,7 @@ class PropertyApiServiceImplementation(
 
     override suspend fun getOwnerProperties(ownerId: String): List<Property>? {
         Log.d("TAG","PropertyApiService- getOwnerProperties called")
-        val token = getValidToken()
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.get("$baseUrl/properties/$ownerId"){
             headers {
                 append("Authorization", "Bearer $token")

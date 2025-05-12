@@ -80,6 +80,7 @@ dependencies {
     implementation (libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.auth0)
     //retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
@@ -109,7 +110,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     //Google Places API
-    implementation("com.google.android.libraries.places:places:4.2.0")
+    implementation(libs.places)
 
 }
 
