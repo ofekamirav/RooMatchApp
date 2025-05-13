@@ -32,6 +32,9 @@ interface UserApiService {
 
     suspend fun getOwnerAnalytics(ownerId: String): AnalyticsResponse?
 
-    suspend fun updateRoommate(roommateId: String, updatedRoommate: RoommateUser): UserResponse
+    suspend fun updateRoommate(seekerId: String, roommate: Roommate): Boolean
+
+    suspend fun updateOwner(ownerId: String, propertyOwner: PropertyOwner): Boolean
+
 
 }

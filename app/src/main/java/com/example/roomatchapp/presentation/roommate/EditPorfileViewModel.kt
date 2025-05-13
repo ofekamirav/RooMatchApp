@@ -4,11 +4,23 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.model.*
-import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
+data class EditProfileUiState(
+    val fullName: String = "",
+    val email: String = "",
+    val phoneNumber: String = "",
+    val password: String = "",
+    val birthDate: String = "",
+    val work: String = "",
+    val profilePicture: String? = null,
+    val personalBio: String = "",
+    val attributes: List<Attribute> = emptyList(),
+    val hobbies: List<Hobby> = emptyList()
+)
 
 class EditProfileViewModel(
     private val userRepository: UserRepository,
@@ -17,6 +29,9 @@ class EditProfileViewModel(
 
     private val _roommate = MutableStateFlow<Roommate?>(null)
     val roommate: StateFlow<Roommate?> = _roommate
+
+    private val _uiState = MutableStateFlow(EditProfileUiState())
+    val uiState: StateFlow<EditProfileUiState> = _uiState
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
@@ -31,9 +46,24 @@ class EditProfileViewModel(
                 Log.d("EditProfileViewModel", "Loading roommate for Id: $seekerId")
                 val result = userRepository.getRoommate(seekerId)
                 _roommate.value = result
+
+                result?.let {
+                    _uiState.value = EditProfileUiState(
+                        fullName = it.fullName,
+                        email = it.email,
+                        phoneNumber = it.phoneNumber,
+                        password = it.password,
+                        birthDate = it.birthDate,
+                        work = it.work,
+                        profilePicture = it.profilePicture,
+                        personalBio = it.personalBio ?: "",
+                        attributes = it.attributes,
+                        hobbies = it.hobbies
+                    )
+                }
+
             } catch (e: Exception) {
                 Log.e("EditProfileViewModel", "Error loading roommate", e)
-                _roommate.value = null
             }
         }
     }
@@ -51,55 +81,34 @@ class EditProfileViewModel(
         hobbies: List<Hobby>
     ) {
         val current = _roommate.value ?: return
-
         _isSaving.value = true
 
         viewModelScope.launch {
             try {
-                val dto = Roommate(
-                    id = seekerId,
-                    email = email,
-                    fullName = fullName,
-                    phoneNumber = phoneNumber,
-                    birthDate = birthDate,
-                    password = password,
-                    work = work.toString(),
-                    gender = current.gender,
-                    attributes = attributes.map { it },
-                    hobbies = hobbies.map { it },
-                    personalBio = personalBio,
-                    profilePicture = profilePicture,
-                    lookingForRoomies = current.lookingForRoomies,
-                    lookingForCondo = current.lookingForCondo,
-                    roommatesNumber = current.roommatesNumber,
-                    minPropertySize = current.minPropertySize,
-                    maxPropertySize = current.maxPropertySize,
-                    minPrice = current.minPrice,
-                    maxPrice = current.maxPrice,
-                    preferredRadiusKm = current.preferredRadiusKm,
-                    latitude = current.latitude,
-                    longitude = current.longitude
+                val updatedRoommate = current.copy(
+                    fullName = if (fullName.isNotBlank()) fullName else current.fullName,
+                    email = if (email.isNotBlank()) email else current.email,
+                    phoneNumber = if (phoneNumber.isNotBlank()) phoneNumber else current.phoneNumber,
+                    password = if (password.isNotBlank()) password else current.password,
+                    birthDate = if (birthDate.isNotBlank()) birthDate else current.birthDate,
+                    work = if (!work.isNullOrBlank()) work else current.work,
+                    profilePicture = profilePicture ?: current.profilePicture,
+                    personalBio = if (personalBio.isNotBlank()) personalBio else current.personalBio,
+                    attributes = if (attributes.isNotEmpty()) attributes else current.attributes,
+                    hobbies = if (hobbies.isNotEmpty()) hobbies else current.hobbies
                 )
 
-                userRepository.updateRoommate(seekerId, dto)
+                val success = userRepository.updateRoommate(seekerId, updatedRoommate)
 
-                _roommate.value = current.copy(
-                    fullName = fullName,
-                    email = email,
-                    phoneNumber = phoneNumber,
-                    password = password,
-                    birthDate = birthDate,
-                    work = work.toString(),
-                    profilePicture = profilePicture,
-                    personalBio = personalBio,
-                    attributes = attributes,
-                    hobbies = hobbies
-                )
+                if (success) {
+                    _roommate.value = updatedRoommate
+                    Log.d("EditProfileViewModel", "Profile updated successfully.")
+                } else {
+                    Log.e("EditProfileViewModel", "Failed to update profile: API returned false")
+                }
 
-
-                Log.d("EditProfileViewModel", "Profile updated successfully.")
             } catch (e: Exception) {
-                Log.e("EditProfileViewModel", "Failed to update profile", e)
+                Log.e("EditProfileViewModel", "Error updating profile", e)
             } finally {
                 _isSaving.value = false
             }

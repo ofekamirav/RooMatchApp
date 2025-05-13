@@ -17,8 +17,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
-import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -266,24 +266,39 @@ class UserApiServiceImplementation(
         }
     }
 
-    override suspend fun updateRoommate(roommateId: String, updatedRoommate: RoommateUser): Boolean {
+    override suspend fun updateRoommate(
+        seekerId: String,
+        roommate: Roommate,
+    ): Boolean {
+        Log.d("TAG", "ApiService-Sending PUT request to $baseUrl/roommates/$seekerId")
         try {
-            Log.d("TAG", "ApiService-Sending PATCH to $baseUrl/roommates/$roommateId with body: $updatedRoommate")
-
-            val response = client.patch("$baseUrl/roommates/$roommateId") {
+            val response = client.put("$baseUrl/roommates/$seekerId") {
                 contentType(ContentType.Application.Json)
-                setBody(updatedRoommate)
-            }.body<UserResponse>()
-
-            Log.d("TAG", "ApiService-Response received: $response")
-            if (response.status == "success") {
-                return true
-            }else
-                return false
+                setBody(roommate)
+            }
+            Log.d("TAG", "ApiService-PUT Roommate Response status: ${response.status}")
+            return response.status == HttpStatusCode.OK
         } catch (e: Exception) {
-            Log.e("TAG", "ApiService-API call failed: ${e.message}", e)
+            Log.e("TAG", "ApiService-PUT Roommate API call failed: ${e.message}", e)
             throw e
         }
     }
 
+    override suspend fun updateOwner(
+        ownerId: String,
+        propertyOwner: PropertyOwner,
+    ): Boolean {
+        Log.d("TAG", "ApiService-Sending PUT request to $baseUrl/owners/$ownerId")
+        try {
+            val response = client.put("$baseUrl/owners/$ownerId") {
+                contentType(ContentType.Application.Json)
+                setBody(propertyOwner)
+            }
+            Log.d("TAG", "ApiService-PUT Owner Response status: ${response.status}")
+            return response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-PUT Owner API call failed: ${e.message}", e)
+            throw e
+        }
+    }
 }
