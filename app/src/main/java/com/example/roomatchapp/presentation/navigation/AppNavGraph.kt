@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import com.ramcosta.composedestinations.generated.app.AppNavGraphs
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.login.LoginViewModel
