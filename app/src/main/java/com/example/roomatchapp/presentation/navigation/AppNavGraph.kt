@@ -29,8 +29,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.login.LoginViewModel
-import com.example.roomatchapp.presentation.roommate.RoommatePreviewViewModel
-import com.example.roomatchapp.presentation.screens.roommate.RoommatePreviewScreen
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.app.destinations.*
 import com.ramcosta.composedestinations.DestinationsNavHost
