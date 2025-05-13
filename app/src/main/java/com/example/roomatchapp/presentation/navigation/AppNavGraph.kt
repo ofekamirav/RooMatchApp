@@ -321,21 +321,4 @@ fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationVi
     RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }
 
-@Destination<RootNavGraph>
-@Composable
-fun RoommatePreviewScreenComposable(
-    navigator: DestinationsNavigator,
-    roommateId: String
-) {
-    val viewModel = remember {
-        RoommatePreviewViewModel(AppDependencies.userRepository, roommateId)
-    }
-
-    RoommatePreviewScreen(
-        viewModel = viewModel,
-        onBackClick = {
-            navigator.popBackStack() // Return to DiscoverScreen
-        }
-    )
-}
 
