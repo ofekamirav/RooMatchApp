@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.owner.properties
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -28,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.roomatchapp.R
@@ -41,12 +43,13 @@ import com.example.roomatchapp.presentation.theme.Primary
 @Composable
 fun AddPropertyFlow(
     navigator: NavController,
-    viewModel: AddPropertyViewModel
+    viewModel: AddPropertyViewModel,
+    onEndFlow: () -> Unit
 )
-
 {
     var stepIndex by rememberSaveable { mutableStateOf(0) }
-    val isLoading = viewModel.isLoading
+    var isLoading = viewModel.isLoading
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier.fillMaxSize().background(Background).padding(8.dp)
@@ -85,7 +88,16 @@ fun AddPropertyFlow(
                     )
                     2 -> AddPropertyScreen2 (
                         viewModel = viewModel,
-                        onNext = { stepIndex++ },
+                        onClick = {
+                            viewModel.submitProperty()
+                            isLoading = true
+                            if (viewModel.navigateToProperties.value) {
+                                onEndFlow()
+                                Toast.makeText(context, "Property added successfully", Toast.LENGTH_SHORT).show()
+                            } else if (viewModel.errorMessage.value != null) {
+                                Toast.makeText(context, viewModel.errorMessage.value, Toast.LENGTH_SHORT).show()
+                            }
+                        },
                     )
                 }
             }

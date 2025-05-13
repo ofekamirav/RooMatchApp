@@ -11,6 +11,7 @@ import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.LookingForCondoPreference
 import com.example.roomatchapp.data.model.PropertyType
 import com.example.roomatchapp.data.model.Roommate
+import com.example.roomatchapp.data.remote.dto.PropertyDto
 import com.example.roomatchapp.domain.repository.PropertyRepository
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,10 +90,13 @@ class AddPropertyViewModel(
         _state.value = _state.value.copy(type = type)
     }
 
+    fun updateBathrooms(num: Int) {
+        _state.value = _state.value.copy(bathrooms = num)
+    }
+
 
     fun clearPhotoUris() {
         _selectedUris.value = emptyList()
-        _state.value = _state.value.copy(photos = emptyList())
     }
 
     fun updateTitle(title: String) {
@@ -149,7 +153,7 @@ class AddPropertyViewModel(
     }
 
     fun addRoommate(roommate: Roommate){
-//        _state.value.CurrentRoommatesIds + roommate.id
+        _state.value.CurrentRoommatesIds + roommate.id
         _state.update { currentState->
             val updatedSelectedRoommate = (currentState.selectedRoommates + roommate).distinctBy { it.id }
             currentState.copy(
@@ -160,7 +164,7 @@ class AddPropertyViewModel(
     }
 
     fun removeRoommate(roommateId: String){
-//        _state.value.CurrentRoommatesIds - roommateId
+       _state.value.CurrentRoommatesIds - roommateId
         _state.update { currentState ->
             val updatedSelectedRoommates = currentState.selectedRoommates.filter { it.id != roommateId }
             currentState.copy(
@@ -170,18 +174,66 @@ class AddPropertyViewModel(
         }
     }
 
-    //-----------------------------AddPropertyStep1---------------------------------------------------------------------------------
-    fun isStep1Valid(): Boolean {
-        Log.d("TAG", "AddPropertyViewModel- Add property state status: ${_state.value.CurrentRoommatesIds.size}, ${_state.value.type}, ${_state.value.features}")
-        val state = _state.value
-        if(state.type==PropertyType.ROOM){
-            return state.selectedRoommates.isNotEmpty()
-                    state.features.size>=3
-        }else{
-            return state.type == PropertyType.APARTMENT &&
-                    state.features.size >= 3
+     fun submitProperty() {
+        Log.d("TAG","AddPropertyViewModel- Submit property ")
+        viewModelScope.launch {
+            val result = propertyRepository.addProperty(
+                PropertyDto(
+                    ownerId = ownerId,
+                    available = _state.value.available,
+                    type = _state.value.type,
+                    address = _state.value.address,
+                    title = _state.value.title,
+                    latitude = _state.value.latitude,
+                    longitude = _state.value.longitude,
+                    canContainRoommates = _state.value.canContainRoommates,
+                    currentRoommatesIds = _state.value.CurrentRoommatesIds,
+                    roomsNumber = _state.value.roomsNumber,
+                    bathrooms = _state.value.bathrooms,
+                    floor = _state.value.floor,
+                    size = _state.value.size,
+                    pricePerMonth = _state.value.pricePerMonth,
+                    features = _state.value.features.map { it },
+                    photos = _state.value.photos,
+                )
+            )
+            Log.d("TAG","AddPropertyViewModel- Submit property result: $result")
+            if (result != null) {
+                _navigateToProperties.value = true
+            } else {
+                _errorMessage.value = "Failed to add property"
+            }
         }
     }
+
+    //-----------------------------AddPropertyStep1---------------------------------------------------------------------------------
+    fun isStep1Valid(): Boolean {
+        val state = _state.value
+        if (state.type == PropertyType.ROOM){
+            return state.selectedRoommates.isNotEmpty() &&
+                    state.features.size>=3 && state.address.isNotEmpty()
+        }else{
+            return state.type == PropertyType.APARTMENT &&
+                    state.features.size >= 3 && state.address.isNotEmpty()
+        }
+    }
+//-----------------------------AddPropertyStep2---------------------------------------------------------------------------------
+fun isStep2Valid(): Boolean {
+    val state = _state.value
+    if (state.type == PropertyType.ROOM) {
+        if (state.canContainRoommates != null) {
+            return state.canContainRoommates > state.CurrentRoommatesIds.size &&
+                    state.roomsNumber != null && state.bathrooms != null && state.floor != null &&
+                    state.size != null && state.pricePerMonth != null && state.title != null
+        }
+    } else {
+        return state.roomsNumber != null && state.bathrooms != null && state.floor != null &&
+                state.size != null && state.pricePerMonth != null && state.title != null
+    }
+    return false
+}
+
+
 
 
 }

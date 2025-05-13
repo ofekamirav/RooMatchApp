@@ -28,7 +28,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
@@ -48,6 +48,8 @@ import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 import com.example.roomatchapp.presentation.theme.cardBackground
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 
 @Composable
@@ -57,56 +59,62 @@ fun PropertiesScreen(
     viewModel: PropertiesViewModel
 ) {
     val properties by viewModel.properties.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .padding(2.dp),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing),
+        onRefresh = { viewModel.refreshContent() }
+    ){
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(Background)
+                .padding(2.dp),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Spacer(modifier = Modifier.height(22.dp))
-            Text(
-                text = "Properties",
-                style = MaterialTheme.typography.titleLarge,
-                color = Primary,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 16.dp)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(properties) { property ->
-                    PropertyRow(property = property)
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(22.dp))
+                Text(
+                    text = "Properties",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Primary,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 16.dp)
+                ) {
+                    items(properties) { property ->
+                        PropertyRow(property = property)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             }
-        }
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            FloatingActionButton(
-                onClick = {onAddProperty() },
-                containerColor = Color.Unspecified,
-                contentColor = Color.Unspecified,
-                shape = RoundedCornerShape(50),
-                elevation = FloatingActionButtonDefaults.elevation(0.dp)
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Add Property",
-                    modifier = Modifier.size(60.dp)
-                )
+                FloatingActionButton(
+                    onClick = {onAddProperty() },
+                    containerColor = Color.Unspecified,
+                    contentColor = Color.Unspecified,
+                    shape = RoundedCornerShape(50),
+                    elevation = FloatingActionButtonDefaults.elevation(0.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = "Add Property",
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
             }
         }
     }
@@ -137,11 +145,13 @@ fun PropertyRow(property: Property) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.avatar),
-                    contentDescription = "Property Image",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
+                painter = if (property.photos.isNotEmpty()) {
+                    rememberAsyncImagePainter(property.photos[0])
+                } else {
+                    painterResource(id = R.drawable.ic_add)
+                },
+                modifier = Modifier.size(64.dp).clip(CircleShape),
+                contentDescription = "Property Image",
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))

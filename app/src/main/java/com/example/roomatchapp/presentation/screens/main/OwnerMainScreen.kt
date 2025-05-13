@@ -98,7 +98,10 @@ fun OwnerMainScreen(
                 }
                 AddPropertyFlow(
                     navigator = navController,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    onEndFlow = {
+                        navController.popBackStack("owner_properties", inclusive = false)
+                    }
                 )
             }
         }

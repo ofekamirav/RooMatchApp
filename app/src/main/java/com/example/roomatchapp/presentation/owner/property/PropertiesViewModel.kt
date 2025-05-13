@@ -21,6 +21,9 @@ class PropertiesViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init{
         _isLoading.value = true
          loadProperties()
@@ -35,6 +38,20 @@ class PropertiesViewModel(
             } else {
                 Log.e("TAG", "PropertiesViewModel- Failed to load properties")
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun refreshContent() {
+        _isRefreshing.value = true
+        viewModelScope.launch {
+            val properties = propertyRepository.getOwnerProperties(ownerId, forceRefresh = true)
+            if (properties != null) {
+                _properties.value = properties
+                _isRefreshing.value = false
+            } else {
+                Log.e("TAG", "PropertiesViewModel- Failed to refresh properties")
+                _isRefreshing.value = false
             }
         }
     }

@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddPropertyScreen2(
     viewModel: AddPropertyViewModel,
-    onNext: () -> Unit
+    onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val selectedUris by viewModel.selectedUris.collectAsState()
@@ -55,6 +55,7 @@ fun AddPropertyScreen2(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
+            .padding(16.dp)
     ) {
         if (showCustomGallery) {
             CustomGalleryPicker(
@@ -63,7 +64,6 @@ fun AddPropertyScreen2(
                     viewModel.clearPhotoUris()
                     selected.forEach { uri ->
                         viewModel.addPhotoUri(uri)
-                        viewModel.updatePhoto("local://image/${System.currentTimeMillis()}")
                     }
                     showCustomGallery = false
                 },
@@ -73,11 +73,16 @@ fun AddPropertyScreen2(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(30.dp),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                HeaderSection()
+                Text(
+                    text = "Upload Property Photos",
+                    fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -92,20 +97,27 @@ fun AddPropertyScreen2(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                SubmitButton(onClick = onNext)
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Primary,
+                        contentColor = Color.White,
+                        disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                        disabledContentColor = Color.White.copy(alpha = 0.5f)
+                    ),
+                ) {
+                    Text(
+                        text = "Submit",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
-}
-@Composable
-private fun HeaderSection() {
-    Text(
-        text = "Upload Property Photos",
-        fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-        fontSize = 26.sp,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center
-    )
 }
 
 @Composable
@@ -183,13 +195,12 @@ private fun ImageGrid(
                     onClick = { viewModel.removePhotoUri(uri) },
                     modifier = Modifier
                         .padding(12.dp)
-                        .size(24.dp)
-                        .background(Primary.copy(alpha = 0.8f), shape = CircleShape)
+                        .size(30.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Close,
+                        painter = painterResource(id = R.drawable.ic_close),
                         contentDescription = "Delete",
-                        tint = Color.White,
+                        tint = Color.Unspecified,
                         modifier = Modifier.size(30.dp)
                     )
                 }
@@ -198,27 +209,7 @@ private fun ImageGrid(
     }
 }
 
-@Composable
-private fun SubmitButton(onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Primary,
-            contentColor = Color.White,
-            disabledContainerColor = Secondary.copy(alpha = 0.5f),
-            disabledContentColor = Color.White.copy(alpha = 0.5f)
-        ),
-    ) {
-        Text(
-            text = "Submit",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White
-        )
-    }
-}
+
 
 @Preview(showBackground = true)
 @Composable
@@ -226,7 +217,7 @@ fun AddPropertyScreen2Previews() {
     RooMatchAppTheme {
         AddPropertyScreen2(
             viewModel = viewModel(),
-            onNext = {}
+            onClick = {}
         )
     }
 }

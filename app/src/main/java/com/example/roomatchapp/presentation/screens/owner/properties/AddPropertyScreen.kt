@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -83,14 +84,18 @@ fun AddPropertyScreen(
     val state by viewModel.state.collectAsState()
     val placesClient = remember { AppDependencies.googlePlacesClient }
     val searchTextFlow = remember { MutableStateFlow(state.address ?: "") }
+    val isStep1Valid by remember(state) {
+        derivedStateOf { viewModel.isStep1Valid() }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
+            .background(Background)
+            .padding(16.dp)
     ) {
         LazyColumn(
             modifier = Modifier
-                .background(Background)
-                .padding(16.dp),
+                .background(Background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
@@ -221,6 +226,7 @@ fun AddPropertyScreen(
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onNext,
+            enabled = isStep1Valid,
             modifier = Modifier.
                 align(Alignment.BottomCenter)
                 .fillMaxWidth()
@@ -315,6 +321,7 @@ fun PlacesAutocompleteTextField(
                                             latLng.longitude
                                         )
                                     }
+                                    Log.d("TAG", "Googleplaces-Place fetched: ${place.address}, ${latLng.latitude}, ${latLng.longitude}")
                                 }
                                 .addOnFailureListener {
                                     Log.e("PlacesAutocomplete", "Place fetch failed: ${it.message}")

@@ -26,19 +26,22 @@ fun AddPropertyScreen1(
     onNext: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val isStep2Valid by remember(state) {
+        derivedStateOf { viewModel.isStep2Valid() }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(30.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Property Details",
             fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
             fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -159,6 +162,22 @@ fun AddPropertyScreen1(
                 max = 10
             )
         }
+        Spacer(modifier = Modifier.height(20.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Bathrooms:", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.width(8.dp))
+            CountSelector(
+                count = state.bathrooms ?: 1,
+                onCountChange = { viewModel.updateBathrooms(it) },
+                min = 1,
+                max = 10,
+            )
+        }
+
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -166,6 +185,7 @@ fun AddPropertyScreen1(
             onClick = {
                onNext()
             },
+            enabled = isStep2Valid,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),

@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.core)
     implementation(libs.charts)
+    implementation(libs.accompanist.swiperefresh)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)

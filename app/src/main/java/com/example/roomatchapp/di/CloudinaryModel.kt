@@ -42,7 +42,7 @@ class CloudinaryModel {
         context: Context
     ): Boolean {
         return suspendCancellableCoroutine { continuation ->
-            val context = context /*MyApplication.Globals.context*/
+            val context = context
             if (context == null) {
                 Log.e("Cloudinary", "Context is null. Cannot upload image.")
                 continuation.resume(false)
