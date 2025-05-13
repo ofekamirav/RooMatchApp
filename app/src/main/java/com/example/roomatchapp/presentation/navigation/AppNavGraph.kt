@@ -25,9 +25,12 @@ import androidx.compose.runtime.remember
 import com.ramcosta.composedestinations.generated.app.AppNavGraphs
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.login.LoginViewModel
+import com.example.roomatchapp.presentation.roommate.RoommatePreviewViewModel
+import com.example.roomatchapp.presentation.screens.roommate.RoommatePreviewScreen
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.app.destinations.*
 import com.ramcosta.composedestinations.DestinationsNavHost
@@ -318,4 +321,21 @@ fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationVi
     RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }
 
+@Destination<RootNavGraph>
+@Composable
+fun RoommatePreviewScreenComposable(
+    navigator: DestinationsNavigator,
+    roommateId: String
+) {
+    val viewModel = remember {
+        RoommatePreviewViewModel(AppDependencies.userRepository, roommateId)
+    }
+
+    RoommatePreviewScreen(
+        viewModel = viewModel,
+        onBackClick = {
+            navigator.popBackStack() // Return to DiscoverScreen
+        }
+    )
+}
 
