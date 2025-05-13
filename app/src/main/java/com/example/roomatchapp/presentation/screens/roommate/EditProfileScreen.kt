@@ -37,19 +37,43 @@ import com.example.roomatchapp.presentation.theme.CustomTeal
 import com.example.roomatchapp.presentation.theme.Third
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.di.CloudinaryModel
+import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
+import com.example.roomatchapp.presentation.components.PriceRangeSelector
+import com.example.roomatchapp.presentation.components.SizeRangeSelector
+import com.example.roomatchapp.presentation.roommate.ProfileViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
+@Composable
+fun EditProfileScreen(viewModel: ProfileViewModel) {
+    val roommate by viewModel.roommate.collectAsState()
+
+    if (roommate != null) {
+        EditProfileContent(roommate!!)
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
+        ) {
+            LoadingAnimation(true, animationResId = R.raw.loading_animation)
+        }
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun EditProfileScreen(roommate: Roommate) {
+fun EditProfileContent(roommate: Roommate) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
     var fullName by remember { mutableStateOf(roommate.fullName) }
@@ -62,7 +86,8 @@ fun EditProfileScreen(roommate: Roommate) {
     var bio by remember { mutableStateOf(roommate.personalBio ?: "") }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
+    var selectedAttributes by remember { mutableStateOf(roommate.attributes.toMutableList()) }
+    var selectedHobbies by remember { mutableStateOf(roommate.hobbies.toMutableList()) }
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     var profilePictureUrl by remember { mutableStateOf(roommate.profilePicture) }
@@ -177,22 +202,25 @@ fun EditProfileScreen(roommate: Roommate) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Attribute.entries.forEach { attr ->
-                        val isSelected = roommate.attributes.contains(attr)
+                        val isSelected = selectedAttributes.contains(attr)
 
                         Button(
-                            onClick = { },
+                            onClick = {
+                                selectedAttributes = if (isSelected) {
+                                    selectedAttributes.toMutableList().apply { remove(attr) }
+                                } else {
+                                    selectedAttributes.toMutableList().apply { add(attr) }
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) Primary else Secondary,
-                                contentColor = Color.White,
-                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
-                                    alpha = 0.6f
-                                )
+                                contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(50),
                             modifier = Modifier
                                 .height(42.dp)
                                 .width(112.dp),
-                            enabled = false
+                            enabled = true
                         ) {
                             Text(
                                 text = getDisplayLabelForAttribute(attr),
@@ -213,22 +241,25 @@ fun EditProfileScreen(roommate: Roommate) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Hobby.entries.forEach { hobby ->
-                        val isSelected = roommate.hobbies.contains(hobby)
+                        val isSelected = selectedHobbies.contains(hobby)
 
                         Button(
-                            onClick = { },
+                            onClick = {
+                                selectedHobbies = if (isSelected) {
+                                    selectedHobbies.toMutableList().apply { remove(hobby) }
+                                } else {
+                                    selectedHobbies.toMutableList().apply { add(hobby) }
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) Primary else Secondary,
-                                contentColor = Color.White,
-                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
-                                    alpha = 0.6f
-                                )
+                                contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(50),
                             modifier = Modifier
                                 .height(42.dp)
                                 .width(112.dp),
-                            enabled = false
+                            enabled = true
                         ) {
                             Text(
                                 text = getDisplayLabelForHobby(hobby),
@@ -274,7 +305,6 @@ fun EditProfileScreen(roommate: Roommate) {
                             isLoadingBio = true
                             coroutineScope.launch {
                                 try {
-                                    // Replace with your real API call
                                     val suggested = "Generated bio by Gemini AI..."
                                     bio = suggested
                                 } catch (e: Exception) {
@@ -300,10 +330,297 @@ fun EditProfileScreen(roommate: Roommate) {
                     }
                 }
             }
+            ExpandableSection(
+                title = "Looking For in Roommate",
+                isExpanded = expandedSection == "LookingForRoommate",
+                onToggle = { expandedSection = if (expandedSection == "LookingForRoommate") null else "LookingForRoommate" }
+            ) {
+                val allAttributes = Attribute.entries
+                var selectedPreferences by remember {
+                    mutableStateOf(
+                        roommate.lookingForRoomies.toMutableList()
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(100.dp)) // Leave space for FAB
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    allAttributes.forEach { attr ->
+                        val existing = selectedPreferences.find { it.attribute == attr }
+                        val isSelected = existing != null
+
+                        Button(
+                            onClick = {
+                                selectedPreferences = if (isSelected) {
+                                    selectedPreferences.toMutableList().apply {
+                                        removeIf { it.attribute == attr }
+                                    }
+                                } else {
+                                    selectedPreferences.toMutableList().apply {
+                                        add(
+                                            LookingForRoomiesPreference(
+                                                attribute = attr,
+                                                weight = 0.5,
+                                                setWeight = true
+                                            )
+                                        )
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp)
+                        ) {
+                            Text(
+                                text = attr.name.replace("_", " ").lowercase()
+                                    .replaceFirstChar { it.uppercase() },
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                selectedPreferences.forEach { pref ->
+                    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                        Text(
+                            text = pref.attribute.name.replace("_", " ").lowercase()
+                                .replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.DarkGray
+                        )
+
+                        val sliderValue = remember { mutableStateOf(pref.weight.toFloat()) }
+
+                        WeightedSlider(
+                            value = sliderValue.value,
+                            onValueChange = { newValue ->
+                                sliderValue.value = newValue
+                                val index = selectedPreferences.indexOfFirst { it.attribute == pref.attribute }
+                                if (index != -1) {
+                                    selectedPreferences = selectedPreferences.toMutableList().apply {
+                                        set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
+                                    }
+                                }
+                            }
+                        )
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = pref.attribute.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.DarkGray
+                            )
+
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                ) {
+                                    val density = LocalDensity.current
+                                    val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp
+                                    val offsetFraction = (sliderValue.value - 0f) / (1f - 0f)
+
+                                    val xOffset = with(density) {
+                                        ((screenWidthDp - 80.dp).toPx() * offsetFraction).toDp()
+                                    }
+
+                                    Text(
+                                        text = String.format("%.2f", sliderValue.value),
+                                        modifier = Modifier
+                                            .offset(x = xOffset)
+                                            .padding(bottom = 4.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = CustomTeal
+                                    )
+                                }
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                                ) {
+                                    Text("0", modifier = Modifier.padding(end = 8.dp))
+                                    Slider(
+                                        value = sliderValue.value,
+                                        onValueChange = { newValue ->
+                                            sliderValue.value = newValue
+                                            val index = selectedPreferences.indexOfFirst { it.attribute == pref.attribute }
+                                            if (index != -1) {
+                                                selectedPreferences = selectedPreferences.toMutableList().apply {
+                                                    set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
+                                                }
+                                            }
+                                        },
+                                        valueRange = 0.0f..1.0f,
+                                        steps = 3,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 8.dp),
+                                        colors = SliderDefaults.colors(
+                                            thumbColor = Primary,
+                                            activeTrackColor = Primary,
+                                            inactiveTrackColor = Secondary
+                                        )
+                                    )
+                                    Text("1", modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ExpandableSection(
+                title = "Looking For in Condo",
+                isExpanded = expandedSection == "LookingForCondo",
+                onToggle = { expandedSection = if (expandedSection == "LookingForCondo") null else "LookingForCondo" }
+            ) {
+                var priceRange by remember { mutableStateOf(roommate.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
+                var sizeRange by remember { mutableStateOf(roommate.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
+                var roommatesNumber by remember { mutableStateOf(roommate.roommatesNumber) }
+                var preferredRadius by remember { mutableStateOf(roommate.preferredRadiusKm) }
+                var selectedCondoPreferences by remember { mutableStateOf(roommate.lookingForCondo.toMutableList()) }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("Price Range (₪)", style = MaterialTheme.typography.titleMedium, color = Third)
+                PriceRangeSelector(
+                    priceRange = priceRange,
+                    onValueChange = { priceRange = it }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Size Range (m²)", style = MaterialTheme.typography.titleMedium, color = Third)
+                SizeRangeSelector(
+                    sizeRange = sizeRange,
+                    onValueChange = { sizeRange = it }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Roommates:", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Spacer(Modifier.width(8.dp))
+                    CountSelector(
+                        count = roommatesNumber,
+                        onCountChange = { roommatesNumber = it },
+                        min = 1,
+                        max = 10,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Preferred radius: ${preferredRadius}km", style = MaterialTheme.typography.titleMedium, color = Third)
+
+                Slider(
+                    value = preferredRadius.toFloat(),
+                    onValueChange = { preferredRadius = it.toInt() },
+                    valueRange = 0.5f..100f,
+                    steps = 49,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Primary,
+                        activeTrackColor = Primary,
+                        inactiveTrackColor = Secondary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Condo Features", style = MaterialTheme.typography.titleMedium, color = Third)
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CondoPreference.entries.forEach { pref ->
+                        val isSelected = selectedCondoPreferences.any { it.preference == pref }
+
+                        Button(
+                            onClick = {
+                                selectedCondoPreferences = if (isSelected) {
+                                    selectedCondoPreferences.toMutableList().apply {
+                                        removeIf { it.preference == pref }
+                                    }
+                                } else {
+                                    selectedCondoPreferences.toMutableList().apply {
+                                        add(
+                                            LookingForCondoPreference(
+                                                preference = pref,
+                                                weight = 0.5,
+                                                setWeight = true
+                                            )
+                                        )
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp)
+                        ) {
+                            Text(
+                                text = pref.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                selectedCondoPreferences.forEach { pref ->
+                    val sliderValue = remember { mutableStateOf(pref.weight.toFloat()) }
+
+                    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                        Text(
+                            text = pref.preference.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.DarkGray
+                        )
+
+                        WeightedSlider(
+                            value = sliderValue.value,
+                            onValueChange = { newValue ->
+                                sliderValue.value = newValue
+                                val index = selectedCondoPreferences.indexOfFirst { it.preference == pref.preference }
+                                if (index != -1) {
+                                    selectedCondoPreferences = selectedCondoPreferences.toMutableList().apply {
+                                        set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(100.dp))
         }
+    }
 
+    Box(modifier = Modifier.fillMaxSize()) {
         ExtendedFloatingActionButton(
             text = { Text("Save Changes") },
             icon = { Icon(Icons.Default.Check, contentDescription = "Save Changes") },
@@ -316,6 +633,7 @@ fun EditProfileScreen(roommate: Roommate) {
                 .align(Alignment.BottomCenter)
                 .padding(24.dp)
         )
+    }
 
         if (isLoadingBio) {
             Box(
@@ -331,9 +649,9 @@ fun EditProfileScreen(roommate: Roommate) {
             }
         }
     }
-}
 
-        @Composable
+
+@Composable
 fun EditableTextField(
     label: String,
     value: String,
@@ -352,13 +670,17 @@ fun EditableTextField(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f)) {
                 if (isPassword) {
-                    PasswordTextField(
+                    CapsuleTextField(
                         value = currentValue,
                         onValueChange = {
                             currentValue = it
                             isEditing = currentValue != value
                         },
-                        label = label
+                        placeholder = label,
+                        isError = false,
+                        supportingText = null,
+                        enabled = true,
+                        isPassword = true
                     )
                 } else {
                     CapsuleTextField(
@@ -416,7 +738,8 @@ fun EditableDateField(
                     onDateSelected = {
                         currentDate = it
                         isEditing = currentDate != selectedDate
-                    }
+                    },
+                    isEditable = true
                 )
             }
 
@@ -473,6 +796,58 @@ fun ExpandableSection(
     }
 }
 
+@Composable
+fun WeightedSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val roundedValue = remember(value) {
+        (value * 4).toInt() / 4f
+    }
+
+    Box(modifier = modifier) {
+        val density = LocalDensity.current
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val offsetFraction = (roundedValue - 0f) / (1f - 0f)
+
+        val xOffsetPx = with(density) { (screenWidth - 80.dp).toPx() * offsetFraction }
+
+        Text(
+            text = String.format("%.2f", roundedValue),
+            modifier = Modifier
+                .offset(x = with(density) { xOffsetPx.toDp() })
+                .padding(bottom = 8.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = CustomTeal
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("0", modifier = Modifier.padding(end = 8.dp))
+            Slider(
+                value = roundedValue,
+                onValueChange = {
+                    val stepped = (it * 4).roundToInt() / 4f // עיגול לרבעים
+                    onValueChange(stepped)
+                },
+                valueRange = 0f..1f,
+                steps = 3,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = Primary,
+                    activeTrackColor = Primary,
+                    inactiveTrackColor = Secondary
+                )
+            )
+            Text("1", modifier = Modifier.padding(start = 8.dp))
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun EditProfileScreenPreview() {
@@ -504,5 +879,5 @@ fun EditProfileScreenPreview() {
         resetTokenExpiration = null
     )
 
-    EditProfileScreen(roommate = dummyRoommate)
+    EditProfileContent(roommate = dummyRoommate)
 }

@@ -20,7 +20,8 @@ import java.util.Calendar
 fun DatePickerField(
     selectedDate: String,
     onDateSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isEditable: Boolean = false
 ) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -38,28 +39,44 @@ fun DatePickerField(
         )
     }
 
-    OutlinedTextField(
-        value = selectedDate,
-        onValueChange = {},
-        label = { Text("Birthdate", color = Color.Black) },
-        enabled = false, // Disables the text field
-        trailingIcon = {
-            Icon(
-                imageVector = Icons.Default.DateRange,
-                contentDescription = "Select Date",
-                modifier = Modifier.clickable {
-                    datePickerDialog.show()
-                }
-            )
-        },
-        singleLine = true,
-        colors = OutlinedTextFieldDefaults.colors(
-            disabledTextColor = Color.Black,
-            disabledLabelColor = Color.Black,
-            disabledBorderColor = Color.Gray // אופציונלי
-        ),
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { datePickerDialog.show() }
-    )
+    if(isEditable){
+        CapsuleTextField(
+            value = selectedDate,
+            onValueChange = {},
+            placeholder = "Birthdate",
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { datePickerDialog.show() },
+            isEditable = true,
+            datePicker = { datePickerDialog.show() }
+        )
+
+    }else{
+        OutlinedTextField(
+            value = selectedDate,
+            onValueChange = {},
+            label = { Text("Birthdate", color = Color.Black) },
+            enabled = false, // Disables the text field
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Select Date",
+                    modifier = Modifier.clickable {
+                        datePickerDialog.show()
+                    }
+                )
+            },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = Color.Black,
+                disabledLabelColor = Color.Black,
+                disabledBorderColor = Color.Gray
+            ),
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { datePickerDialog.show() }
+        )
+    }
+
+
 }
