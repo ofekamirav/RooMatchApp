@@ -2,8 +2,10 @@ package com.example.roomatchapp.di
 
 
 import android.content.Context
+import com.example.roomatchapp.BuildConfig
 import com.example.roomatchapp.data.local.AppLocalDB
 import com.example.roomatchapp.data.local.LocalDatabaseProvider
+import com.example.roomatchapp.data.local.session.TokenAuthenticator
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.remote.api.match.MatchApiService
 import com.example.roomatchapp.data.remote.api.match.MatchApiServiceImplementation
@@ -17,27 +19,40 @@ import com.example.roomatchapp.data.repository.UserRepositoryImpl
 import com.example.roomatchapp.domain.repository.MatchRepository
 import com.example.roomatchapp.domain.repository.PropertyRepository
 import com.example.roomatchapp.domain.repository.UserRepository
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.net.PlacesClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "192.168.1.158" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "10.0.2.2" //if your are using emulator change ip to 10.0.2.2
 
     internal const val BASE_URL = "http://$computerIP:8080"
 
     lateinit var sessionManager: UserSessionManager
 
+    lateinit var tokenAuthenticator: TokenAuthenticator
+
+    lateinit var googlePlacesClient: PlacesClient
+
     lateinit var localDB: AppLocalDB
 
     fun init(context: Context){
         localDB = LocalDatabaseProvider.getDatabase(context)
+        tokenAuthenticator = TokenAuthenticator(sessionManager, BASE_URL)
+        initPlaces(context)
     }
 
 
@@ -51,10 +66,38 @@ object AppDependencies {
                 })
             }
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.BODY
+            }
+
+            expectSuccess = false
+
+            HttpResponseValidator {
+                validateResponse { response ->
+                    if (response.status == HttpStatusCode.Unauthorized) {
+                        val refreshed = tokenAuthenticator.refreshToken()
+                        if (refreshed == null) {
+                            throw Exception("Unauthorized and failed to refresh token")
+                        }
+                    }
+                }
+            }
+
+            defaultRequest {
+                val token = runBlocking { tokenAuthenticator.getValidToken() }
+                token?.let {
+                    headers.append(HttpHeaders.Authorization, "Bearer $it")
+                }
             }
         }
     }
+
+    fun initPlaces(context: Context) {
+        if (!Places.isInitialized()) {
+            Places.initializeWithNewPlacesApiEnabled(context, BuildConfig.GOOGLE_PLACES_API_KEY)
+        }
+        googlePlacesClient = Places.createClient(context)
+    }
+
 
     val userApiService: UserApiService by lazy {
         UserApiServiceImplementation(httpClient, BASE_URL)

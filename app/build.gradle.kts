@@ -23,6 +23,7 @@ android {
         buildConfigField("String", "CLOUD_NAME", "\"${project.properties["CLOUD_NAME"]?: ""}\"")
         buildConfigField("String", "API_KEY", "\"${project.properties["API_KEY"]?: ""}\"")
         buildConfigField("String", "API_SECRET", "\"${project.properties["API_SECRET"]?: ""}\"")
+        buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"${project.properties["GOOGLE_PLACES_API_KEY"]?: ""}\"")
     }
 
     buildTypes {
@@ -72,6 +73,7 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.core)
     implementation(libs.charts)
+    implementation(libs.accompanist.swiperefresh)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)
@@ -79,6 +81,7 @@ dependencies {
     implementation (libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.auth0)
     //retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
@@ -106,6 +109,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //Google Places API
+    implementation(libs.places)
+
 }
 
 ksp {

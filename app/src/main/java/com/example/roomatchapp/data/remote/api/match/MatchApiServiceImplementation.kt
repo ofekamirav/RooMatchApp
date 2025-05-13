@@ -5,6 +5,7 @@ import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.Roommate
+import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.utils.TokenUtils
 import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
@@ -30,7 +31,7 @@ class MatchApiServiceImplementation(
 
     override suspend fun getNextMatches(seekerId: String, limit: Int): List<Match> {
         Log.d("TAG","MatchApiService- getNextMatches called")
-        val token = getValidToken()
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.get("$baseUrl/match/$seekerId"){
             parameter("limit", limit)
             headers {
@@ -42,7 +43,7 @@ class MatchApiServiceImplementation(
 
     override suspend fun likeRoommates(match: Match): Boolean {
         Log.d("TAG","MatchApiService- likeRoommates called")
-        val token = getValidToken()
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response =  client.post("$baseUrl/likes/roommates") {
             headers {
                 append("Authorization", "Bearer $token")
