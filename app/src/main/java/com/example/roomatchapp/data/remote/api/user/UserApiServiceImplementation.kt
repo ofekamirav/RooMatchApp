@@ -167,7 +167,7 @@ class UserApiServiceImplementation(
             val response = client.get("$baseUrl/roommates") {
                 contentType(ContentType.Application.Json)
             }.body<List<Roommate>>()
-            Log.d("TAG", "ApiService-GET All Roommates Response received: $response")
+            Log.d("TAG", "ApiService-GET All Roommates Response size: ${response.size}")
             return response
         } catch (e: Exception){
             Log.e("TAG", "ApiService-GET All Roommates API call failed: ${e.message}", e)

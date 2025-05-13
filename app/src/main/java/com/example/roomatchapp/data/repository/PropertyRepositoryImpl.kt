@@ -6,6 +6,7 @@ import com.example.roomatchapp.data.model.CacheEntity
 import com.example.roomatchapp.data.model.CacheType
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.remote.api.property.PropertyApiService
+import com.example.roomatchapp.data.remote.dto.PropertyDto
 import com.example.roomatchapp.domain.repository.PropertyRepository
 
 class PropertyRepositoryImpl(
@@ -85,4 +86,20 @@ class PropertyRepositoryImpl(
             .map { it.first }
             .ifEmpty { null }
     }
+
+    override suspend fun addProperty(property: PropertyDto): Boolean? {
+        val response = apiService.addProperty(property)
+        if (response != null) {
+            propertyDao.insert(response)
+            cacheDao.insert(
+                CacheEntity(
+                    type = CacheType.PROPERTY,
+                    entityId = response.id,
+                    lastUpdatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+        return response != null
+    }
+
 }

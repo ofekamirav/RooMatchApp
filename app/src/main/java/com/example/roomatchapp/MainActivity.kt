@@ -1,6 +1,7 @@
 package com.example.roomatchapp
 
 import android.os.Bundle
+import android.util.Log
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,8 @@ import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.navigation.AppNavGraph
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
+import com.example.roomatchapp.BuildConfig
+import com.google.android.libraries.places.api.Places
 import javax.inject.Inject
 
 
@@ -48,6 +51,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
 

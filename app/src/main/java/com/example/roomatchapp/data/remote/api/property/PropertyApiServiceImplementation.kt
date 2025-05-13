@@ -3,11 +3,18 @@ package com.example.roomatchapp.data.remote.api.property
 import android.util.Log
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Property
+import com.example.roomatchapp.data.remote.dto.PropertyDto
+import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.headers
 
 class PropertyApiServiceImplementation(
     private val client: HttpClient,
@@ -15,13 +22,9 @@ class PropertyApiServiceImplementation(
     private val sessionManager: UserSessionManager
 ): PropertyApiService {
 
-    private suspend fun getValidToken(): String {
-        return refreshTokenIfNeeded(sessionManager) ?: throw Exception("No valid token available")
-    }
-
     override suspend fun getProperty(propertyId: String): Property? {
         Log.d("TAG","PropertyApiService- getProperty called")
-        val token = getValidToken()
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.get("$baseUrl/properties/$propertyId"){
             headers {
                 append("Authorization", "Bearer $token")
@@ -38,7 +41,7 @@ class PropertyApiServiceImplementation(
 
     override suspend fun getOwnerProperties(ownerId: String): List<Property>? {
         Log.d("TAG","PropertyApiService- getOwnerProperties called")
-        val token = getValidToken()
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.get("$baseUrl/properties/$ownerId"){
             headers {
                 append("Authorization", "Bearer $token")
@@ -50,6 +53,26 @@ class PropertyApiServiceImplementation(
         }
         else {
             Log.d("TAG", "PropertyApiService- getOwnerProperties failed")
+            return null
+        }
+    }
+
+    override suspend fun addProperty(property: PropertyDto): Property? {
+        Log.d("TAG","PropertyApiService- addProperty called")
+        val ownerId = property.ownerId
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
+        val response = client.post("$baseUrl/properties/${ownerId}") {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(property)
+        }
+        if(response.status.value == 201){
+            Log.d("TAG","PropertyApiService- addProperty success")
+            return response.body()
+        }else {
+            Log.d("TAG", "PropertyApiService- addProperty failed: ${response.status.value}")
             return null
         }
     }

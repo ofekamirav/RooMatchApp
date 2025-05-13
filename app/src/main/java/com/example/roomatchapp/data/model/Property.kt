@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 data class Property(
     @PrimaryKey val id: String,
     val ownerId: String?=null,
-    val available: Boolean?=null,
+    var available: Boolean?=null,
     val type: PropertyType,
     val address: String?=null,
     val latitude: Double?=null,
