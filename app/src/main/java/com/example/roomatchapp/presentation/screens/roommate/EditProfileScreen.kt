@@ -42,14 +42,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.components.LoadingAnimation
+import com.example.roomatchapp.presentation.roommate.ProfileViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 import kotlinx.coroutines.launch
 
+@Composable
+fun EditProfileScreen(viewModel: ProfileViewModel) {
+    val roommate by viewModel.roommate.collectAsState()
+
+    if (roommate != null) {
+        EditProfileContent(roommate!!)
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
+        ) {
+            LoadingAnimation(true, animationResId = R.raw.loading_animation)
+        }
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun EditProfileScreen(roommate: Roommate) {
+fun EditProfileContent(roommate: Roommate) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
     var fullName by remember { mutableStateOf(roommate.fullName) }
@@ -62,7 +80,8 @@ fun EditProfileScreen(roommate: Roommate) {
     var bio by remember { mutableStateOf(roommate.personalBio ?: "") }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
+    var selectedAttributes by remember { mutableStateOf(roommate.attributes.toMutableList()) }
+    var selectedHobbies by remember { mutableStateOf(roommate.hobbies.toMutableList()) }
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     var profilePictureUrl by remember { mutableStateOf(roommate.profilePicture) }
@@ -177,22 +196,25 @@ fun EditProfileScreen(roommate: Roommate) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Attribute.entries.forEach { attr ->
-                        val isSelected = roommate.attributes.contains(attr)
+                        val isSelected = selectedAttributes.contains(attr)
 
                         Button(
-                            onClick = { },
+                            onClick = {
+                                selectedAttributes = if (isSelected) {
+                                    selectedAttributes.toMutableList().apply { remove(attr) }
+                                } else {
+                                    selectedAttributes.toMutableList().apply { add(attr) }
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) Primary else Secondary,
-                                contentColor = Color.White,
-                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
-                                    alpha = 0.6f
-                                )
+                                contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(50),
                             modifier = Modifier
                                 .height(42.dp)
                                 .width(112.dp),
-                            enabled = false
+                            enabled = true
                         ) {
                             Text(
                                 text = getDisplayLabelForAttribute(attr),
@@ -213,22 +235,25 @@ fun EditProfileScreen(roommate: Roommate) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Hobby.entries.forEach { hobby ->
-                        val isSelected = roommate.hobbies.contains(hobby)
+                        val isSelected = selectedHobbies.contains(hobby)
 
                         Button(
-                            onClick = { },
+                            onClick = {
+                                selectedHobbies = if (isSelected) {
+                                    selectedHobbies.toMutableList().apply { remove(hobby) }
+                                } else {
+                                    selectedHobbies.toMutableList().apply { add(hobby) }
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) Primary else Secondary,
-                                contentColor = Color.White,
-                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(
-                                    alpha = 0.6f
-                                )
+                                contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(50),
                             modifier = Modifier
                                 .height(42.dp)
                                 .width(112.dp),
-                            enabled = false
+                            enabled = true
                         ) {
                             Text(
                                 text = getDisplayLabelForHobby(hobby),
@@ -274,7 +299,6 @@ fun EditProfileScreen(roommate: Roommate) {
                             isLoadingBio = true
                             coroutineScope.launch {
                                 try {
-                                    // Replace with your real API call
                                     val suggested = "Generated bio by Gemini AI..."
                                     bio = suggested
                                 } catch (e: Exception) {
@@ -301,7 +325,7 @@ fun EditProfileScreen(roommate: Roommate) {
                 }
             }
 
-                Spacer(modifier = Modifier.height(100.dp)) // Leave space for FAB
+                Spacer(modifier = Modifier.height(100.dp))
         }
 
         ExtendedFloatingActionButton(
@@ -473,36 +497,3 @@ fun ExpandableSection(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun EditProfileScreenPreview() {
-    val dummyRoommate = Roommate(
-        id = "1",
-        email = "bar@example.com",
-        fullName = "Bar Kobi",
-        phoneNumber = "050-1234567",
-        birthDate = "1999-05-06",
-        password = "password123",
-        refreshToken = null,
-        profilePicture = null,
-        work = "QA Engineer",
-        gender = Gender.FEMALE,
-        attributes = listOf(Attribute.CLEAN, Attribute.PET_LOVER),
-        hobbies = listOf(Hobby.YOGA, Hobby.TRAVELER),
-        lookingForRoomies = emptyList(),
-        lookingForCondo = emptyList(),
-        roommatesNumber = 2,
-        minPropertySize = 60,
-        maxPropertySize = 100,
-        minPrice = 2000,
-        maxPrice = 4000,
-        personalBio = "I love hiking, music, and keeping a tidy apartment.",
-        preferredRadiusKm = 10,
-        latitude = null,
-        longitude = null,
-        resetToken = null,
-        resetTokenExpiration = null
-    )
-
-    EditProfileScreen(roommate = dummyRoommate)
-}

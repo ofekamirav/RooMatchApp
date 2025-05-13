@@ -103,6 +103,7 @@ class UserRepositoryImpl(
 
     }
 
+
     override suspend fun getAllRoommatesRemote(): List<Roommate>? {
         return apiService.getAllRoommates()
     }
@@ -140,5 +141,12 @@ class UserRepositoryImpl(
             }
             return analytics
         }
+    }
+
+    override suspend fun updateRoommate(
+        string: String,
+        user: RoommateUser
+    ) {
+        TODO("Not yet implemented")
     }
 }

@@ -27,4 +27,6 @@ interface UserRepository {
     suspend fun googleSignIn(idToken: String): UserResponse
 
     suspend fun getOwnerAnalytics(ownerId: String, forceRefresh: Boolean = false, maxCacheAgeMillis: Long = 5 * 60 * 1000): AnalyticsResponse?
+
+    suspend fun updateRoommate(string: String, user: RoommateUser)
 }

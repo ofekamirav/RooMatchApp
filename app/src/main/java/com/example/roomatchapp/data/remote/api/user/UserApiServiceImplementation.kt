@@ -17,6 +17,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -264,4 +265,25 @@ class UserApiServiceImplementation(
             throw e
         }
     }
+
+    override suspend fun updateRoommate(roommateId: String, updatedRoommate: RoommateUser): Boolean {
+        try {
+            Log.d("TAG", "ApiService-Sending PATCH to $baseUrl/roommates/$roommateId with body: $updatedRoommate")
+
+            val response = client.patch("$baseUrl/roommates/$roommateId") {
+                contentType(ContentType.Application.Json)
+                setBody(updatedRoommate)
+            }.body<UserResponse>()
+
+            Log.d("TAG", "ApiService-Response received: $response")
+            if (response.status == "success") {
+                return true
+            }else
+                return false
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-API call failed: ${e.message}", e)
+            throw e
+        }
+    }
+
 }
