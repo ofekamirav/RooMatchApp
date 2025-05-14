@@ -7,4 +7,5 @@ interface PropertyApiService {
     suspend fun getProperty(propertyId: String): Property?
     suspend fun getOwnerProperties(ownerId: String): List<Property>?
     suspend fun addProperty(property: PropertyDto): Property?
+    suspend fun changeAvailability(propertyId: String, isAvailable: Boolean): Boolean
 }

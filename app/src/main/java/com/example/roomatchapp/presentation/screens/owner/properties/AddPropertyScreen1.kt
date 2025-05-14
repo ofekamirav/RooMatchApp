@@ -62,7 +62,7 @@ fun AddPropertyScreen1(
         )
 
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Property Size
         Text("Property Size (sqm):",
@@ -83,7 +83,7 @@ fun AddPropertyScreen1(
         )
 
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Monthly Rent
         Text("Monthly Rent (₪):",
@@ -103,7 +103,7 @@ fun AddPropertyScreen1(
             placeholder = "Enter a price"
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Room Count
         Row(
@@ -123,7 +123,7 @@ fun AddPropertyScreen1(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Floor
         Row(
@@ -143,7 +143,7 @@ fun AddPropertyScreen1(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Roommates Capacity
         Row(
@@ -162,7 +162,7 @@ fun AddPropertyScreen1(
                 max = 10
             )
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth(),

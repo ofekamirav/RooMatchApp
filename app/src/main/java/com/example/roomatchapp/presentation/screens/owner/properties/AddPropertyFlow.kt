@@ -23,6 +23,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,6 +40,7 @@ import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -50,6 +53,17 @@ fun AddPropertyFlow(
     var stepIndex by rememberSaveable { mutableStateOf(0) }
     var isLoading = viewModel.isLoading
     val context = LocalContext.current
+    val navigateToProperties by viewModel.navigateToProperties.collectAsState()
+
+    LaunchedEffect(navigateToProperties) {
+        if (navigateToProperties) {
+            delay(1000)
+            onEndFlow()
+            isLoading = false
+            Toast.makeText(context, "Property added successfully", Toast.LENGTH_SHORT).show()
+            viewModel.clearState()
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize().background(Background).padding(8.dp)
@@ -91,10 +105,7 @@ fun AddPropertyFlow(
                         onClick = {
                             viewModel.submitProperty()
                             isLoading = true
-                            if (viewModel.navigateToProperties.value) {
-                                onEndFlow()
-                                Toast.makeText(context, "Property added successfully", Toast.LENGTH_SHORT).show()
-                            } else if (viewModel.errorMessage.value != null) {
+                            if (viewModel.errorMessage.value != null) {
                                 Toast.makeText(context, viewModel.errorMessage.value, Toast.LENGTH_SHORT).show()
                             }
                         },

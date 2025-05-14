@@ -138,9 +138,6 @@ class AddPropertyViewModel(
         _state.value = _state.value.copy(features = current)
         Log.d("TAG", "AddPropertyViewModel- Add property state status: ${_state.value.features.size}")
     }
-    fun updateAvailability(available: Boolean) {
-        _state.value = _state.value.copy(available = available)
-    }
 
     fun updateCurrentRoommatesIds(ids: List<String>) {
         _state.value = _state.value.copy(CurrentRoommatesIds = ids)
@@ -161,6 +158,7 @@ class AddPropertyViewModel(
                 CurrentRoommatesIds = updatedSelectedRoommate.map { it.id }
             )
         }
+        Log.d("TAG", "AddPropertyViewModel- Add property state status: ${_state.value.CurrentRoommatesIds.size}")
     }
 
     fun removeRoommate(roommateId: String){
@@ -172,6 +170,14 @@ class AddPropertyViewModel(
                 CurrentRoommatesIds = updatedSelectedRoommates.map { it.id }
             )
         }
+        Log.d("TAG", "AddPropertyViewModel- Add property state status: ${_state.value.CurrentRoommatesIds.size}")
+    }
+
+    fun clearState(){
+        _state.value = AddPropertyFormState()
+        _selectedUris.value = emptyList()
+        _navigateToProperties.value = false
+        _errorMessage.value = null
     }
 
      fun submitProperty() {

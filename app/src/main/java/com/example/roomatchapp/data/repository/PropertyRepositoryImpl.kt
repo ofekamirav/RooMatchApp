@@ -1,5 +1,6 @@
 package com.example.roomatchapp.data.repository
 
+import android.util.Log
 import com.example.roomatchapp.data.local.dao.CacheDao
 import com.example.roomatchapp.data.local.dao.PropertyDao
 import com.example.roomatchapp.data.model.CacheEntity
@@ -100,6 +101,25 @@ class PropertyRepositoryImpl(
             )
         }
         return response != null
+    }
+
+    override suspend fun changeAvailability(
+        propertyId: String,
+        isAvailable: Boolean,
+    ): Boolean {
+        Log.d("TAG", "PropertyRepositoryImpl- changeAvailability - propertyId: $propertyId")
+        val response = apiService.changeAvailability(propertyId, isAvailable)
+        if (response) {
+           val rowNum =  propertyDao.changeAvailability(propertyId, isAvailable)
+            cacheDao.insert(
+                CacheEntity(
+                    type = CacheType.PROPERTY,
+                    entityId = propertyId,
+                    lastUpdatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+        return response
     }
 
 }

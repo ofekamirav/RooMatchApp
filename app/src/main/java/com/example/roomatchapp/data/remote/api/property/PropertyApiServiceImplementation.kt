@@ -11,6 +11,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -74,6 +75,28 @@ class PropertyApiServiceImplementation(
         }else {
             Log.d("TAG", "PropertyApiService- addProperty failed: ${response.status.value}")
             return null
+        }
+    }
+
+    override suspend fun changeAvailability(
+        propertyId: String,
+        isAvailable: Boolean,
+    ): Boolean {
+        Log.d("TAG","PropertyApiService- changeAvailability called")
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
+        val response = client.put("$baseUrl/properties/$propertyId/availability") {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(isAvailable)
+        }
+        if(response.status.value == 200){
+            Log.d("TAG","PropertyApiService- changeAvailability success")
+            return true
+        }else {
+            Log.d("TAG", "PropertyApiService- changeAvailability failed: ${response.status.value}")
+            return false
         }
     }
 
