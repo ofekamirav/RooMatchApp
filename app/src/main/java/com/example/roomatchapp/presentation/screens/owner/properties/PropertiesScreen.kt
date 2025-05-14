@@ -148,7 +148,7 @@ fun PropertyRow(property: Property) {
                 painter = if (property.photos.isNotEmpty()) {
                     rememberAsyncImagePainter(property.photos[0])
                 } else {
-                    painterResource(id = R.drawable.ic_add)
+                    painterResource(id = R.drawable.ic_location)
                 },
                 modifier = Modifier.size(64.dp).clip(CircleShape),
                 contentDescription = "Property Image",

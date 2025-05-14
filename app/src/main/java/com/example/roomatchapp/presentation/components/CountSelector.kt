@@ -39,7 +39,7 @@ fun CountSelector(
                imageVector = ImageVector.vectorResource(id = R.drawable.ic_minus),
                contentDescription = "Decrease Count",
                tint = Color.Unspecified,
-               modifier = Modifier.size(40.dp)
+               modifier = Modifier.size(42.dp)
            )
        }
 

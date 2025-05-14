@@ -51,6 +51,7 @@ fun AddPropertyScreen2(
     var showCustomGallery by remember { mutableStateOf(false) }
     val state by viewModel.state.collectAsState()
 
+
     Box(
         modifier = Modifier
             .fillMaxSize()

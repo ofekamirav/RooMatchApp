@@ -56,15 +56,15 @@ class PropertiesViewModel(
         }
     }
 
-//    fun togglePropertyAvailability(property: Property) {
-//        viewModelScope.launch {
-//            val updatedProperty = property.copy(available = !property.available)
-//            val success = propertyRepository.updateProperty(updatedProperty)
-//            if (success) {
-//                loadProperties()
-//            } else {
-//                Log.e("TAG", "PropertiesViewModel- Failed to update property availability")
-//            }
-//        }
-//    }
+    fun toggleAvailability(propertyId: String) {
+        viewModelScope.launch {
+            Log.d("TAG", "PropertiesViewModel- toggleAvailability called")
+            val property = propertyRepository.getProperty(propertyId)
+            if (property != null) {
+                property.available = !property.available!!
+                propertyRepository.changeAvailability(propertyId, !property.available!!)
+            }
+        }
+
+    }
 }

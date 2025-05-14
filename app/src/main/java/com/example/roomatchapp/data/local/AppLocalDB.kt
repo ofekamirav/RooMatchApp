@@ -16,7 +16,7 @@ import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.Roommate
 
-@Database(entities = [CacheEntity::class, Roommate::class, PropertyOwner::class, Property::class, Match::class, AnalyticsResponse::class], version = 2)
+@Database(entities = [CacheEntity::class, Roommate::class, PropertyOwner::class, Property::class, Match::class, AnalyticsResponse::class], version = 3)
 @TypeConverters(RooMatchConverters::class)
 abstract class AppLocalDB : RoomDatabase() {
     abstract fun cacheDao(): CacheDao
