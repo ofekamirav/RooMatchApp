@@ -27,4 +27,11 @@ interface PropertyDao {
 
     @Query("UPDATE properties SET available = :isAvailable WHERE id = :propertyId")
     suspend fun changeAvailability(propertyId: String, isAvailable: Boolean): Int
+
+    @Query("SELECT id FROM properties")
+    suspend fun getAllIds(): List<String>
+
+    @Query("DELETE FROM properties WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
+
 }

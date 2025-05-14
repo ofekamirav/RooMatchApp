@@ -31,4 +31,5 @@ interface UserRepository {
     suspend fun updateRoommate(seekerId: String,roommate: Roommate): Boolean
 
     suspend fun updateOwner(ownerId: String, propertyOwner: PropertyOwner): Boolean
+
 }
