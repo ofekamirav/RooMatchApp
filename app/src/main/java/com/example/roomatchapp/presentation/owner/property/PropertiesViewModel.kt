@@ -1,6 +1,8 @@
 package com.example.roomatchapp.presentation.owner.property
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.model.*
@@ -23,6 +25,10 @@ class PropertiesViewModel(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _updatingPropertyId = MutableStateFlow<String?>(null)
+    val updatingPropertyId: StateFlow<String?> = _updatingPropertyId.asStateFlow()
+
 
     init{
         _isLoading.value = true
@@ -56,15 +62,28 @@ class PropertiesViewModel(
         }
     }
 
-    fun toggleAvailability(propertyId: String) {
+    fun toggleAvailability(context: Context, propertyId: String) {
         viewModelScope.launch {
-            Log.d("TAG", "PropertiesViewModel- toggleAvailability called")
-            val property = propertyRepository.getProperty(propertyId)
-            if (property != null) {
-                property.available = !property.available!!
-                propertyRepository.changeAvailability(propertyId, !property.available!!)
-            }
-        }
+            _updatingPropertyId.value = propertyId
 
+            val updatedList = _properties.value.map { property ->
+                if (property.id == propertyId) {
+                    val newAvailability = !(property.available ?: false)
+                    val success = propertyRepository.changeAvailability(propertyId, newAvailability)
+
+                    if (success) {
+                        property.copy(available = newAvailability)
+                    } else {
+                        Toast.makeText(context, "Failed to update availability", Toast.LENGTH_SHORT).show()
+                        property // no change
+                    }
+                } else property
+            }
+
+            _properties.value = updatedList
+            _updatingPropertyId.value = null
+        }
     }
+
+
 }

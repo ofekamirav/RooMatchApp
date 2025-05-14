@@ -34,4 +34,7 @@ interface CacheDao {
     @Query("SELECT lastUpdatedAt FROM cache_entities WHERE type = :type ORDER BY lastUpdatedAt DESC LIMIT 1")
     suspend fun getLastUpdatedAt(type: CacheType): Long?
 
+    @Query("DELETE FROM cache_entities WHERE entityId IN (:entityIds)")
+    suspend fun deleteByEntityIds(entityIds: List<String>)
+
 }

@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -66,9 +67,16 @@ fun AddPropertyFlow(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Background).padding(8.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+            .padding(8.dp)
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .matchParentSize()
+                .then(if (isLoading) Modifier.blur(4.dp) else Modifier)
+        ) {
             Row(
                 Modifier.fillMaxWidth().padding(top = 22.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -100,15 +108,8 @@ fun AddPropertyFlow(
                         viewModel = viewModel,
                         onNext = { stepIndex++ }
                     )
-                    2 -> AddPropertyScreen2 (
-                        viewModel = viewModel,
-                        onClick = {
-                            viewModel.submitProperty()
-                            isLoading = true
-                            if (viewModel.errorMessage.value != null) {
-                                Toast.makeText(context, viewModel.errorMessage.value, Toast.LENGTH_SHORT).show()
-                            }
-                        },
+                    2 -> GalleryGridScreen(
+                        viewModel = viewModel
                     )
                 }
             }

@@ -216,9 +216,7 @@ fun LoginScreen(
             LoadingAnimation(
                 isLoading = true,
                 animationResId = R.raw.loading_animation,
-                modifier = Modifier
-                    .size(120.dp)
-                    .align(Alignment.Center)            )
+            )
         }
     }
 }

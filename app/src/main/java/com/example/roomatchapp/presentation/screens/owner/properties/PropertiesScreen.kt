@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,6 +52,7 @@ import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 import com.example.roomatchapp.presentation.theme.cardBackground
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.google.android.gms.location.LocationAvailability
 
 
 @Composable
@@ -92,7 +95,7 @@ fun PropertiesScreen(
                         .padding(bottom = 16.dp)
                 ) {
                     items(properties) { property ->
-                        PropertyRow(property = property)
+                        PropertyRow(property = property, viewModel)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
@@ -121,12 +124,13 @@ fun PropertiesScreen(
 }
 
 
-
-
-
 @Composable
-fun PropertyRow(property: Property) {
-    var isChecked by remember { mutableStateOf(property.available ?: false) }
+fun PropertyRow(property: Property, viewModel: PropertiesViewModel) {
+    val context = LocalContext.current
+    val updatingPropertyId by viewModel.updatingPropertyId.collectAsState()
+    val isChecked = property.available ?: false
+    val isLoading = updatingPropertyId == property.id
+
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -145,13 +149,13 @@ fun PropertyRow(property: Property) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                painter = if (property.photos.isNotEmpty()) {
-                    rememberAsyncImagePainter(property.photos[0])
-                } else {
-                    painterResource(id = R.drawable.ic_location)
-                },
-                modifier = Modifier.size(64.dp).clip(CircleShape),
-                contentDescription = "Property Image",
+                    painter = if (property.photos.isNotEmpty()) {
+                        rememberAsyncImagePainter(property.photos[0])
+                    } else {
+                        painterResource(id = R.drawable.ic_location)
+                    },
+                    modifier = Modifier.size(64.dp).clip(CircleShape),
+                    contentDescription = "Property Image",
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -170,19 +174,25 @@ fun PropertyRow(property: Property) {
                     )
                 }
             }
-                Column (
-                    horizontalAlignment = Alignment.End
-                ){
-                    Text(
-                        text = "Available",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.DarkGray
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "Available",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.DarkGray
+                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = Primary
                     )
+                } else {
                     Switch(
                         checked = isChecked,
                         onCheckedChange = {
-                            isChecked = it
-                            property.available = it
+                            viewModel.toggleAvailability(context, property.id)
                         },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
@@ -203,6 +213,7 @@ fun PropertyRow(property: Property) {
                         }
                     )
                 }
+            }
         }
     }
 }

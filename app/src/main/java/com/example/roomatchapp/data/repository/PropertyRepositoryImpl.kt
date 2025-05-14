@@ -61,23 +61,27 @@ class PropertyRepositoryImpl(
             val freshProperties = apiService.getOwnerProperties(ownerId)
 
             freshProperties?.let { properties ->
+                val now = System.currentTimeMillis()
+                val incomingIds = properties.map { it.id }
+
                 properties.forEach { property ->
                     propertyDao.insert(property)
-
-                    val existingCache = cacheDao.getByEntityId(property.id)
-
-                    val updatedCache = if (existingCache != null) {
-                        existingCache.copy(lastUpdatedAt = now)
-                    } else {
+                    cacheDao.insert(
                         CacheEntity(
                             type = CacheType.PROPERTY,
                             entityId = property.id,
                             lastUpdatedAt = now
                         )
-                    }
-                    cacheDao.insert(updatedCache)
+                    )
                 }
+
+                val existingIds = propertyDao.getAllIds()
+                val idsToDelete = existingIds.filterNot { incomingIds.contains(it) }
+
+                propertyDao.deleteByIds(idsToDelete)
+                cacheDao.deleteByEntityIds(idsToDelete)
             }
+
 
             return freshProperties
         }
@@ -118,6 +122,7 @@ class PropertyRepositoryImpl(
                     lastUpdatedAt = System.currentTimeMillis()
                 )
             )
+            Log.d("TAG", "PropertyRepositoryImpl- changeAvailability - rowNum: $rowNum")
         }
         return response
     }
