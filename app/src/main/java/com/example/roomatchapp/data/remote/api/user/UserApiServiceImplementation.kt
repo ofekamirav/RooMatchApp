@@ -178,7 +178,7 @@ class UserApiServiceImplementation(
 
     override suspend fun sendResetToken(email: String, userType: String): Result<String> {
         return try {
-            val response = client.post("http://10.0.2.2:8080/api/auth/request-reset-token") {
+            val response = client.post("http://$baseUrl/api/auth/request-reset-token") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("email" to email, "userType" to userType))
             }
@@ -195,7 +195,7 @@ class UserApiServiceImplementation(
 
     override suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String> {
         return try {
-            val response = client.post("http://10.0.2.2:8080/api/auth/reset-password") {
+            val response = client.post("http://$baseUrl/api/auth/reset-password") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("token" to token, "newPassword" to newPassword, "userType" to userType))
             }

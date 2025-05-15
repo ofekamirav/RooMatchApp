@@ -3,11 +3,12 @@ package com.example.roomatchapp.presentation.screens.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.remote.api.user.UserApiService
+import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ForgotPasswordViewModel(private val userApiService: UserApiService) : ViewModel() {
+class ForgotPasswordViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage = _statusMessage.asStateFlow()
@@ -15,12 +16,7 @@ class ForgotPasswordViewModel(private val userApiService: UserApiService) : View
     fun requestPasswordReset(email: String, userType: String) {
         viewModelScope.launch {
             try {
-                val url = when (userType) {
-                    "Roommate" -> "/roommates/forgot-password"
-                    "PropertyOwner" -> "/owners/forgot-password"
-                    else -> ""
-                }
-                val response = userApiService.sendResetToken(email, url)
+                val response = userRepository.sendResetToken(email, userType)
                 _statusMessage.value = response.toString()
             } catch (e: Exception) {
                 _statusMessage.value = "Error: ${e.message}"
@@ -31,12 +27,7 @@ class ForgotPasswordViewModel(private val userApiService: UserApiService) : View
     fun resetPassword(token: String, newPassword: String, userType: String) {
         viewModelScope.launch {
             try {
-                val url = when (userType) {
-                    "Roommate" -> "/roommates/reset-password"
-                    "PropertyOwner" -> "/owners/reset-password"
-                    else -> ""
-                }
-                val response = userApiService.resetPassword(token, newPassword, url)
+                val response = userRepository.resetPassword(token, newPassword, userType)
                 _statusMessage.value = response.toString()
             } catch (e: Exception) {
                 _statusMessage.value = "Error: ${e.message}"

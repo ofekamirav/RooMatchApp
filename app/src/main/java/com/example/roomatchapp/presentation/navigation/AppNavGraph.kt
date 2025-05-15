@@ -24,10 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.ramcosta.composedestinations.generated.app.AppNavGraphs
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.roomatchapp.R
-import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.app.destinations.*
@@ -57,6 +53,8 @@ fun AppNavGraph(
 ) {
     val registrationViewModel = RegistrationViewModel(sessionManager)
 
+    val forgotPasswordViewModel = ForgotPasswordViewModel(AppDependencies.userRepository)
+
     val hasSeenWelcome by sessionManager.hasSeenWelcomeFlow.collectAsStateWithLifecycle(initialValue = null)
     val isLoggedIn by sessionManager.isLoggedInFlow.collectAsStateWithLifecycle(initialValue = null)
     val userType by sessionManager.userTypeFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -84,6 +82,18 @@ fun AppNavGraph(
             LoginScreenComposableDestination
         }
     }
+
+
+    DestinationsNavHost(
+        navGraph = AppNavGraphs.root,
+        navController = navController,
+        start = startRoute,
+        dependenciesContainerBuilder = {
+            dependency(registrationViewModel)
+            dependency(sessionManager)
+            dependency(forgotPasswordViewModel)
+        }
+    )
 
 
 
@@ -209,7 +219,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                 }
             )
         },
-        onForgotPasswordClick = {},
+        onForgotPasswordClick = {navigator.navigate(ForgotPasswordScreenComposableDestination) },
         onRegisterClick = { navigator.navigate(RegisterScreenComposableDestination) },
         loginViewModel = loginViewModel,
         registrationViewModel = registrationViewModel
@@ -328,3 +338,34 @@ fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationVi
     RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }
 
+@Destination<RootNavGraph>
+@Composable
+fun ForgotPasswordScreenComposable(
+    navigator: DestinationsNavigator,
+    forgotPasswordViewModel: ForgotPasswordViewModel
+) {
+    ForgotPasswordScreen(
+        viewModel = forgotPasswordViewModel,
+        onLoginClick = {
+            navigator.navigate(LoginScreenComposableDestination) {
+                popUpTo(ForgotPasswordScreenComposableDestination) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Destination<RootNavGraph>
+@Composable
+fun ResetPasswordScreenComposable(
+    navigator: DestinationsNavigator,
+    forgotPasswordViewModel: ForgotPasswordViewModel
+) {
+    ResetPasswordScreen(
+        viewModel = forgotPasswordViewModel,
+        onLoginClick = {
+            navigator.navigate(LoginScreenComposableDestination) {
+                popUpTo(ResetPasswordScreenComposableDestination) { inclusive = true }
+            }
+        }
+    )
+}
