@@ -78,10 +78,9 @@ fun PropertiesScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(22.dp))
                 Text(
                     text = "Properties",
                     style = MaterialTheme.typography.titleLarge,
@@ -110,14 +109,17 @@ fun PropertiesScreen(
                     containerColor = Color.Unspecified,
                     contentColor = Color.Unspecified,
                     shape = RoundedCornerShape(50),
-                    elevation = FloatingActionButtonDefaults.elevation(0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_add),
-                        contentDescription = "Add Property",
-                        modifier = Modifier.size(60.dp)
-                    )
-                }
+                    modifier = Modifier.size(60.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                    content = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_add),
+                            contentDescription = "Add Property",
+                            modifier = Modifier.size(60.dp),
+                            tint = Color.Unspecified
+                        )
+                    }
+                )
             }
         }
     }

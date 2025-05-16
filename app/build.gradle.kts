@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.vico.core)
     implementation(libs.charts)
     implementation(libs.accompanist.swiperefresh)
+    implementation(libs.accompanist.systemuicontroller)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)

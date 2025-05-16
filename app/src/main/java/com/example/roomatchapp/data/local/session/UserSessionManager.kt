@@ -41,7 +41,11 @@ class UserSessionManager(private val context: Context) {
     }
 
     suspend fun clearUserSession() {
-        context.dataStore.edit { it.clear() }
+        context.dataStore.edit { prefs ->
+            val hasSeenWelcome = prefs[HAS_SEEN_WELCOME_KEY] ?: false
+            prefs.clear()
+            prefs[HAS_SEEN_WELCOME_KEY] = hasSeenWelcome
+        }
     }
 
     val tokenFlow: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }

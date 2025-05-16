@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.login
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,8 +12,10 @@ import com.example.roomatchapp.data.remote.dto.IncompleteRegistrationException
 import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import com.example.roomatchapp.di.AppDependencies.userRepository
+import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.domain.repository.UserRepository
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
+import com.example.roomatchapp.utils.downloadImageBitmap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,8 +30,7 @@ data class LoginState(
 
 class LoginViewModel(
     private val repository: UserRepository,
-    private val sessionManager: UserSessionManager
-
+    private val sessionManager: UserSessionManager,
 ) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
@@ -90,6 +92,7 @@ class LoginViewModel(
     fun googleSignIn(
         idToken: String,
         registerViewModel: RegistrationViewModel,
+        context: Context
     ) {
         Log.d("TAG", "LoginViewModel-Google sign in with token: $idToken")
         viewModelScope.launch {
@@ -111,12 +114,35 @@ class LoginViewModel(
             } catch (e: IncompleteRegistrationException) {
                 Log.e("TAG", "LoginViewModel-Google sign in catch: ${e.message}", e)
 
-                registerViewModel.prefillGoogleData(
-                    e.email,
-                    e.fullName,
-                    e.profilePicture
-                )
+                val bitmap = downloadImageBitmap(e.profilePicture.toString())
+
+                if (bitmap != null) {
+                    CloudinaryModel().uploadImage(
+                        bitmap = bitmap,
+                        name = "google_profile_${System.currentTimeMillis()}",
+                        folder = "roomatchapp/googleProfilePics",
+                        onSuccess = { url ->
+                            val uploadedUrl = url.toString()
+                            registerViewModel.prefillGoogleData(
+                                e.email,
+                                e.fullName,
+                                uploadedUrl
+                            )
+                        },
+                        onError = {
+                            Log.e("TAG", "Upload Error: $it")
+                            registerViewModel.prefillGoogleData(
+                                e.email,
+                                e.fullName,
+                                e.profilePicture
+                            )
+                            _googleSignInStatus.value = "NEED_REGISTRATION"
+                        },
+                        context = context
+                    )
+                }
                 _googleSignInStatus.value = "NEED_REGISTRATION"
+
             } catch (e: Exception) {
                 _googleSignInStatus.value = "ERROR $e"
             } finally {

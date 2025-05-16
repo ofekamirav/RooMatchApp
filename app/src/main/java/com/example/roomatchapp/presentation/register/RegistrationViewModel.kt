@@ -16,6 +16,7 @@ import com.example.roomatchapp.data.model.LookingForRoomiesPreference
 import com.example.roomatchapp.data.remote.dto.RoommateUser
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -361,6 +362,7 @@ fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) 
                 Log.e("RegistrationViewModel", "SubmitRoommate Error", e)
                 _errorMessage.value = e.message ?: "Unknown error occurred"
             } finally {
+                delay(1500)
                 isLoading = false
             }
         }

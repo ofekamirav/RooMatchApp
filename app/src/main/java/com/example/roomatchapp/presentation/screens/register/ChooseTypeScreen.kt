@@ -51,13 +51,10 @@ fun ChooseTypeUserScreen(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (isOwnerLoading) {
-            LoadingAnimation(
-                isLoading = isOwnerLoading,
-                animationResId = R.raw.loading_animation
-            )
-        } else {
-
+        LoadingAnimation(
+            isLoading = isOwnerLoading,
+            animationResId = R.raw.loading_animation
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -86,7 +83,7 @@ fun ChooseTypeUserScreen(
                         onOwnerClick { isLoading ->
                             isOwnerLoading = isLoading
                         }
-                              },
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()

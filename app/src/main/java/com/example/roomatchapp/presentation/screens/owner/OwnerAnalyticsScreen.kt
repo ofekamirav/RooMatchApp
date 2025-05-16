@@ -7,6 +7,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,50 +38,64 @@ fun OwnerAnalyticsScreen(viewModel: OwnerAnalyticsViewModel) {
 
     val analyticsResponse = viewModel.analyticsResponse.collectAsState()
     val message = viewModel.message.collectAsState()
+    var isLoading = remember { mutableStateOf(true) }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(22.dp))
-        Text(
-            text = "Properties Analytics",
-            style = MaterialTheme.typography.titleLarge,
-            color = Primary,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        when {
-            analyticsResponse.value.analytics == null && message.value.isEmpty() -> {
-                LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
-            }
-            analyticsResponse.value.analytics == null && message.value.isNotEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = message.value,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Secondary,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-            else -> {
-                val analytics = analyticsResponse.value.analytics
-                OverviewCard(analyticsResponse = analytics)
-                Spacer(modifier = Modifier.height(24.dp))
-                MatchesPerPropertySection(analytics?.matchesPerProperty)
+    ){
+        LoadingAnimation(
+            isLoading = isLoading.value,
+            animationResId = R.raw.loading_animation
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Background)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Properties Analytics",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Primary,
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                PropertyScoreBreakdownSection(analytics?.matchesPerProperty)
+                when {
+                    analyticsResponse.value.analytics == null && message.value.isEmpty() -> {
+                        isLoading.value = true
+                    }
+                    analyticsResponse.value.analytics == null && message.value.isNotEmpty() -> {
+                        isLoading.value = false
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = message.value,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Secondary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    else -> {
+                        isLoading.value = false
+                        val analytics = analyticsResponse.value.analytics
+                        OverviewCard(analyticsResponse = analytics)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        MatchesPerPropertySection(analytics?.matchesPerProperty)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        PropertyScoreBreakdownSection(analytics?.matchesPerProperty)
+                    }
+                }
             }
         }
     }
+
 
 }
 
@@ -167,22 +183,18 @@ fun MatchesPerPropertySection(matchesList: List<PropertyMatchAnalytics>?) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp, start = 4.dp, end = 4.dp),
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Property",
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.weight(1.5f),
                 color = Primary
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Box(modifier = Modifier.weight(3f))
             Text(
                 text = "Matches",
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Start,
                 color = Primary
             )
         }

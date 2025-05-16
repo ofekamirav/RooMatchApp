@@ -37,15 +37,21 @@ fun RoommatePreviewScreen(
     onBackClick: () -> Unit
 ) {
     val roommate by viewModel.roommate.collectAsState()
-
-    if (roommate != null) {
-        RoommatePreviewContent(roommate = roommate!!, onBackClick = onBackClick)
-    } else {
-        Box(
-            modifier = Modifier.fillMaxSize().background(Background),
-            contentAlignment = Alignment.Center
+    var isLoading by remember { mutableStateOf(true) }
+    Box(
+        modifier = Modifier.fillMaxSize().background(Background),
+        contentAlignment = Alignment.Center
+    ){
+        LoadingAnimation(
+            isLoading = isLoading,
+            animationResId = R.raw.loading_animation
         ) {
-            LoadingAnimation(true, animationResId = R.raw.loading_animation)
+            if (roommate != null) {
+                isLoading = false
+                RoommatePreviewContent(roommate = roommate!!, onBackClick = onBackClick)
+            } else {
+                isLoading = true
+            }
         }
     }
 }

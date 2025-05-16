@@ -75,7 +75,7 @@ fun GalleryGridScreen(viewModel: AddPropertyViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(8.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

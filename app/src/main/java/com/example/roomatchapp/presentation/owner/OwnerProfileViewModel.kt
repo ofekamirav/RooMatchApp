@@ -15,8 +15,11 @@ class OwnerProfileViewModel(
     private val ownerId: String
 ) : ViewModel() {
 
-    private val _owner = MutableStateFlow<PropertyOwnerUser?>(null)
-    val owner: StateFlow<PropertyOwnerUser?> = _owner
+    private val _owner = MutableStateFlow<PropertyOwner?>(null)
+    val owner: StateFlow<PropertyOwner?> = _owner
+
+    private val isProfileLoaded = MutableStateFlow(false)
+    val profileLoaded: StateFlow<Boolean> = isProfileLoaded
 
     init {
         loadOwnerProfile()
@@ -25,11 +28,17 @@ class OwnerProfileViewModel(
     private fun loadOwnerProfile() {
         viewModelScope.launch {
             try {
-                Log.d("OwnerProfileVM", "Loading owner profile for ID: $ownerId")
+                Log.d("TAG", "OwnerProfileVM-Loading owner profile for ID: $ownerId")
                 val result = userRepository.getPropertyOwner(ownerId)
-                _owner.value = result as PropertyOwnerUser?
+                if (result != null) {
+                    _owner.value = result
+                    isProfileLoaded.value = true
+                    Log.d("TAG", "OwnerProfileVM-Owner profile loaded: $result")
+                } else {
+                    Log.e("TAG", "OwnerProfileVM-Failed to load owner profile")
+                }
             } catch (e: Exception) {
-                Log.e("OwnerProfileVM", "Error loading owner profile", e)
+                Log.e("TAG", "OwnerProfileVM-Error loading owner profile", e)
                 _owner.value = null
             }
         }

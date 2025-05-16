@@ -38,7 +38,9 @@ fun CapsuleTextField(
     enabled: Boolean = true,
     isPassword: Boolean = false,
     isEditable: Boolean = false,
-    datePicker: () -> Unit = {}
+    datePicker: () -> Unit = {},
+    lineCount: Int = 1,
+    singleLine: Boolean = true
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
 
@@ -73,8 +75,8 @@ fun CapsuleTextField(
                 fontWeight = FontWeight.Light
             )
         },
-        singleLine = !isEditable,
-        maxLines = if (isEditable) 1 else 6,
+        singleLine = singleLine,
+        maxLines = lineCount,
         isError = isError,
         modifier = modifier
             .fillMaxWidth()
