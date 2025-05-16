@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -40,6 +41,7 @@ import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.text.input.KeyboardType
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.theme.Secondary
 import com.example.roomatchapp.presentation.theme.cardBackground
@@ -75,7 +77,7 @@ fun RegisterScreen(
                 modifier = Modifier
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
             ){
                 Column(
@@ -149,7 +151,10 @@ fun RegisterScreen(
                             supportingText = { state.phoneNumberError?.let { Text(text = it) } },
                             singleLine = true,
                             label = { Text("Phone Number") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone
+                            )
                         )
                     }
                     // Password input

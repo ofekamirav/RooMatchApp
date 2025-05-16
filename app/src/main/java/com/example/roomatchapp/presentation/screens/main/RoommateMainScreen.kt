@@ -1,14 +1,14 @@
 package com.example.roomatchapp.presentation.screens.main
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.background
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +25,7 @@ import com.example.roomatchapp.data.model.*
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.roommate.DiscoverViewModel
 import com.example.roomatchapp.presentation.roommate.ProfileViewModel
+import com.example.roomatchapp.presentation.theme.Background
 
 
 @Composable
@@ -35,8 +36,16 @@ fun RoommateMainScreen(
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
+    val systemUiController = rememberSystemUiController()
+
+    SideEffect {
+        systemUiController.setStatusBarColor(
+            color = Background
+        )
+    }
 
     Scaffold(
+        modifier = Modifier.background(Background),
         bottomBar = {
             BottomNavigationBar(
                 navController = navController,
@@ -50,10 +59,7 @@ fun RoommateMainScreen(
             startDestination = "roommate_discover",
             modifier = Modifier
                 .fillMaxSize()
-                .consumeWindowInsets(paddingValues)
-                .padding(
-                    bottom = WindowInsets.statusBars.asPaddingValues().calculateBottomPadding() + 35.dp,
-                )
+                .padding(paddingValues)
         ) {
             composable("roommate_matches") {
                 // roommate matches screen
@@ -63,7 +69,8 @@ fun RoommateMainScreen(
                     val viewModel = remember(seekerId) {
                         DiscoverViewModel(
                             matchRepository = AppDependencies.matchRepository,
-                            seekerId = seekerId
+                            seekerId = seekerId,
+                            likeRepository = AppDependencies.likeRepository
                         )
                     }
                     DiscoverScreen(viewModel = viewModel)
@@ -96,29 +103,3 @@ fun RoommateMainScreenPreview() {
     RoommateMainScreen(seekerId = "preview", onLogout = {})
 }
 
-fun getMockRoommate(): Roommate {
-    return Roommate(
-        id = "1",
-        email = "test@example.com",
-        fullName = "Ofek Amirav",
-        phoneNumber = "123456789",
-        birthDate = "1998-05-20",
-        password = "password",
-        work = "Developer",
-        gender = Gender.MALE,
-        attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
-        hobbies = emptyList(),
-        lookingForRoomies = listOf(
-            LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
-            LookingForRoomiesPreference(Attribute.QUIET, 1.0, true)
-        ),
-        lookingForCondo = emptyList(),
-        roommatesNumber = 2,
-        minPropertySize = 50,
-        maxPropertySize = 120,
-        minPrice = 2000,
-        maxPrice = 4000,
-        personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
-        profilePicture = null
-    )
-}

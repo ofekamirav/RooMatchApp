@@ -11,6 +11,7 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -70,53 +71,55 @@ fun AddPropertyFlow(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .matchParentSize()
-                .then(if (isLoading) Modifier.blur(4.dp) else Modifier)
+        LoadingAnimation(
+            isLoading = isLoading,
+            animationResId = R.raw.loading_animation
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(top = 22.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .then(if (isLoading) Modifier.blur(4.dp) else Modifier)
+                    .background(Background)
+                    .padding(start = 16.dp, end = 16.dp)
             ) {
-                IconButton(onClick = {
-                    if (stepIndex > 0) stepIndex-- else navigator.popBackStack()
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Primary, modifier = Modifier.size(40.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = {
+                        if (stepIndex > 0) stepIndex-- else navigator.popBackStack()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Primary, modifier = Modifier.size(40.dp))
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(4.dp))
-            SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = 3)
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = 3)
+                Spacer(modifier = Modifier.height(8.dp))
 
-            AnimatedContent(
-                targetState = stepIndex,
-                transitionSpec = {
-                    slideInHorizontally { it } + fadeIn() with slideOutHorizontally { -it } + fadeOut()
-                },
-                modifier = Modifier.weight(1f)
-            ) { page ->
-                when (page) {
-                    0 -> AddPropertyScreen(
-                        viewModel = viewModel,
-                        onNext = { stepIndex++ }
-                    )
-                    1 -> AddPropertyScreen1 (
-                        viewModel = viewModel,
-                        onNext = { stepIndex++ }
-                    )
-                    2 -> GalleryGridScreen(
-                        viewModel = viewModel
-                    )
+                AnimatedContent(
+                    targetState = stepIndex,
+                    transitionSpec = {
+                        slideInHorizontally { it } + fadeIn() with slideOutHorizontally { -it } + fadeOut()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { page ->
+                    when (page) {
+                        0 -> AddPropertyScreen(
+                            viewModel = viewModel,
+                            onNext = { stepIndex++ }
+                        )
+                        1 -> AddPropertyScreen1 (
+                            viewModel = viewModel,
+                            onNext = { stepIndex++ }
+                        )
+                        2 -> GalleryGridScreen(
+                            viewModel = viewModel
+                        )
+                    }
                 }
             }
         }
 
-        if (isLoading) {
-            LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
-        }
     }
 }

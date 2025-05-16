@@ -21,18 +21,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Gender
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.LoadingAnimation
-import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
@@ -162,25 +161,36 @@ fun RoommateStep1(
             Text("Please upload your profile picture", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
 
             Spacer(modifier = Modifier.height(8.dp))
+            val imagePainter = rememberAsyncImagePainter(state.profilePicture.ifBlank { null })
+            val imageState = imagePainter.state
+            val showImage = imageState is AsyncImagePainter.State.Success
+            val isLoadingImage = viewModel.isUploadingImage || !showImage
             Box(
                 modifier = Modifier
                     .size(150.dp)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (viewModel.isUploadingImage) {
-                    LoadingAnimation(
-                        isLoading = viewModel.isUploadingImage,
-                        animationResId = R.raw.loading_animation
-                    )
-                } else {
-                    Image(
-                        painter = if (state.profilePicture.isNotBlank()) rememberAsyncImagePainter(state.profilePicture)
-                        else painterResource(id = R.drawable.avatar),
-                        contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
+                LoadingAnimation(
+                    isLoading = isLoadingImage,
+                    animationResId = R.raw.loading_animation
+                ) {
+                    if(showImage){
+                        Image(
+                            painter = imagePainter,
+                            contentDescription = "Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }else{
+                        Icon(
+                            painter = painterResource(id = R.drawable.avatar),
+                            contentDescription = "Avatar",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(150.dp)
+                        )
+                    }
+
                 }
             }
 

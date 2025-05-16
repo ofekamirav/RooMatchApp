@@ -91,12 +91,13 @@ fun AddPropertyScreen(
     Box(
         modifier = Modifier.fillMaxSize()
             .background(Background)
-            .padding(16.dp)
-    ) {
+            .padding(8.dp),
+        ) {
         LazyColumn(
             modifier = Modifier
+                .fillMaxSize()
                 .background(Background),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             item {
                 Text(

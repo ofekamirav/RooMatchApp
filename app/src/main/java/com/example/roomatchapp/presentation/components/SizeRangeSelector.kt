@@ -6,6 +6,7 @@ import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
@@ -22,15 +23,21 @@ fun SizeRangeSelector(
         )
         RangeSlider(
             value = sizeRange,
-            onValueChange = onValueChange,
+            onValueChange = {
+                val start = (it.start / 10).toInt() * 10f
+                val end = (it.endInclusive / 10).toInt() * 10f
+                onValueChange(start..end)
+            },
             valueRange = 10f..200f,
-            steps = 19,
+            enabled = true,
             colors = SliderDefaults.colors(
                 thumbColor = Primary,
+                disabledThumbColor = Primary.copy(alpha = 0.3f),
                 activeTrackColor = Primary,
-                inactiveTrackColor = Secondary
+                inactiveTrackColor = Secondary,
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent
             ),
-            enabled = enabled
         )
     }
 }

@@ -16,7 +16,7 @@ interface MatchApiService {
 
     suspend fun getProperty(propertyId: String): Property?
 
-    suspend fun getRoommateMatches(seekerId: String): List<Match>?
+    suspend fun deleteMatch(matchId: String): Boolean
 
 
 }

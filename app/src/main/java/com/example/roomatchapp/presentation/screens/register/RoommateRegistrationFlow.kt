@@ -72,62 +72,74 @@ fun RoommateFlowScreen(
     Box(
         modifier = Modifier.fillMaxSize().background(Background).padding(8.dp)
     ) {
-        Column {
-            Row(
-                Modifier.fillMaxWidth().padding(top = 22.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = {
-                    if (stepIndex > 0) stepIndex-- else navigator.popBackStack()
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Primary, modifier = Modifier.size(40.dp))
+        LoadingAnimation(
+            isLoading = isLoading,
+            animationResId = R.raw.loading_animation
+        ) {
+            Column {
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 22.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = {
+                        if (stepIndex > 0) stepIndex-- else navigator.popBackStack()
+                    }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Primary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = 4)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                AnimatedContent(
+                    targetState = stepIndex,
+                    transitionSpec = {
+                        slideInHorizontally { it } + fadeIn() with slideOutHorizontally { -it } + fadeOut()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { page ->
+                    when (page) {
+                        0 -> RoommateStep1(
+                            viewModel = viewModel,
+                            onContinue = { stepIndex++ }
+                        )
+
+                        1 -> RoommateStep2(
+                            viewModel = viewModel,
+                            onContinue = { stepIndex++ }
+                        )
+
+                        2 -> RoommateStep3(
+                            viewModel = viewModel,
+                            onContinue = { stepIndex++ },
+                            onAIButtonClick = {
+                                viewModel.suggestPersonalBio(
+                                    AppDependencies.userRepository,
+                                    onError = {
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+                        )
+
+                        3 -> RoommateStep4(
+                            viewModel = viewModel,
+                            onSubmit = {
+                                Log.d("TAG", "RoommateFlowScreen: Submit button clicked")
+                                viewModel.submitRoommate(AppDependencies.userRepository)
+                                Toast.makeText(context, "Roommate submitted!", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
-            SurveyTopAppProgress(stepIndex = stepIndex, totalSteps = 4)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            AnimatedContent(
-                targetState = stepIndex,
-                transitionSpec = {
-                    slideInHorizontally { it } + fadeIn() with slideOutHorizontally { -it } + fadeOut()
-                },
-                modifier = Modifier.weight(1f)
-            ) { page ->
-                when (page) {
-                    0 -> RoommateStep1(
-                        viewModel = viewModel,
-                        onContinue = { stepIndex++ }
-                    )
-                    1 -> RoommateStep2(
-                        viewModel = viewModel,
-                        onContinue = { stepIndex++ }
-                    )
-                    2 -> RoommateStep3(
-                        viewModel = viewModel,
-                        onContinue = { stepIndex++ },
-                        onAIButtonClick = {
-                            viewModel.suggestPersonalBio(
-                                AppDependencies.userRepository,
-                                onError = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
-                            )
-                        }
-                    )
-                    3 -> RoommateStep4(
-                        viewModel = viewModel,
-                        onSubmit = {
-                            Log.d("TAG","RoommateFlowScreen: Submit button clicked")
-                            viewModel.submitRoommate(AppDependencies.userRepository)
-                            Toast.makeText(context, "Roommate submitted!", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-            }
-        }
-
-        if (isLoading) {
-            LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
         }
     }
 }

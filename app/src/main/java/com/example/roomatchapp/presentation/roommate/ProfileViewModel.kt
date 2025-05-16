@@ -18,6 +18,9 @@ class ProfileViewModel(
     private val _roommate = MutableStateFlow<Roommate?>(null)
     val roommate: StateFlow<Roommate?> = _roommate
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     init {
         loadRoommateProfile()
     }
@@ -29,6 +32,7 @@ class ProfileViewModel(
                 val result = userRepository.getRoommate(seekerId)
                 Log.d("ProfileViewModel", "Loaded roommate: ${result?.fullName}")
                 _roommate.value = result
+                _isLoading.value = false
             } catch (e: Exception) {
                 Log.e("ProfileViewModel", "Error loading roommate", e)
                 _roommate.value = null

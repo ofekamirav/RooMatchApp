@@ -12,6 +12,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.di.CloudinaryModel
@@ -29,6 +31,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
         enableEdgeToEdge()
         // Initialize ROOM, Cloudinary and UserSessionManager
         sessionManager = UserSessionManager(applicationContext)
@@ -36,7 +42,6 @@ class MainActivity : ComponentActivity() {
         AppDependencies.init(applicationContext)
         CloudinaryModel.init(this)
 
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
         setContent {
             RooMatchAppTheme {
                 Surface(

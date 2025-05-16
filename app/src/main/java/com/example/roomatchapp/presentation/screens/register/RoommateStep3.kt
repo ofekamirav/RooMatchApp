@@ -47,151 +47,144 @@ fun RoommateStep3(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                "Which roomies are you looking for...",
-                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                fontSize = 26.sp,
-                lineHeight = 32.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                "Select at least 3 attributes",
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            FlowRow {
-                lookingForRoomies.forEach { attr ->
-                    val isSelected = state.lookingForRoomies.any { it.attribute == attr }
-
-                    Button(
-                        onClick = {
-                            if (!viewModel.isLoadingBio) {
-                                viewModel.toggleLookingForRoomies(attr)
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Primary else Secondary,
-                            contentColor = Color.White,
-                            disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .height(42.dp)
-                            .width(112.dp),
-                        enabled = !viewModel.isLoadingBio
-                    ) {
-                        Text(
-                            text = attr.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                            fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
-                            color = Color.White,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Visible
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            Text(
-                "Personal Bio:",
-                modifier = Modifier.align(Alignment.Start),
-                style = MaterialTheme.typography.titleSmall
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            CapsuleTextField(
-                value = state.personalBio,
-                onValueChange = {
-                    if (!viewModel.isLoadingBio) viewModel.updatePersonalBio(it)
-                },
-                placeholder = "Personal Bio",
+        LoadingAnimation(
+            isLoading = viewModel.isLoadingBio,
+            animationResId = R.raw.gemini_animation
+        ){
+            Column(
                 modifier = Modifier
-                    .height(170.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(20),
-                enabled = !viewModel.isLoadingBio
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Get help generating your bio",
+                    "Which roomies are you looking for...",
+                    fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                    fontSize = 26.sp,
+                    lineHeight = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    "Select at least 3 attributes",
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.Gray
                 )
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(
-                    onClick = {
-                        if (!viewModel.isLoadingBio) {
-                            // Set loading state immediately
-                            viewModel.isLoadingBio = true
-                            onAIButtonClick { isLoading -> viewModel.isLoadingBio = true }
-                            Log.d("TAG", "RoommateStep3: AI Button Clicked")
+                Spacer(modifier = Modifier.height(8.dp))
+
+                FlowRow {
+                    lookingForRoomies.forEach { attr ->
+                        val isSelected = state.lookingForRoomies.any { it.attribute == attr }
+
+                        Button(
+                            onClick = {
+                                if (!viewModel.isLoadingBio) {
+                                    viewModel.toggleLookingForRoomies(attr)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelected) Primary else Secondary,
+                                contentColor = Color.White,
+                                disabledContainerColor = if (isSelected) Primary.copy(alpha = 0.6f) else Secondary.copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .height(42.dp)
+                                .width(112.dp),
+                            enabled = !viewModel.isLoadingBio
+                        ) {
+                            Text(
+                                text = attr.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                                fontFamily = MaterialTheme.typography.labelMedium.fontFamily,
+                                color = Color.White,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Visible
+                            )
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                Text(
+                    "Personal Bio:",
+                    modifier = Modifier.align(Alignment.Start),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                CapsuleTextField(
+                    value = state.personalBio,
+                    onValueChange = {
+                        if (!viewModel.isLoadingBio) viewModel.updatePersonalBio(it)
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Secondary,
-                        disabledContainerColor = Secondary.copy(alpha = 0.5f)
-                    ),
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier.size(65.dp),
-                    enabled = !viewModel.isLoadingBio
+                    placeholder = "Personal Bio",
+                    modifier = Modifier
+                        .height(170.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(20),
+                    enabled = !viewModel.isLoadingBio,
+                    lineCount = 5,
+                    singleLine = false
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_gemini),
-                        contentDescription = "AI Icon",
-                        modifier = Modifier.fillMaxSize(),
+                    Text(
+                        text = "Get help generating your bio",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Button(
+                        onClick = {
+                            if (!viewModel.isLoadingBio) {
+                                // Set loading state immediately
+                                viewModel.isLoadingBio = true
+                                onAIButtonClick { isLoading -> viewModel.isLoadingBio = true }
+                                Log.d("TAG", "RoommateStep3: AI Button Clicked")
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Secondary,
+                            disabledContainerColor = Secondary.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.size(65.dp),
+                        enabled = !viewModel.isLoadingBio
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_gemini),
+                            contentDescription = "AI Icon",
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = onContinue,
+                    enabled = isStepValid && !viewModel.isLoadingBio,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Primary,
+                        contentColor = Color.White,
+                        disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                        disabledContentColor = Color.White.copy(alpha = 0.5f)
+                    ),
+                ) {
+                    Text(
+                        "Continue",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-            Button(
-                onClick = onContinue,
-                enabled = isStepValid && !viewModel.isLoadingBio,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Primary,
-                    contentColor = Color.White,
-                    disabledContainerColor = Secondary.copy(alpha = 0.5f),
-                    disabledContentColor = Color.White.copy(alpha = 0.5f)
-                ),
-            ) {
-                Text(
-                    "Continue",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
-                )
-            }
-        }
-
-        if (viewModel.isLoadingBio) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Transparent),
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingAnimation(
-                    isLoading = true,
-                    animationResId = R.raw.gemini_animation
-                )
             }
         }
     }

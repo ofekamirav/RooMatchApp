@@ -1,7 +1,10 @@
 package com.example.roomatchapp.data.repository
 
+import android.util.Log
 import com.example.roomatchapp.data.local.dao.CacheDao
 import com.example.roomatchapp.data.local.dao.MatchDao
+import com.example.roomatchapp.data.local.dao.PropertyDao
+import com.example.roomatchapp.data.local.dao.RoommateDao
 import com.example.roomatchapp.data.model.CacheEntity
 import com.example.roomatchapp.data.model.CacheType
 import com.example.roomatchapp.data.model.Match
@@ -12,6 +15,8 @@ import com.example.roomatchapp.domain.repository.MatchRepository
 
 class MatchRepositoryImpl(
     private val apiService: MatchApiService,
+    private val userDao: RoommateDao,
+    private val propertyDao: PropertyDao,
     private val cacheDao: CacheDao,
     private val matchDao: MatchDao
 ) : MatchRepository {
@@ -30,63 +35,57 @@ class MatchRepositoryImpl(
 
     override suspend fun getRoommate(roommateId: String): Roommate? {
         //trying to get the roommate from the ROOM first and if it's not there, get it from the API
-        return apiService.getRoommate(roommateId)
+        val cacheEntry = cacheDao.getByIdAndType(roommateId, CacheType.ROOMMATE)
+        val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= 5 * 60 * 1000
+        if (!isCacheValid) {
+            val roommate = apiService.getRoommate(roommateId)
+            if (roommate != null) {
+                cacheDao.insert(
+                    CacheEntity(
+                        type = CacheType.ROOMMATE,
+                        entityId = roommate.id,
+                        lastUpdatedAt = System.currentTimeMillis()
+                    )
+                )
+                userDao.insert(roommate)
+                return roommate
+            }
+        }
+        return userDao.getById(roommateId)
     }
 
     override suspend fun getProperty(propertyId: String): Property? {
-        //trying to get the property from the ROOM first and if it's not there, get it from the API
-        return apiService.getProperty(propertyId)
-    }
+        val cacheEntry = cacheDao.getByIdAndType(propertyId, CacheType.PROPERTY)
+        val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= 5 * 60 * 1000
 
-    override suspend fun getRoommateMatches(
-        seekerId: String,
-        forceRefresh: Boolean,
-        maxCacheAgeMillis: Long,
-    ): List<Match>? {
-        val cacheEntities = cacheDao.getAllByType(CacheType.MATCH)
-        val now = System.currentTimeMillis()
-
-        //Get all matches from the ROOM
-        val matchesWithCache  = cacheEntities.mapNotNull { cacheEntry ->
-            matchDao.getMatchById(cacheEntry.entityId)?.let { match ->
-                match to cacheEntry
-            }
-        }
-
-        //Check if the matches are fresh enough
-        val isCacheFresh = matchesWithCache .all { (_, cacheEntry) ->
-            (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
-        }
-
-        if (forceRefresh || isCacheFresh) {
-            val freshMatches = apiService.getRoommateMatches(seekerId)
-
-            freshMatches?.let{ matches ->
-                matches.forEach { match ->
-                    matchDao.insert(match)
-
-                    val existingCache = cacheDao.getByEntityId(match.id.toString())
-
-                    val updatedCache = if (existingCache != null) {
-                        existingCache.copy(lastUpdatedAt = now)
-                    } else {
+        if (!isCacheValid) {
+            return try {
+                val property = apiService.getProperty(propertyId)
+                if (property != null) {
+                    cacheDao.insert(
                         CacheEntity(
-                            type = CacheType.MATCH,
-                            entityId = match.id.toString(),
-                            lastUpdatedAt = now
+                            type = CacheType.PROPERTY,
+                            entityId = property.id,
+                            lastUpdatedAt = System.currentTimeMillis()
                         )
-                    }
-                    cacheDao.insert(updatedCache)
+                    )
+                    propertyDao.insert(property)
                 }
-
+                property
+            } catch (e: Exception) {
+                Log.e("MatchRepository", "Failed to load property from API", e)
+                null
             }
-
-            return freshMatches
         }
 
-        return matchesWithCache
-            .filter { (match, _) -> match.seekerId == seekerId }
-            .map { it.first }
-            .ifEmpty { null }
+        return propertyDao.getById(propertyId)
     }
+
+
+    override suspend fun deleteMatch(matchId: String): Boolean {
+        cacheDao.delete(matchId)
+        matchDao.delete(matchId)
+        return apiService.deleteMatch(matchId)
+    }
+
 }

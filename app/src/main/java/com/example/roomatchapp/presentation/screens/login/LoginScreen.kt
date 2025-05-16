@@ -81,7 +81,7 @@ fun LoginScreen(
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken
             if (idToken != null) {
-                loginViewModel.googleSignIn(idToken.toString(),registrationViewModel)
+                loginViewModel.googleSignIn(idToken.toString(),registrationViewModel,context)
             }
         } catch (e: ApiException) {
 
@@ -95,129 +95,129 @@ fun LoginScreen(
             .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
         contentAlignment = Alignment.TopCenter
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Logo
-            Image(
-                painter = painterResource(id = R.drawable.logoname),
-                contentDescription = "Logo",
-                modifier = Modifier.size(200.dp)
-            )
-            // Card container
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
+        LoadingAnimation(
+            isLoading = isLoading,
+            animationResId = R.raw.loading_animation
+        ){
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                // Logo
+                Image(
+                    painter = painterResource(id = R.drawable.logoname),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(200.dp)
+                )
+                // Card container
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
                 ) {
-                    Text("Log in", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
-
-                    // Google Sign in
-                    Button(
-                        onClick = {val signinIntent = googleSignInClient.signInIntent
-                                  launcher.launch(signinIntent)
-                                  },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5FB)),
-                        modifier = Modifier.fillMaxWidth().height(55.dp)
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_google),
-                            contentDescription = "Google icon",
-                            tint = Color.Unspecified
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Sign in with Google", color = Color(0xFF4285F4))
-                    }
+                        Text("Log in", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
 
-                    // Email input
-                    OutlinedTextField(
-                        value = state.email,
-                        onValueChange = { email ->
-                            loginViewModel.updateState(
-                                state.copy(
-                                    email = email,
-                                    emailError = if (loginViewModel.isValidEmail(email)) null else "Email is not valid"
-                                )
+                        // Google Sign in
+                        Button(
+                            onClick = {val signinIntent = googleSignInClient.signInIntent
+                                launcher.launch(signinIntent)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5FB)),
+                            modifier = Modifier.fillMaxWidth().height(55.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_google),
+                                contentDescription = "Google icon",
+                                tint = Color.Unspecified
                             )
-                        },
-                        isError = state.emailError != null,
-                        supportingText = { state.emailError?.let { Text(text = it) } },
-                        label = { Text("Enter your email address") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Sign in with Google", color = Color(0xFF4285F4))
+                        }
 
-                    // Password input
-                    PasswordTextField(
-                        value = state.password,
-                        onValueChange = { loginViewModel.updatePassword(it) },
-                        label = "Enter your password",
-                        error = state.passwordError
-                    )
-
-                    // Forgot password
-                    Text(
-                        "Forgot Password",
-                        fontSize = 12.sp,
-                        color = Primary,
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .clickable { onForgotPasswordClick() }
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    // Log in button
-                    Button(
-                        onClick = onLoginClick,
-                        enabled = loginViewModel.validateAllFields(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                        ,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Primary,
-                            contentColor = Color.White,
-                            disabledContainerColor = Primary.copy(alpha = 0.5f)
-                        ),
-                    ) {
-                        Text("Log in",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White
+                        // Email input
+                        OutlinedTextField(
+                            value = state.email,
+                            onValueChange = { email ->
+                                loginViewModel.updateState(
+                                    state.copy(
+                                        email = email,
+                                        emailError = if (loginViewModel.isValidEmail(email)) null else "Email is not valid"
+                                    )
+                                )
+                            },
+                            isError = state.emailError != null,
+                            supportingText = { state.emailError?.let { Text(text = it) } },
+                            label = { Text("Enter your email address") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    }
 
-                    // No account? Register
-                    Row(
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text("No Account ?", fontSize = 12.sp)
-                        Spacer(Modifier.width(4.dp))
+                        // Password input
+                        PasswordTextField(
+                            value = state.password,
+                            onValueChange = { loginViewModel.updatePassword(it) },
+                            label = "Enter your password",
+                            error = state.passwordError
+                        )
+
+                        // Forgot password
                         Text(
-                            text = "Registration",
+                            "Forgot Password",
                             fontSize = 12.sp,
                             color = Primary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { onRegisterClick() }
+                            modifier = Modifier
+                                .align(Alignment.End)
+                                .clickable { onForgotPasswordClick() }
                         )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        // Log in button
+                        Button(
+                            onClick = onLoginClick,
+                            enabled = loginViewModel.validateAllFields(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                            ,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary,
+                                contentColor = Color.White,
+                                disabledContainerColor = Primary.copy(alpha = 0.5f)
+                            ),
+                        ) {
+                            Text("Log in",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White
+                            )
+                        }
+
+                        // No account? Register
+                        Row(
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("No Account ?", fontSize = 12.sp)
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "Registration",
+                                fontSize = 12.sp,
+                                color = Primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { onRegisterClick() }
+                            )
+                        }
                     }
                 }
-            }
 
+            }
         }
-        if (isLoading) {
-            LoadingAnimation(
-                isLoading = true,
-                animationResId = R.raw.loading_animation,
-            )
-        }
+
     }
 }
 

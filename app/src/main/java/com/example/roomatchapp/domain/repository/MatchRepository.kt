@@ -11,5 +11,5 @@ interface MatchRepository {
     suspend fun likeProperty(match: Match): Boolean
     suspend fun getRoommate(roommateId: String): Roommate?
     suspend fun getProperty(propertyId: String): Property?
-    suspend fun getRoommateMatches(seekerId: String, forceRefresh: Boolean = false, maxCacheAgeMillis: Long = 5 * 60 * 1000): List<Match>?
+    suspend fun deleteMatch(matchId: String): Boolean
 }

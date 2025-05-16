@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.owner
 
+import CustomAlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,37 +23,57 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.presentation.components.LoadingAnimation
+import com.example.roomatchapp.presentation.owner.OwnerProfileViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
 
 @Composable
 fun OwnerProfileScreen(
-    owner: PropertyOwner?,
-    onLogoutClick: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    viewModel: OwnerProfileViewModel
 ) {
+    val owner by viewModel.owner.collectAsState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    val isProfileLoaded by viewModel.profileLoaded.collectAsState()
+
+    if (showLogoutDialog) {
+        CustomAlertDialog(
+            title = "Log Out",
+            message = "Are you sure you want to log out?",
+            onDismiss = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            dialogBackgroundColor = Background
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
     ) {
-        if (owner != null) {
+        LoadingAnimation(
+            isLoading = !isProfileLoaded,
+            animationResId = R.raw.loading_animation
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(22.dp))
                 Text(
                     text = "Profile",
                     style = MaterialTheme.typography.titleLarge,
                     color = Primary
                 )
 
-                val profilePainter = if (owner.profilePicture != null) {
-                    rememberAsyncImagePainter(owner.profilePicture)
+                val profilePainter = if (owner?.profilePicture != null) {
+                    rememberAsyncImagePainter(owner?.profilePicture)
                 } else {
                     painterResource(id = R.drawable.avatar)
                 }
@@ -69,7 +90,7 @@ fun OwnerProfileScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = owner.fullName,
+                    text = owner?.fullName?:"",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -89,7 +110,7 @@ fun OwnerProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = owner.email,
+                        text = owner?.email?:"",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -102,22 +123,34 @@ fun OwnerProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = owner.phoneNumber,
+                        text = owner?.phoneNumber?:"",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Date of Birth",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Third
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = owner?.birthDate?:"",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp)
+                    .padding(16.dp)
                     .align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 FloatingActionButton(
-                    onClick = { onLogoutClick() },
+                    onClick = { showLogoutDialog = true },
                     modifier = Modifier.size(60.dp),
                     containerColor = Color.Transparent,
                     elevation = FloatingActionButtonDefaults.elevation(0.dp)
@@ -144,28 +177,7 @@ fun OwnerProfileScreen(
                     )
                 }
             }
-        } else {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingAnimation(true, animationResId = R.raw.loading_animation)
-            }
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun OwnerProfileScreenPreview() {
-    val dummyOwner = PropertyOwner(
-        id = "1",
-        fullName = "David Cohen",
-        phoneNumber = "054-9876543",
-        birthDate = "1980-12-01",
-        email = "david@example.com",
-        password = "secure",
-        profilePicture = null
-    )
-    OwnerProfileScreen(owner = dummyOwner)
-}

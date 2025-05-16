@@ -60,11 +60,6 @@ fun AppNavGraph(
         Log.d("TAG", "AppNavGraph-hasSeenWelcome: $hasSeenWelcome, isLoggedIn: $isLoggedIn, userType: $userType")
     }
 
-    if (!isInitialized) {
-        LoadingAnimation(isLoading = true, animationResId = R.raw.loading_animation)
-        return
-    }
-
 
     val startRoute = hasSeenWelcome?.let {
         if (!it) {

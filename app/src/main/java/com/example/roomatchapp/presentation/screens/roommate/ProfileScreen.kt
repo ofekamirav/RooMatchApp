@@ -29,12 +29,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
-import com.google.common.io.Files.append
 
 @Composable
 fun ProfileScreen(
@@ -43,38 +39,41 @@ fun ProfileScreen(
 ) {
     val roommate by viewModel.roommate.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
 
-    if (roommate != null) {
-        ProfileContent(
-            roommate = roommate!!,
-            onLogoutClick = {
-                showLogoutDialog = true
-            }
+    if (showLogoutDialog) {
+        CustomAlertDialog(
+            title = "Log Out",
+            message = "Are you sure you want to log out?",
+            onDismiss = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            dialogBackgroundColor = Background
         )
-        if (showLogoutDialog) {
-            CustomAlertDialog(
-                title = "Log Out",
-                message = "Are you sure you want to log out?",
-                onDismiss = { showLogoutDialog = false },
-                onConfirm = {
-                    showLogoutDialog = false
-                    onLogout()
-                },
-                dialogBackgroundColor = Background
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoading || roommate == null) {
+            LoadingAnimation(
+                isLoading = true,
+                animationResId = R.raw.loading_animation
+            ){
+            }
+        } else {
+            ProfileContent(
+                roommate = roommate!!,
+                onLogoutClick = { showLogoutDialog = true }
             )
         }
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Background),
-            contentAlignment = Alignment.Center
-        ) {
-            LoadingAnimation(true, animationResId = R.raw.loading_animation)
-        }
     }
-
 }
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileContent(
@@ -85,13 +84,10 @@ fun ProfileContent(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .background(Background)
-                .padding(16.dp),
+                .padding(start = 16.dp, end = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(22.dp))
             Text(
                 text = "Profile",
                 style = MaterialTheme.typography.titleLarge,
@@ -157,15 +153,13 @@ fun ProfileContent(
             DividerSection()
             Spacer(modifier = Modifier.height(16.dp))
             HobbiesSection(roommate)
+            Spacer(modifier = Modifier.height(16.dp))
         }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp
-                )
-                .align(Alignment.BottomCenter),
+                .align(Alignment.BottomCenter)
+                .padding(start = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             FloatingActionButton(
@@ -292,7 +286,7 @@ fun LookingForSection(roommate: Roommate) {
 }
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun HobbiesSection(roommate: Roommate) {
+fun HobbiesSection(roommate: Roommate?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -308,7 +302,7 @@ fun HobbiesSection(roommate: Roommate) {
             maxItemsInEachRow = 3,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            roommate.hobbies.forEach { hobby->
+            roommate?.hobbies?.forEach { hobby->
                 ConnectItem(
                     iconRes = getIconForHobbie(hobby),
                     text = getDisplayLabelForHobby(hobby)

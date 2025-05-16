@@ -7,15 +7,19 @@ import com.example.roomatchapp.data.local.AppLocalDB
 import com.example.roomatchapp.data.local.LocalDatabaseProvider
 import com.example.roomatchapp.data.local.session.TokenAuthenticator
 import com.example.roomatchapp.data.local.session.UserSessionManager
+import com.example.roomatchapp.data.remote.api.like.LikeApiServiceImplementation
+import com.example.roomatchapp.data.remote.api.like.LikeApiService
 import com.example.roomatchapp.data.remote.api.match.MatchApiService
 import com.example.roomatchapp.data.remote.api.match.MatchApiServiceImplementation
 import com.example.roomatchapp.data.remote.api.property.PropertyApiService
 import com.example.roomatchapp.data.remote.api.property.PropertyApiServiceImplementation
 import com.example.roomatchapp.data.remote.api.user.UserApiService
 import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
+import com.example.roomatchapp.data.repository.LikeRepositoryImpl
 import com.example.roomatchapp.data.repository.MatchRepositoryImpl
 import com.example.roomatchapp.data.repository.PropertyRepositoryImpl
 import com.example.roomatchapp.data.repository.UserRepositoryImpl
+import com.example.roomatchapp.domain.repository.LikeRepository
 import com.example.roomatchapp.domain.repository.MatchRepository
 import com.example.roomatchapp.domain.repository.PropertyRepository
 import com.example.roomatchapp.domain.repository.UserRepository
@@ -37,7 +41,7 @@ import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "10.0.0.20" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "192.168.1.62" //if your are using emulator change ip to 10.0.2.2
 
     internal const val BASE_URL = "http://$computerIP:8080"
 
@@ -114,12 +118,14 @@ object AppDependencies {
     }
 
     val matchApiService: MatchApiService by lazy {
-        MatchApiServiceImplementation(httpClient, BASE_URL, sessionManager)
+        MatchApiServiceImplementation(httpClient, BASE_URL)
     }
 
     val matchRepository: MatchRepository by lazy {
         MatchRepositoryImpl(
             matchApiService,
+            localDB.roommateDao(),
+            localDB.propertyDao(),
             localDB.cacheDao(),
             localDB.matchDao()
         )
@@ -134,6 +140,18 @@ object AppDependencies {
             propertyApiService,
             localDB.cacheDao(),
             localDB.propertyDao()
+        )
+    }
+
+    val likeApiService: LikeApiService by lazy {
+        LikeApiServiceImplementation(httpClient, BASE_URL)
+    }
+
+    val likeRepository: LikeRepository by lazy {
+        LikeRepositoryImpl(
+            likeApiService,
+            localDB.cacheDao(),
+            localDB.matchDao()
         )
     }
 }

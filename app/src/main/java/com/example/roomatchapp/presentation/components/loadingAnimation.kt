@@ -22,25 +22,38 @@ fun LoadingAnimation(
     isLoading: Boolean,
     @RawRes animationResId: Int,
     animationSize: Dp = 120.dp,
+    blurTarget: @Composable () -> Unit
 ) {
-    if (isLoading) {
+    Box {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .clickable(enabled = true, onClick = {}),
-            contentAlignment = Alignment.Center,
+                .blur(if (isLoading) 4.dp else 0.dp)
+                .zIndex(0f)
         ) {
-            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(animationResId))
-            val progress by animateLottieCompositionAsState(
-                composition = composition,
-                iterations = LottieConstants.IterateForever //loop
-            )
+            blurTarget()
+        }
 
-            LottieAnimation(
-                composition = composition,
-                progress = progress,
-                modifier = Modifier.size(animationSize)
-            )
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Transparent)
+                    .clickable(enabled = true, onClick = {})
+                    .zIndex(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(animationResId))
+                val progress by animateLottieCompositionAsState(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever
+                )
+
+                LottieAnimation(
+                    composition = composition,
+                    progress = progress,
+                    modifier = Modifier.size(animationSize)
+                )
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
@@ -21,10 +24,14 @@ import com.example.roomatchapp.presentation.navigation.BottomNavItems
 import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
 import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
 import com.example.roomatchapp.presentation.owner.OwnerAnalyticsViewModel
+import com.example.roomatchapp.presentation.owner.OwnerProfileViewModel
 import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
 import com.example.roomatchapp.presentation.screens.owner.OwnerAnalyticsScreen
+import com.example.roomatchapp.presentation.screens.owner.OwnerProfileScreen
 import com.example.roomatchapp.presentation.screens.owner.properties.AddPropertyFlow
 import com.example.roomatchapp.presentation.screens.owner.properties.PropertiesScreen
+import com.example.roomatchapp.presentation.theme.Background
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable
 fun OwnerMainScreen(
@@ -34,8 +41,17 @@ fun OwnerMainScreen(
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
+    val systemUiController = rememberSystemUiController()
+
+    SideEffect {
+        systemUiController.setStatusBarColor(
+            color = Background
+        )
+    }
+
 
     Scaffold(
+        modifier = Modifier.background(Background),
         bottomBar = {
             BottomNavigationBar(
                 navController = navController,
@@ -48,11 +64,8 @@ fun OwnerMainScreen(
             navController = navController,
             startDestination = "owner_analytics",
             modifier = Modifier
-                .consumeWindowInsets(paddingValues)
                 .fillMaxSize()
-                .padding(
-                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 35.dp
-                )
+                .padding(paddingValues)
         ) {
             composable("owner_properties") {
                 if (ownerId.isNotBlank()){
@@ -87,6 +100,18 @@ fun OwnerMainScreen(
             }
             composable("owner_profile") {
                 // Owner profile screen
+                val viewModel = remember(ownerId) {
+                    OwnerProfileViewModel(
+                        userRepository = AppDependencies.userRepository,
+                        ownerId = ownerId
+                    )
+                }
+                OwnerProfileScreen(
+                    viewModel = viewModel,
+                    onLogout = {
+                        onLogout()
+                    }
+                )
             }
             composable("add_property") {
                 val viewModel = remember(ownerId) {
