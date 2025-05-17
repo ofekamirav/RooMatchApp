@@ -30,7 +30,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.*
 import com.example.roomatchapp.presentation.components.CapsuleTextField
-import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.components.DatePickerField
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CustomTeal
@@ -43,61 +42,68 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.di.CloudinaryModel
+import com.example.roomatchapp.domain.repository.UserRepository
 import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PriceRangeSelector
 import com.example.roomatchapp.presentation.components.SizeRangeSelector
-import com.example.roomatchapp.presentation.roommate.ProfileViewModel
+import com.example.roomatchapp.presentation.roommate.EditProfileUiState
+import com.example.roomatchapp.presentation.roommate.EditProfileViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun EditProfileScreen(viewModel: ProfileViewModel) {
+fun EditProfileScreen(viewModel: EditProfileViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
     val roommate by viewModel.roommate.collectAsState()
-    val isLoading = remember { mutableStateOf(true) }
+    val isLoading by viewModel.isLoading.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
-    ) {
-        LoadingAnimation(
-            isLoading = isLoading.value,
-            animationResId = R.raw.loading_animation
+    if (isLoading || roommate == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
         ) {
-            if (roommate != null) {
-                isLoading.value = false
-                EditProfileContent(roommate!!)
-            } else {
-                isLoading.value = true
-            }
+            CircularProgressIndicator(color = CustomTeal)
         }
+    } else {
+        EditProfileContent(uiState = uiState, roommate = roommate!!, viewModel = viewModel)
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun EditProfileContent(roommate: Roommate) {
+fun EditProfileContent(
+    uiState: EditProfileUiState,
+    roommate: Roommate,
+    viewModel: EditProfileViewModel
+) {    val isLoading by viewModel.isLoading.collectAsState()
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
-    var fullName by remember { mutableStateOf(roommate.fullName) }
-    var email by remember { mutableStateOf(roommate.email) }
-    var phone by remember { mutableStateOf(roommate.phoneNumber) }
-    var password by remember { mutableStateOf(roommate.password) }
+    var selectedPreferences by remember { mutableStateOf(uiState.lookingForRoomies.toMutableList()) }
+    var selectedCondoPreferences by remember { mutableStateOf(uiState.lookingForCondo.toMutableList()) }
+    var preferredRadius by remember { mutableStateOf(uiState.preferredRadiusKm) }
+    var priceRange by remember { mutableStateOf(uiState.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
+    var sizeRange by remember { mutableStateOf(uiState.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
+    var roommatesNumber by remember { mutableStateOf(uiState.roommatesNumber) }
+    var fullName by remember { mutableStateOf(uiState.fullName) }
+    var email by remember { mutableStateOf(uiState.email) }
+    var phone by remember { mutableStateOf(uiState.phoneNumber) }
+    var password by remember { mutableStateOf(uiState.password) }
     var isLoadingBio by remember { mutableStateOf(false) }
-    var birthDate by remember { mutableStateOf(roommate.birthDate) }
-    var work by remember { mutableStateOf(roommate.work) }
-    var bio by remember { mutableStateOf(roommate.personalBio ?: "") }
+    var birthDate by remember { mutableStateOf(uiState.birthDate) }
+    var work by remember { mutableStateOf(uiState.work) }
+    var bio by remember { mutableStateOf(uiState.personalBio ?: "") }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var selectedAttributes by remember { mutableStateOf(roommate.attributes.toMutableList()) }
-    var selectedHobbies by remember { mutableStateOf(roommate.hobbies.toMutableList()) }
+    var selectedAttributes by remember { mutableStateOf(uiState.attributes.toMutableList()) }
+    var selectedHobbies by remember { mutableStateOf(uiState.hobbies.toMutableList()) }
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
-    var profilePictureUrl by remember { mutableStateOf(roommate.profilePicture) }
+    var profilePictureUrl by remember { mutableStateOf(uiState.profilePicture) }
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
@@ -544,7 +550,6 @@ fun EditProfileContent(roommate: Roommate) {
                         value = preferredRadius.toFloat(),
                         onValueChange = { preferredRadius = it.toInt() },
                         valueRange = 0.5f..100f,
-                        steps = 49,
                         modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
                             thumbColor = Primary,
@@ -634,13 +639,31 @@ fun EditProfileContent(roommate: Roommate) {
         }
 
     }
-
     Box(modifier = Modifier.fillMaxSize()) {
         ExtendedFloatingActionButton(
             text = { Text("Save Changes") },
             icon = { Icon(Icons.Default.Check, contentDescription = "Save Changes") },
             onClick = {
-                // TODO: Save logic here
+                viewModel.saveChanges(
+                    fullName = fullName,
+                    email = email,
+                    phoneNumber = phone,
+                    password = password,
+                    birthDate = birthDate,
+                    work = work,
+                    profilePicture = profilePictureUrl,
+                    personalBio = bio,
+                    attributes = selectedAttributes,
+                    hobbies = selectedHobbies,
+                    lookingForRoomies = selectedPreferences,
+                    lookingForCondo = selectedCondoPreferences,
+                    preferredRadiusKm = preferredRadius,
+                    roommatesNumber = roommatesNumber,
+                    minPrice = priceRange.start.toInt(),
+                    maxPrice = priceRange.endInclusive.toInt(),
+                    minPropertySize = sizeRange.start.toInt(),
+                    maxPropertySize = sizeRange.endInclusive.toInt()
+                )
             },
             containerColor = CustomTeal,
             contentColor = Color.White,
@@ -649,8 +672,8 @@ fun EditProfileContent(roommate: Roommate) {
                 .padding(24.dp)
         )
     }
-
 }
+
 
 
 @Composable
@@ -831,11 +854,10 @@ fun WeightedSlider(
             Slider(
                 value = roundedValue,
                 onValueChange = {
-                    val stepped = (it * 4).roundToInt() / 4f // עיגול לרבעים
+                    val stepped = (it * 4).roundToInt() / 4f // still rounds to 0.25
                     onValueChange(stepped)
                 },
                 valueRange = 0f..1f,
-                steps = 3,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp),
@@ -866,8 +888,8 @@ fun EditProfileScreenPreview() {
         gender = Gender.FEMALE,
         attributes = listOf(Attribute.CLEAN, Attribute.PET_LOVER),
         hobbies = listOf(Hobby.YOGA, Hobby.TRAVELER),
-        lookingForRoomies = emptyList(),
-        lookingForCondo = emptyList(),
+        lookingForRoomies = listOf(),
+        lookingForCondo = listOf(),
         roommatesNumber = 2,
         minPropertySize = 60,
         maxPropertySize = 100,
@@ -881,5 +903,4 @@ fun EditProfileScreenPreview() {
         resetTokenExpiration = null
     )
 
-    EditProfileContent(roommate = dummyRoommate)
 }
