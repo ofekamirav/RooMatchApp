@@ -47,6 +47,7 @@ import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PriceRangeSelector
 import com.example.roomatchapp.presentation.components.SizeRangeSelector
+import com.example.roomatchapp.presentation.roommate.EditProfileUiState
 import com.example.roomatchapp.presentation.roommate.EditProfileViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
@@ -55,31 +56,11 @@ import kotlin.math.roundToInt
 
 @Composable
 fun EditProfileScreen(viewModel: EditProfileViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
     val roommate by viewModel.roommate.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
-    ) {
-        LoadingAnimation(
-            isLoading = isLoading,
-            animationResId = R.raw.loading_animation
-        ) {
-            roommate?.let {
-                EditProfileContent(it, viewModel)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun EditProfileContent(roommate: Roommate, viewModel: EditProfileViewModel) {
-    val isLoading by viewModel.isLoading.collectAsState()
-    if (roommate == null || isLoading) {
+    if (isLoading || roommate == null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,31 +69,41 @@ fun EditProfileContent(roommate: Roommate, viewModel: EditProfileViewModel) {
         ) {
             CircularProgressIndicator(color = CustomTeal)
         }
-        return
+    } else {
+        EditProfileContent(uiState = uiState, roommate = roommate!!, viewModel = viewModel)
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun EditProfileContent(
+    uiState: EditProfileUiState,
+    roommate: Roommate,
+    viewModel: EditProfileViewModel
+) {    val isLoading by viewModel.isLoading.collectAsState()
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
-    var selectedPreferences by remember { mutableStateOf(roommate.lookingForRoomies.toMutableList()) }
-    var selectedCondoPreferences by remember { mutableStateOf(roommate.lookingForCondo.toMutableList()) }
-    var preferredRadius by remember { mutableStateOf(roommate.preferredRadiusKm) }
-    var priceRange by remember { mutableStateOf(roommate.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
-    var sizeRange by remember { mutableStateOf(roommate.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
-    var roommatesNumber by remember { mutableStateOf(roommate.roommatesNumber) }
-    var fullName by remember { mutableStateOf(roommate.fullName) }
-    var email by remember { mutableStateOf(roommate.email) }
-    var phone by remember { mutableStateOf(roommate.phoneNumber) }
-    var password by remember { mutableStateOf(roommate.password) }
+    var selectedPreferences by remember { mutableStateOf(uiState.lookingForRoomies.toMutableList()) }
+    var selectedCondoPreferences by remember { mutableStateOf(uiState.lookingForCondo.toMutableList()) }
+    var preferredRadius by remember { mutableStateOf(uiState.preferredRadiusKm) }
+    var priceRange by remember { mutableStateOf(uiState.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
+    var sizeRange by remember { mutableStateOf(uiState.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
+    var roommatesNumber by remember { mutableStateOf(uiState.roommatesNumber) }
+    var fullName by remember { mutableStateOf(uiState.fullName) }
+    var email by remember { mutableStateOf(uiState.email) }
+    var phone by remember { mutableStateOf(uiState.phoneNumber) }
+    var password by remember { mutableStateOf(uiState.password) }
     var isLoadingBio by remember { mutableStateOf(false) }
-    var birthDate by remember { mutableStateOf(roommate.birthDate) }
-    var work by remember { mutableStateOf(roommate.work) }
-    var bio by remember { mutableStateOf(roommate.personalBio ?: "") }
+    var birthDate by remember { mutableStateOf(uiState.birthDate) }
+    var work by remember { mutableStateOf(uiState.work) }
+    var bio by remember { mutableStateOf(uiState.personalBio ?: "") }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var selectedAttributes by remember { mutableStateOf(roommate.attributes.toMutableList()) }
-    var selectedHobbies by remember { mutableStateOf(roommate.hobbies.toMutableList()) }
+    var selectedAttributes by remember { mutableStateOf(uiState.attributes.toMutableList()) }
+    var selectedHobbies by remember { mutableStateOf(uiState.hobbies.toMutableList()) }
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
-    var profilePictureUrl by remember { mutableStateOf(roommate.profilePicture) }
+    var profilePictureUrl by remember { mutableStateOf(uiState.profilePicture) }
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
