@@ -9,10 +9,12 @@ import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.model.SuggestedMatchEntity
 import com.example.roomatchapp.domain.repository.LikeRepository
 import com.example.roomatchapp.domain.repository.MatchRepository
+import com.example.roomatchapp.utils.SwipeAction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.example.roomatchapp.utils.toMatch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -63,10 +65,18 @@ class DiscoverViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing
 
+    private val retryQueue = mutableListOf<SwipeAction>()
+
     private val _imagesLoaded = MutableStateFlow(0)
     private val _totalImages = MutableStateFlow(0)
-    val isFullyLoaded: StateFlow<Boolean> = combine(_imagesLoaded, _totalImages) { loaded, total ->
-        total == 0 || (total > 0 && loaded == total)
+
+    val isFullyLoaded = combine(_imagesLoaded, _totalImages) { loaded, total ->
+        val result = total > 0 && loaded >= total
+        Log.d(
+            "TAG",
+            "DiscoverViewModel-isFullyLoaded updated: $result (loaded=$loaded, total=$total)"
+        )
+        result
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     init {
@@ -76,6 +86,7 @@ class DiscoverViewModel(
                 val newMatches = matchRepository.getNextMatches(seekerId, limit = 5)
             }
             preloadMatches()
+            processRetryQueue()
         }
     }
 
@@ -122,10 +133,38 @@ class DiscoverViewModel(
                 )
             } finally {
                 isRequestInProgress = false
-                Log.d("TAG", "DiscoverViewModel-matches loaded successfully with ${matchBuffer.size} matches")
+                Log.d(
+                    "TAG",
+                    "DiscoverViewModel-matches loaded successfully with ${matchBuffer.size} matches"
+                )
             }
         }
     }
+
+    private fun processRetryQueue() {
+        viewModelScope.launch {
+            while (true) {
+                if (retryQueue.isNotEmpty()) {
+                    val action = retryQueue.removeAt(0)
+                    val success = when (action) {
+                        is SwipeAction.LikeRoommates -> matchRepository.likeRoommates(action.match)
+                        is SwipeAction.LikeProperty -> matchRepository.likeProperty(action.match)
+                        is SwipeAction.FullLike -> likeRepository.fullLike(action.match)
+                        is SwipeAction.Dislike -> likeRepository.dislike(action.match)
+                    }
+                    if (!success) {
+                        retryQueue.add(action) // failed again, keep it in queue
+                        delay(5000) // wait before retry
+                    } else {
+                        Log.d("Retry", "Action ${action::class.simpleName} succeeded")
+                    }
+                } else {
+                    delay(2000) // idle wait
+                }
+            }
+        }
+    }
+
 
     private fun loadNextCards() {
         matchBuffer.getOrNull(0)?.let { loadCardDetailsFor(it, isCurrent = true) }
@@ -134,8 +173,13 @@ class DiscoverViewModel(
 
     fun onSwiped() {
         val removed = matchBuffer.removeFirstOrNull()
-        removed?.let { viewModelScope.launch { suggestedMatchDao.delete(it.toString()) } }
+        removed?.let { viewModelScope.launch { suggestedMatchDao.delete(it.matchId) } }
         loadNextCards()
+
+        matchBuffer.getOrNull(0)?.let { loadCardDetailsFor(it, isCurrent = true) }
+            ?: run { _cardDetails.value = null }
+        matchBuffer.getOrNull(1)?.let { loadCardDetailsFor(it, isCurrent = false) }
+            ?: run { _nextCardDetails.value = null }
 
         if (matchBuffer.size <= preloadThreshold && !isRequestInProgress) {
             preloadMatches()
@@ -165,32 +209,45 @@ class DiscoverViewModel(
     }
 
     fun likeRoommates() {
-        val suggestedMatch  = matchBuffer.firstOrNull() ?: return
-        val match = suggestedMatch .toMatch(seekerId, suggestedMatch .propertyMatchScore)
+        val suggestedMatch = matchBuffer.firstOrNull() ?: return
+        val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
         viewModelScope.launch {
-            matchRepository.likeRoommates(match)
-            onSwiped()
+            val response = matchRepository.likeRoommates(match)
+            if (response) {
+                onSwiped()
+            } else {
+                retryQueue.add(SwipeAction.Dislike(match))
+                onSwiped()
+            }
         }
         Log.d("TAG", "DiscoverViewModel-likeRoommates called")
     }
 
     fun likeProperty() {
-        val suggestedMatch  = matchBuffer.firstOrNull() ?: return
-        val match = suggestedMatch .toMatch(seekerId, suggestedMatch .propertyMatchScore)
+        val suggestedMatch = matchBuffer.firstOrNull() ?: return
+        val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
         viewModelScope.launch {
-            matchRepository.likeProperty(match)
-            onSwiped()
-        }
-        Log.d("TAG", "DiscoverViewModel-likeProperty called")
+            val response = matchRepository.likeProperty(match)
+            if (response) {
+                onSwiped()
+            } else {
+                retryQueue.add(SwipeAction.Dislike(match))
+                onSwiped()
+            }
+            Log.d("TAG", "DiscoverViewModel-likeProperty called")
 
+        }
     }
 
     fun fullLike() {
-        val suggestedMatch  = matchBuffer.firstOrNull() ?: return
-        val match = suggestedMatch .toMatch(seekerId, suggestedMatch.propertyMatchScore)
+        val suggestedMatch = matchBuffer.firstOrNull() ?: return
+        val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
         viewModelScope.launch {
             val response = likeRepository.fullLike(match)
             if (response) {
+                onSwiped()
+            } else {
+                retryQueue.add(SwipeAction.Dislike(match))
                 onSwiped()
             }
             Log.d("TAG", "DiscoverViewModel-fullLike called")
@@ -198,13 +255,14 @@ class DiscoverViewModel(
     }
 
     fun dislike() {
-        val suggestedMatch  = matchBuffer.firstOrNull() ?: return
-        val match = suggestedMatch .toMatch(seekerId, suggestedMatch.propertyMatchScore)
+        val suggestedMatch = matchBuffer.firstOrNull() ?: return
+        val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
         viewModelScope.launch {
-           val response = likeRepository.dislike(match)
-            if (response) {
-                onSwiped()
+            val response = likeRepository.dislike(match)
+            if (!response) {
+                retryQueue.add(SwipeAction.Dislike(match))
             }
+            onSwiped()
         }
         Log.d("TAG", "DiscoverViewModel-dislike called")
     }
@@ -218,7 +276,8 @@ class DiscoverViewModel(
                 preloadMatches()
             } catch (e: Exception) {
                 Log.e("TAG", "Error refreshing content: ${e.message}", e)
-                _state.value = _state.value.copy(errorMessage = "Unable to refresh. Check connection.")
+                _state.value =
+                    _state.value.copy(errorMessage = "Unable to refresh. Check connection.")
             } finally {
                 _isRefreshing.value = false
             }
@@ -228,10 +287,22 @@ class DiscoverViewModel(
 
     fun notifyImageLoaded() {
         _imagesLoaded.value += 1
+        Log.d(
+            "TAG",
+            "DiscoverViewModel-Image loaded: ${_imagesLoaded.value}/${_totalImages.value}"
+        )
+
+        if (_imagesLoaded.value >= _totalImages.value && _totalImages.value > 0) {
+            Log.d("TAG", "DiscoverViewModel-All images loaded! Setting isFullyLoaded to true")
+        }
     }
 
     fun setTotalImages(count: Int) {
+        Log.d(
+            "TAG",
+            "DiscoverViewModel-Setting total images to $count (previous: ${_totalImages.value})"
+        )
         _totalImages.value = count
-        _imagesLoaded.value = if (count == 0) 0 else 0
+        _imagesLoaded.value = 0
     }
 }

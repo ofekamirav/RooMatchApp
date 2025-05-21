@@ -30,13 +30,14 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
 import androidx.navigation.NavController
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
-    onEditClick: EmptyCallBack,
+    onEditClick: EmptyCallback,
     onLogout: () -> Unit,
 ) {
     val roommate by viewModel.roommate.collectAsState()
@@ -70,7 +71,12 @@ fun ProfileScreen(
         } else {
             ProfileContent(
                 roommate = roommate!!,
-                onLogoutClick = { showLogoutDialog = true }
+                onLogoutClick = {
+                    showLogoutDialog = true
+                },
+                onEditClick = {
+                    onEditClick
+                }
             )
         }
     }
@@ -80,7 +86,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     roommate: Roommate,
-    onLogoutClick: () -> Unit = {}) {
+    onEditClick: EmptyCallback,
+    onLogoutClick: EmptyCallback
+) {
     Box(
         modifier = Modifier.fillMaxSize().background(Background)
     ) {
@@ -410,35 +418,35 @@ fun calculateAge(birthDate: String): Int {
         0
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileContentPreview() {
-    val sampleRoommate = Roommate(
-        id = "1",
-        email = "test@example.com",
-        fullName = "Bar Kobi",
-        phoneNumber = "123456789",
-        birthDate = "1998-05-20",
-        password = "password",
-        work = "Developer",
-        gender = Gender.FEMALE,
-        attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
-        hobbies = listOf(Hobby.MUSICIAN, Hobby.SPORT, Hobby.PARTY),
-        lookingForRoomies = listOf(
-            LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
-            LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
-            LookingForRoomiesPreference(Attribute.HAS_PET, 1.0, true)
-        ),
-        lookingForCondo = emptyList(),
-        roommatesNumber = 2,
-        minPropertySize = 50,
-        maxPropertySize = 120,
-        minPrice = 2000,
-        maxPrice = 4000,
-        personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
-        profilePicture = null
-    )
-        ProfileContent(roommate = sampleRoommate)
-
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun ProfileContentPreview() {
+//    val sampleRoommate = Roommate(
+//        id = "1",
+//        email = "test@example.com",
+//        fullName = "Bar Kobi",
+//        phoneNumber = "123456789",
+//        birthDate = "1998-05-20",
+//        password = "password",
+//        work = "Developer",
+//        gender = Gender.FEMALE,
+//        attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
+//        hobbies = listOf(Hobby.MUSICIAN, Hobby.SPORT, Hobby.PARTY),
+//        lookingForRoomies = listOf(
+//            LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
+//            LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
+//            LookingForRoomiesPreference(Attribute.HAS_PET, 1.0, true)
+//        ),
+//        lookingForCondo = emptyList(),
+//        roommatesNumber = 2,
+//        minPropertySize = 50,
+//        maxPropertySize = 120,
+//        minPrice = 2000,
+//        maxPrice = 4000,
+//        personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
+//        profilePicture = null
+//    )
+//        ProfileContent(roommate = sampleRoommate)
+//
+//}

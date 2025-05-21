@@ -28,7 +28,7 @@ class MatchRepositoryImpl(
 
     override suspend fun getNextMatches(seekerId: String, limit: Int): List<SuggestedMatchEntity> {
         //trying to get the matches from the ROOM first and if it's not updated, get it from the API
-        if (userSessionManager.shouldRefetchMatches()) {
+        if (userSessionManager.shouldRefetchMatches() || suggestedMatchDao.getAll().isEmpty()) {
             suggestedMatchDao.clearAll()
             val matches = apiService.getNextMatches(seekerId, limit)
             val matchesEntities = matches.map { match ->
