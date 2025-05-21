@@ -29,12 +29,14 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
+import androidx.navigation.NavController
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
+    onEditClick: EmptyCallBack,
     onLogout: () -> Unit,
 ) {
     val roommate by viewModel.roommate.collectAsState()
@@ -177,7 +179,9 @@ fun ProfileContent(
             }
 
             FloatingActionButton(
-                onClick = { /* Edit logic */ },
+                onClick = {
+                    onEditClick()
+                },
                 modifier = Modifier.size(60.dp),
                 containerColor = Color.Transparent,
                 elevation = FloatingActionButtonDefaults.elevation(0.dp)

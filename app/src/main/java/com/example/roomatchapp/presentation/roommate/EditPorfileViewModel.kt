@@ -19,7 +19,15 @@ data class EditProfileUiState(
     val profilePicture: String? = null,
     val personalBio: String = "",
     val attributes: List<Attribute> = emptyList(),
-    val hobbies: List<Hobby> = emptyList()
+    val hobbies: List<Hobby> = emptyList(),
+    val lookingForRoomies: List<LookingForRoomiesPreference> = emptyList(),
+    val lookingForCondo: List<LookingForCondoPreference> = emptyList(),
+    val preferredRadiusKm: Int = 10,
+    val roommatesNumber: Int = 1,
+    val minPrice: Int = 2000,
+    val maxPrice: Int = 4000,
+    val minPropertySize: Int = 60,
+    val maxPropertySize: Int = 100
 )
 
 class EditProfileViewModel(
@@ -32,6 +40,9 @@ class EditProfileViewModel(
 
     private val _uiState = MutableStateFlow(EditProfileUiState())
     val uiState: StateFlow<EditProfileUiState> = _uiState
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
@@ -46,7 +57,6 @@ class EditProfileViewModel(
                 Log.d("EditProfileViewModel", "Loading roommate for Id: $seekerId")
                 val result = userRepository.getRoommate(seekerId)
                 _roommate.value = result
-
                 result?.let {
                     _uiState.value = EditProfileUiState(
                         fullName = it.fullName,
@@ -54,16 +64,26 @@ class EditProfileViewModel(
                         phoneNumber = it.phoneNumber,
                         password = it.password,
                         birthDate = it.birthDate,
-                        work = it.work,
+                        work = it.work ?: "",
                         profilePicture = it.profilePicture,
                         personalBio = it.personalBio ?: "",
                         attributes = it.attributes,
-                        hobbies = it.hobbies
+                        hobbies = it.hobbies,
+                        lookingForRoomies = it.lookingForRoomies,
+                        lookingForCondo = it.lookingForCondo,
+                        preferredRadiusKm = it.preferredRadiusKm,
+                        roommatesNumber = it.roommatesNumber,
+                        minPrice = it.minPrice,
+                        maxPrice = it.maxPrice,
+                        minPropertySize = it.minPropertySize,
+                        maxPropertySize = it.maxPropertySize
                     )
                 }
-
+                _isLoading.value = false
             } catch (e: Exception) {
                 Log.e("EditProfileViewModel", "Error loading roommate", e)
+                _roommate.value = null
+                _isLoading.value = false
             }
         }
     }
@@ -78,7 +98,15 @@ class EditProfileViewModel(
         profilePicture: String?,
         personalBio: String,
         attributes: List<Attribute>,
-        hobbies: List<Hobby>
+        hobbies: List<Hobby>,
+        lookingForRoomies: List<LookingForRoomiesPreference>,
+        lookingForCondo: List<LookingForCondoPreference>,
+        preferredRadiusKm: Int,
+        roommatesNumber: Int,
+        minPrice: Int,
+        maxPrice: Int,
+        minPropertySize: Int,
+        maxPropertySize: Int
     ) {
         val current = _roommate.value ?: return
         _isSaving.value = true
@@ -95,13 +123,33 @@ class EditProfileViewModel(
                     profilePicture = profilePicture ?: current.profilePicture,
                     personalBio = if (personalBio.isNotBlank()) personalBio else current.personalBio,
                     attributes = if (attributes.isNotEmpty()) attributes else current.attributes,
-                    hobbies = if (hobbies.isNotEmpty()) hobbies else current.hobbies
+                    hobbies = if (hobbies.isNotEmpty()) hobbies else current.hobbies,
+                    lookingForRoomies = lookingForRoomies,
+                    lookingForCondo = lookingForCondo,
+                    preferredRadiusKm = preferredRadiusKm,
+                    roommatesNumber = roommatesNumber,
+                    minPrice = minPrice,
+                    maxPrice = maxPrice,
+                    minPropertySize = minPropertySize,
+                    maxPropertySize = maxPropertySize
                 )
 
                 val success = userRepository.updateRoommate(seekerId, updatedRoommate)
 
                 if (success) {
                     _roommate.value = updatedRoommate
+                    _uiState.value = EditProfileUiState(
+                        fullName = updatedRoommate.fullName,
+                        email = updatedRoommate.email,
+                        phoneNumber = updatedRoommate.phoneNumber,
+                        password = updatedRoommate.password,
+                        birthDate = updatedRoommate.birthDate,
+                        work = updatedRoommate.work ?: "",
+                        profilePicture = updatedRoommate.profilePicture,
+                        personalBio = updatedRoommate.personalBio ?: "",
+                        attributes = updatedRoommate.attributes,
+                        hobbies = updatedRoommate.hobbies
+                    )
                     Log.d("EditProfileViewModel", "Profile updated successfully.")
                 } else {
                     Log.e("EditProfileViewModel", "Failed to update profile: API returned false")

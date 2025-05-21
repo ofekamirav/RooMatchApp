@@ -21,7 +21,9 @@ import com.example.roomatchapp.presentation.screens.roommate.DiscoverScreen
 import com.example.roomatchapp.presentation.screens.roommate.ProfileScreen
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.roommate.DiscoverViewModel
+import com.example.roomatchapp.presentation.roommate.EditProfileViewModel
 import com.example.roomatchapp.presentation.roommate.ProfileViewModel
+import com.example.roomatchapp.presentation.screens.roommate.EditProfileScreen
 import com.example.roomatchapp.presentation.theme.Background
 
 
@@ -86,15 +88,29 @@ fun RoommateMainScreen(
                     }
                     ProfileScreen(
                         viewModel = viewModel,
-                        onLogout = {
-                            onLogout()
-                        }
+                        onEditClick = {
+                            navController.navigate("edit_profile")
+                        },
+                        onLogout = { onLogout() }
                     )
+                }
+            }
+
+            composable("edit_profile") {
+                if (seekerId.isNotBlank()) {
+                    val viewModel = remember(seekerId) {
+                        EditProfileViewModel(
+                            userRepository = AppDependencies.userRepository,
+                            seekerId = seekerId
+                        )
+                    }
+                    EditProfileScreen(viewModel = viewModel)
                 }
             }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
