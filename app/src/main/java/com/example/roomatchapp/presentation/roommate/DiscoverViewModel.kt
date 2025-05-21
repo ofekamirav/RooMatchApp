@@ -58,6 +58,9 @@ class DiscoverViewModel(
     private val _nextCardDetails = MutableStateFlow<CardDetailsState?>(null)
     val nextCardDetails: StateFlow<CardDetailsState?> = _nextCardDetails
 
+    private val _showInitialLoading = MutableStateFlow(true)
+    val showInitialLoading: StateFlow<Boolean> = _showInitialLoading
+
     private val matchBuffer = mutableListOf<SuggestedMatchEntity>()
     private val preloadThreshold = 2
     private var isRequestInProgress = false
@@ -72,18 +75,16 @@ class DiscoverViewModel(
 
     val isFullyLoaded = combine(_imagesLoaded, _totalImages) { loaded, total ->
         val result = total > 0 && loaded >= total
-        Log.d(
-            "TAG",
-            "DiscoverViewModel-isFullyLoaded updated: $result (loaded=$loaded, total=$total)"
-        )
+        Log.d("TAG", "DiscoverViewModel-isFullyLoaded updated: $result (loaded=$loaded, total=$total)")
         result
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     init {
         viewModelScope.launch {
-            if (userSessionManager.shouldRefetchMatches()) {
+            val cached = suggestedMatchDao.getAll()
+            if (cached.isEmpty() || userSessionManager.shouldRefetchMatches()) {
                 suggestedMatchDao.clearAll()
-                val newMatches = matchRepository.getNextMatches(seekerId, limit = 5)
+                matchRepository.getNextMatches(seekerId, limit = 5)
             }
             preloadMatches()
             processRetryQueue()
@@ -163,6 +164,10 @@ class DiscoverViewModel(
                 }
             }
         }
+    }
+
+    fun stopInitialLoading() {
+        _showInitialLoading.value = false
     }
 
 

@@ -113,4 +113,9 @@ class MatchRepositoryImpl(
         return apiService.deleteMatch(matchId)
     }
 
+    override suspend fun clearLocalMatches() {
+        cacheDao.clearCacheByType(CacheType.MATCH)
+        matchDao.clearAll()
+    }
+
 }

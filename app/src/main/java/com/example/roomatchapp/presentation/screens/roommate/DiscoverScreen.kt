@@ -56,15 +56,14 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
     val nextCardDetails by viewModel.nextCardDetails.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isFullyLoaded by viewModel.isFullyLoaded.collectAsState()
-    val showInitialLoading = remember { mutableStateOf(true) }
+    val showInitialLoading by viewModel.showInitialLoading.collectAsState()
 
-    val loadingState = "cardDetails=${cardDetails != null}, isFullyLoaded=$isFullyLoaded, showInitialLoading=${showInitialLoading.value}"
+    val loadingState = "cardDetails=${cardDetails != null}, isFullyLoaded=$isFullyLoaded, showInitialLoading=${showInitialLoading}"
     LaunchedEffect(loadingState) {
         Log.d("TAG", "DiscoverScreen-Loading state changed: $loadingState")
     }
 
     LaunchedEffect(Unit) {
-        showInitialLoading.value = true
         Log.d("TAG", "DiscoverScreen-Initial loading set to true")
     }
 
@@ -77,9 +76,9 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
     }
 
     LaunchedEffect(isFullyLoaded, cardDetails) {
-        if (isFullyLoaded && cardDetails != null && showInitialLoading.value) {
+        if (isFullyLoaded && cardDetails != null && showInitialLoading) {
             delay(300)
-            showInitialLoading.value = false
+            viewModel.stopInitialLoading()
             Log.d("TAG", "DiscoverScreenImages fully loaded, hiding loading screen")
         }
     }
@@ -91,7 +90,7 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
         contentAlignment = Alignment.Center
     ) {
         LoadingAnimation(
-            isLoading = showInitialLoading.value,
+            isLoading = showInitialLoading,
             animationResId = R.raw.loading_animation
         ) {
             SwipeRefresh(

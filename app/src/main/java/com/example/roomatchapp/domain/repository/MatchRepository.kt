@@ -13,4 +13,5 @@ interface MatchRepository {
     suspend fun getRoommate(roommateId: String): Roommate?
     suspend fun getProperty(propertyId: String): Property?
     suspend fun deleteMatch(matchId: String): Boolean
+    suspend fun clearLocalMatches()
 }

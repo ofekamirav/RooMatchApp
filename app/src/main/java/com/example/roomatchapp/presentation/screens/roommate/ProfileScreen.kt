@@ -56,29 +56,32 @@ fun ProfileScreen(
             dialogBackgroundColor = Background
         )
     }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
+
+    LoadingAnimation(
+        isLoading = isLoading,
+        animationResId = R.raw.loading_animation
     ) {
-        if (isLoading || roommate == null) {
-            LoadingAnimation(
-                isLoading = true,
-                animationResId = R.raw.loading_animation
-            ){
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
+        ) {
+            roommate?.let {
+                ProfileContent(
+                    roommate = it,
+                    onLogoutClick = {
+                        showLogoutDialog = true
+                    },
+                    onEditClick = {
+                        onEditClick
+                    }
+                )
             }
-        } else {
-            ProfileContent(
-                roommate = roommate!!,
-                onLogoutClick = {
-                    showLogoutDialog = true
-                },
-                onEditClick = {
-                    onEditClick
-                }
-            )
+
         }
+
     }
 }
 
@@ -418,35 +421,3 @@ fun calculateAge(birthDate: String): Int {
         0
     }
 }
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun ProfileContentPreview() {
-//    val sampleRoommate = Roommate(
-//        id = "1",
-//        email = "test@example.com",
-//        fullName = "Bar Kobi",
-//        phoneNumber = "123456789",
-//        birthDate = "1998-05-20",
-//        password = "password",
-//        work = "Developer",
-//        gender = Gender.FEMALE,
-//        attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
-//        hobbies = listOf(Hobby.MUSICIAN, Hobby.SPORT, Hobby.PARTY),
-//        lookingForRoomies = listOf(
-//            LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
-//            LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
-//            LookingForRoomiesPreference(Attribute.HAS_PET, 1.0, true)
-//        ),
-//        lookingForCondo = emptyList(),
-//        roommatesNumber = 2,
-//        minPropertySize = 50,
-//        maxPropertySize = 120,
-//        minPrice = 2000,
-//        maxPrice = 4000,
-//        personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
-//        profilePicture = null
-//    )
-//        ProfileContent(roommate = sampleRoommate)
-//
-//}
