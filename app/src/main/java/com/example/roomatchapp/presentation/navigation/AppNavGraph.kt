@@ -39,7 +39,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.roomatchapp.presentation.screens.login.ForgotPasswordScreen
 import com.example.roomatchapp.presentation.screens.login.ResetPasswordScreen
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.roomatchapp.R
 import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.screens.login.ForgotPasswordViewModel
 
 
@@ -84,19 +87,6 @@ fun AppNavGraph(
     }
 
 
-    DestinationsNavHost(
-        navGraph = AppNavGraphs.root,
-        navController = navController,
-        start = startRoute,
-        dependenciesContainerBuilder = {
-            dependency(registrationViewModel)
-            dependency(sessionManager)
-            dependency(forgotPasswordViewModel)
-        }
-    )
-
-
-
 
     startRoute?.let {
         DestinationsNavHost(
@@ -106,6 +96,7 @@ fun AppNavGraph(
             dependenciesContainerBuilder = {
                 dependency(registrationViewModel)
                 dependency(sessionManager)
+                dependency(forgotPasswordViewModel)
             }
         )
     }
