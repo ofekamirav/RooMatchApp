@@ -89,7 +89,9 @@ fun RoommateMainScreen(
                     }
                     ProfileScreen(
                         viewModel = viewModel,
-                        navController = navController,
+                        onEditClick = {
+                            navController.navigate("edit_profile")
+                        },
                         onLogout = { onLogout() }
                     )
                 }
