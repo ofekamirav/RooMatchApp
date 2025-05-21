@@ -80,7 +80,8 @@ fun EditProfileContent(
     uiState: EditProfileUiState,
     roommate: Roommate,
     viewModel: EditProfileViewModel
-) {    val isLoading by viewModel.isLoading.collectAsState()
+) {
+    val isLoading by viewModel.isLoading.collectAsState()
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
     var selectedPreferences by remember { mutableStateOf(uiState.lookingForRoomies.toMutableList()) }

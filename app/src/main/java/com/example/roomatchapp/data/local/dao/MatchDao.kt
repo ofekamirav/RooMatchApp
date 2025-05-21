@@ -24,4 +24,7 @@ interface MatchDao {
     @Query("DELETE FROM matches WHERE id = :id")
     suspend fun delete(id: String)
 
+    @Query("DELETE FROM matches")
+    suspend fun clearAll()
+
 }
