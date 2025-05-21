@@ -95,13 +95,12 @@ fun RoommateMainScreen(
                 }
             }
 
-            composable("edit_profile/{seekerId}") { backStackEntry ->
-                val seekerIdArg = backStackEntry.arguments?.getString("seekerId") ?: ""
-                if (seekerIdArg.isNotBlank()) {
-                    val viewModel = remember(seekerIdArg) {
+            composable("edit_profile") {
+                if (seekerId.isNotBlank()) {
+                    val viewModel = remember(seekerId) {
                         EditProfileViewModel(
                             userRepository = AppDependencies.userRepository,
-                            seekerId = seekerIdArg
+                            seekerId = seekerId
                         )
                     }
                     EditProfileScreen(viewModel = viewModel)
