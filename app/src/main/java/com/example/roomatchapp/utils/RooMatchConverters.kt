@@ -1,8 +1,13 @@
-package com.example.roomatchapp.data.local
+package com.example.roomatchapp.utils
 
 import androidx.room.TypeConverter
-import com.example.roomatchapp.data.model.*
-import com.example.roomatchapp.data.remote.dto.RoommateMatch
+import com.example.roomatchapp.data.model.Attribute
+import com.example.roomatchapp.data.model.CondoPreference
+import com.example.roomatchapp.data.model.Hobby
+import com.example.roomatchapp.data.model.LookingForCondoPreference
+import com.example.roomatchapp.data.model.LookingForRoomiesPreference
+import com.example.roomatchapp.data.model.PropertyMatchAnalytics
+import com.example.roomatchapp.data.model.RoommateMatch
 import kotlinx.serialization.json.Json
 
 object RooMatchConverters {
@@ -98,7 +103,6 @@ object RooMatchConverters {
     fun toPropertyMatchAnalyticsList(value: String): List<PropertyMatchAnalytics> {
         return json.decodeFromString(value)
     }
-
 
 
 }

@@ -9,14 +9,17 @@ import com.example.roomatchapp.data.local.dao.OwnerAnalyticsDao
 import com.example.roomatchapp.data.local.dao.PropertyDao
 import com.example.roomatchapp.data.local.dao.PropertyOwnerDao
 import com.example.roomatchapp.data.local.dao.RoommateDao
+import com.example.roomatchapp.data.local.dao.SuggestedMatchDao
 import com.example.roomatchapp.data.model.AnalyticsResponse
 import com.example.roomatchapp.data.model.CacheEntity
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.Roommate
+import com.example.roomatchapp.data.model.SuggestedMatchEntity
+import com.example.roomatchapp.utils.RooMatchConverters
 
-@Database(entities = [CacheEntity::class, Roommate::class, PropertyOwner::class, Property::class, Match::class, AnalyticsResponse::class], version = 3)
+@Database(entities = [CacheEntity::class, Roommate::class, PropertyOwner::class, Property::class, Match::class, AnalyticsResponse::class, SuggestedMatchEntity::class], version = 5)
 @TypeConverters(RooMatchConverters::class)
 abstract class AppLocalDB : RoomDatabase() {
     abstract fun cacheDao(): CacheDao
@@ -25,4 +28,5 @@ abstract class AppLocalDB : RoomDatabase() {
     abstract fun propertyDao(): PropertyDao
     abstract fun matchDao(): MatchDao
     abstract fun ownerAnalyticsDao(): OwnerAnalyticsDao
+    abstract fun suggestedMatchDao(): SuggestedMatchDao
 }

@@ -6,8 +6,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.*
@@ -30,6 +32,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.roommate.CardDetailsState
@@ -38,6 +41,8 @@ import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 import com.example.roomatchapp.presentation.theme.Secondary
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -47,12 +52,21 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
     val state by viewModel.state.collectAsState()
     val cardDetails by viewModel.cardDetails.collectAsState()
     val nextCardDetails by viewModel.nextCardDetails.collectAsState()
-    val scope = rememberCoroutineScope()
-    val isLoading = remember { mutableStateOf(true) }
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val isFullyLoaded by viewModel.isFullyLoaded.collectAsState()
+    val showInitialLoading = remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        viewModel.preloadMatches()
+        showInitialLoading.value = true
     }
+
+    LaunchedEffect(cardDetails, isFullyLoaded) {
+        if (cardDetails != null && isFullyLoaded) {
+            viewModel.setTotalImages(cardDetails!!.roommates.size + 1)
+            showInitialLoading.value = false
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -61,58 +75,67 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
         contentAlignment = Alignment.Center
     ) {
         LoadingAnimation(
-            isLoading = isLoading.value,
+            isLoading = showInitialLoading.value,
             animationResId = R.raw.loading_animation
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+            SwipeRefresh(
+                state = rememberSwipeRefreshState(isRefreshing),
+                onRefresh = { viewModel.refreshContent() }
             ) {
-                Text("roomatch", style = MaterialTheme.typography.titleLarge, color = Primary)
-                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
+                ) {
+                    Text("roomatch", style = MaterialTheme.typography.titleLarge, color = Primary)
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                if (state.matches.isEmpty() && state.endOfMatches) {
-                    isLoading.value = false
-                    Text("No more matches available!", color = Primary)
-                } else {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        cardDetails?.let {
-                            MatchCard(
-                                cardDetails = it,
-                                modifier = Modifier.zIndex(1f),
-                                swipeable = true,
-                                onSwiped = { viewModel.onSwiped() }
-                            )
-                            isLoading.value = false
-                        }
+                    if (state.matches.isEmpty() && state.endOfMatches) {
+                        Text("No more matches available!", color = Primary)
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isFullyLoaded && cardDetails != null) {
+                                MatchCard(
+                                    cardDetails = cardDetails!!,
+                                    modifier = Modifier
+                                        .zIndex(1f),
+                                    swipeable = true,
+                                    viewModel = viewModel
+                                )
+                            }
 
-                        nextCardDetails?.let {
-                            MatchCard(
-                                cardDetails = it,
-                                modifier = Modifier
-                                    .zIndex(0f)
-                                    .scale(0.95f)
-                                    .alpha(0.7f),
-                                swipeable = false,
-                                onSwiped = {}
-                            )
-                            isLoading.value = false
+                            nextCardDetails?.let {
+                                MatchCard(
+                                    cardDetails = it,
+                                    modifier = Modifier
+                                        .zIndex(0f)
+                                        .scale(0.95f)
+                                        .alpha(0.7f),
+                                    swipeable = false,
+                                    viewModel = viewModel
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+
     }
 }
+
 
 @Composable
 fun MatchCard(
     cardDetails: CardDetailsState,
+    viewModel: DiscoverViewModel,
     modifier: Modifier = Modifier,
     swipeable: Boolean,
-    onSwiped: () -> Unit
 ) {
     val offsetX = remember { Animatable(0f) }
     val iconScale = remember { Animatable(0f) }
@@ -124,7 +147,7 @@ fun MatchCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
             .then(
                 if (swipeable) Modifier.pointerInput(Unit) {
                     detectDragGestures(
@@ -154,9 +177,11 @@ fun MatchCard(
                                     offsetX.snapTo(0f)
                                     iconScale.snapTo(0f)
                                     iconOffsetX.snapTo(0f)
+                                    val finalDirection = swipeDirection
                                     swipeDirection = null
                                     isSwipeAction = false
-                                    onSwiped()
+                                    if (finalDirection == "right") viewModel.fullLike() else viewModel.dislike()
+
                                 }
                             } else {
                                 scope.launch {
@@ -171,7 +196,7 @@ fun MatchCard(
                 } else Modifier
             )
             .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-            .background(Color.White, RoundedCornerShape(24.dp))
+            .background(Color.White, RoundedCornerShape(32.dp))
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -187,14 +212,21 @@ fun MatchCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
 
+            //Property Image
+            val imagePainter = rememberAsyncImagePainter(
+                model = cardDetails.photos,
+                onSuccess = { viewModel.notifyImageLoaded() },
+                onError = { viewModel.notifyImageLoaded() }
+            )
+
             Image(
-                painter = rememberAsyncImagePainter(cardDetails.photos),
+                painter = imagePainter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .height(240.dp)
+                    .clip(RoundedCornerShape(24.dp))
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -216,16 +248,19 @@ fun MatchCard(
             ) {
                 cardDetails.roommates.forEach {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            painter = painterResource(R.drawable.avatar),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray)
+                        val painter = rememberAsyncImagePainter(
+                            model = it.image,
+                            onSuccess = { viewModel.notifyImageLoaded() },
+                            onError = { viewModel.notifyImageLoaded() }
                         )
-                        Text(it.name, fontSize = 12.sp)
+                        Image(
+                            painter = painter,
+                            contentDescription = "roommate picture",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                        )
+                        Text(it.name, style = MaterialTheme.typography.bodySmall ,fontSize = 12.sp)
                         Text("${it.matchScore}%", style = MaterialTheme.typography.bodySmall, color = Primary)
                     }
                 }
@@ -233,41 +268,43 @@ fun MatchCard(
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ){
                 Button(
-                    onClick = {},
-                    modifier = Modifier
-                        .height(50.dp)
-                        .width(100.dp),
+                    onClick = {
+                        viewModel.likeProperty()
+                    },
+                    modifier = Modifier.height(50.dp).weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Primary,
                         contentColor = Color.White,
                         disabledContainerColor = Secondary.copy(alpha = 0.5f),
                         disabledContentColor = Color.White.copy(alpha = 0.5f)
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         "Like Property",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = Color.White
                     )
                 }
                 Button(
-                    onClick = {},
-                    modifier = Modifier
-                        .height(50.dp)
-                        .width(100.dp),
+                    onClick = {
+                        viewModel.likeRoommates()
+                    },
+                    modifier = Modifier.height(50.dp).weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Primary,
                         contentColor = Color.White,
                         disabledContainerColor = Secondary.copy(alpha = 0.5f),
                         disabledContentColor = Color.White.copy(alpha = 0.5f)
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         "Like Roommates",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = Color.White
                     )
                 }

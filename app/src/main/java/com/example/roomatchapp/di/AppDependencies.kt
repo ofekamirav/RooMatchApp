@@ -28,6 +28,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -41,7 +42,7 @@ import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "192.168.1.62" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "10.0.0.9" //if your are using emulator change ip to 10.0.2.2
 
     internal const val BASE_URL = "http://$computerIP:8080"
 
@@ -127,7 +128,9 @@ object AppDependencies {
             localDB.roommateDao(),
             localDB.propertyDao(),
             localDB.cacheDao(),
-            localDB.matchDao()
+            localDB.matchDao(),
+            localDB.suggestedMatchDao(),
+            sessionManager
         )
     }
 
