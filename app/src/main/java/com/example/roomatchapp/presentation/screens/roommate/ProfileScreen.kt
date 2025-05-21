@@ -36,7 +36,7 @@ import com.example.roomatchapp.presentation.theme.Third
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
-    navController: NavController,
+    onEditClick: EmptyCallBack,
     onLogout: () -> Unit,
 ) {
     val roommate by viewModel.roommate.collectAsState()
@@ -180,7 +180,7 @@ fun ProfileContent(
 
             FloatingActionButton(
                 onClick = {
-                    navController.navigate("edit_profile/${roommate.id}")
+                    onEditClick()
                 },
                 modifier = Modifier.size(60.dp),
                 containerColor = Color.Transparent,
