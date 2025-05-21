@@ -22,6 +22,7 @@ import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
 import com.example.roomatchapp.presentation.screens.roommate.DiscoverScreen
 import com.example.roomatchapp.presentation.screens.roommate.ProfileScreen
 import com.example.roomatchapp.data.model.*
+import com.example.roomatchapp.data.remote.api.match.MatchesViewModel
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.roommate.DiscoverViewModel
 import com.example.roomatchapp.presentation.roommate.EditProfileViewModel
@@ -64,7 +65,14 @@ fun RoommateMainScreen(
                 .padding(paddingValues)
         ) {
             composable("roommate_matches") {
-                // roommate matches screen
+                val viewModel = remember(seekerId) {
+                    MatchesViewModel(
+                        seekerId = seekerId,
+                        matchRepository = AppDependencies.matchRepository
+                    ).also { it.loadMatches() }
+                }
+
+                RoommateMatchesScreen(viewModel = viewModel)
             }
             composable("roommate_discover") {
                 if (seekerId.isNotBlank()) {

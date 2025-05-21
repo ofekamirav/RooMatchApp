@@ -24,10 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.ramcosta.composedestinations.generated.app.AppNavGraphs
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.roomatchapp.R
-import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.app.destinations.*
@@ -36,6 +32,19 @@ import com.ramcosta.composedestinations.annotation.NavHostGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.dependency
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.roomatchapp.presentation.screens.login.ForgotPasswordScreen
+import com.example.roomatchapp.presentation.screens.login.ResetPasswordScreen
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.roomatchapp.R
+import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
+import com.example.roomatchapp.presentation.components.LoadingAnimation
+import com.example.roomatchapp.presentation.screens.login.ForgotPasswordViewModel
+
 
 @NavHostGraph
 annotation class RootNavGraph
@@ -46,6 +55,8 @@ fun AppNavGraph(
     sessionManager: UserSessionManager
 ) {
     val registrationViewModel = RegistrationViewModel(sessionManager)
+
+    val forgotPasswordViewModel = ForgotPasswordViewModel(AppDependencies.userRepository)
 
     val hasSeenWelcome by sessionManager.hasSeenWelcomeFlow.collectAsStateWithLifecycle(initialValue = null)
     val isLoggedIn by sessionManager.isLoggedInFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -75,6 +86,8 @@ fun AppNavGraph(
         }
     }
 
+
+
     startRoute?.let {
         DestinationsNavHost(
             navGraph = AppNavGraphs.root,
@@ -83,6 +96,7 @@ fun AppNavGraph(
             dependenciesContainerBuilder = {
                 dependency(registrationViewModel)
                 dependency(sessionManager)
+                dependency(forgotPasswordViewModel)
             }
         )
     }
@@ -196,7 +210,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                 }
             )
         },
-        onForgotPasswordClick = {},
+        onForgotPasswordClick = {navigator.navigate(ForgotPasswordScreenComposableDestination) },
         onRegisterClick = { navigator.navigate(RegisterScreenComposableDestination) },
         loginViewModel = loginViewModel,
         registrationViewModel = registrationViewModel
@@ -212,6 +226,7 @@ fun RegisterScreenComposable(navigator: DestinationsNavigator,registrationViewMo
         registrationViewModel = registrationViewModel
     )
 }
+
 
 @Destination<RootNavGraph>
 @Composable
@@ -314,4 +329,34 @@ fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationVi
     RoommateFlowScreen(navigator = navigator,viewModel = registrationViewModel)
 }
 
+@Destination<RootNavGraph>
+@Composable
+fun ForgotPasswordScreenComposable(
+    navigator: DestinationsNavigator,
+    forgotPasswordViewModel: ForgotPasswordViewModel
+) {
+    ForgotPasswordScreen(
+        viewModel = forgotPasswordViewModel,
+        onLoginClick = {
+            navigator.navigate(LoginScreenComposableDestination) {
+                popUpTo(ForgotPasswordScreenComposableDestination) { inclusive = true }
+            }
+        }
+    )
+}
 
+@Destination<RootNavGraph>
+@Composable
+fun ResetPasswordScreenComposable(
+    navigator: DestinationsNavigator,
+    forgotPasswordViewModel: ForgotPasswordViewModel
+) {
+    ResetPasswordScreen(
+        viewModel = forgotPasswordViewModel,
+        onLoginClick = {
+            navigator.navigate(LoginScreenComposableDestination) {
+                popUpTo(ResetPasswordScreenComposableDestination) { inclusive = true }
+            }
+        }
+    )
+}
