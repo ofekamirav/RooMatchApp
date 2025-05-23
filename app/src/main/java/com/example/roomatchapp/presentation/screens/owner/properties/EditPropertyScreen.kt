@@ -3,26 +3,24 @@ package com.example.roomatchapp.presentation.screens.owner.properties
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.roomatchapp.presentation.theme.Background
-import com.example.roomatchapp.presentation.theme.Primary
-import com.example.roomatchapp.presentation.theme.Secondary
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.PropertyType
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.FilterChip
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.owner.property.EditPropertyViewModel
+import com.example.roomatchapp.presentation.theme.Background
+import com.example.roomatchapp.presentation.theme.Primary
+import com.example.roomatchapp.presentation.theme.Secondary
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EditPropertyScreen(
     viewModel: EditPropertyViewModel,
@@ -31,54 +29,67 @@ fun EditPropertyScreen(
     onAddPhoto: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    var showWarning by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .background(Background)
-        .padding(16.dp)) {
-
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+            .padding(16.dp)
+    ) {
         Text("Edit Property", style = MaterialTheme.typography.titleLarge, color = Primary)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Title
-        Text("Title", style = MaterialTheme.typography.titleSmall)
-        //CapsuleTextField(value = state.title, onValueChange = { viewModel.updateTitle(it) })
-
+        Text("Title:", style = MaterialTheme.typography.titleSmall)
+        CapsuleTextField(
+            value = state.title,
+            onValueChange = { viewModel.updateTitle(it) },
+            placeholder = "Enter a new title"
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Price
-        Text("Price (₪)", style = MaterialTheme.typography.titleSmall)
-//        CapsuleTextField(
-//            value = state.price.toString(),
-//            onValueChange = { viewModel.updatePrice(it.toIntOrNull() ?: 0) }
-//        )
-
+        Text("Monthly Rent (₪):", style = MaterialTheme.typography.titleSmall)
+        CapsuleTextField(
+            value = state.price.toString(),
+            onValueChange = {
+                val parsed = it.toIntOrNull()
+                if (parsed != null) viewModel.updatePrice(parsed)
+            },
+            placeholder = "Enter price"
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Features
         Text("Features", style = MaterialTheme.typography.titleSmall)
-//        FlowRow {
-//            CondoPreference.entries.forEach { pref ->
-//                val selected = state.features.contains(pref)
-//                FilterChip(
-//                    selected = selected,
-//                    onClick = { viewModel.toggleFeature(pref) },
-//                    label = { Text(pref.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }) }
-//                )
-//            }
-//        }
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CondoPreference.entries.forEach { pref ->
+                val selected = state.features.contains(pref)
+                FilterChip(
+                    selected = selected,
+                    onClick = { viewModel.toggleFeature(pref) },
+                    label = {
+                        Text(
+                            pref.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                            fontSize = 14.sp
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Primary,
+                        selectedLabelColor = Color.White
+                    )
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        // Roommates capacity with special warning logic
         Text("Roommates Capacity", style = MaterialTheme.typography.titleSmall)
-
         CountSelector(
             count = state.canContainRoommates,
             onCountChange = {
                 if (state.type == PropertyType.APARTMENT && it == 1) {
-                    // Replace with your actual warning logic
-                    println("Must delete and re-create as ROOM")
+                    showWarning = true
                 } else {
                     viewModel.updateRoommateCapacity(it)
                 }
@@ -87,21 +98,39 @@ fun EditPropertyScreen(
             max = 10
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        if (showWarning) {
+            Text(
+                "You must delete and re-create this listing as ROOM type",
+                color = Color.Red,
+                fontSize = 14.sp
+            )
+        }
 
-        // Photos
+        Spacer(modifier = Modifier.height(16.dp))
         Text("Photos", style = MaterialTheme.typography.titleSmall)
-        state.photos.forEach { photo ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(photo, modifier = Modifier.weight(1f))
-                Button(onClick = { onDeletePhoto(photo) }) { Text("Delete") }
+        LazyColumn(modifier = Modifier.height(120.dp)) {
+            items(state.photos.size) { index ->
+                val photo = state.photos[index]
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(photo, modifier = Modifier.weight(1f))
+                    Button(onClick = { onDeletePhoto(photo) }) {
+                        Text("Delete")
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
-        Button(onClick = onAddPhoto) { Text("Add Photo") }
+
+        Button(
+            onClick = onAddPhoto,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Secondary)
+        ) {
+            Text("Add Photo", color = Color.White)
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Save Button
         Button(
             onClick = onSave,
             modifier = Modifier
@@ -113,6 +142,7 @@ fun EditPropertyScreen(
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun EditPropertyPreview() {

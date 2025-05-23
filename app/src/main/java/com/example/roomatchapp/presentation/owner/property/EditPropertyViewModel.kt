@@ -3,18 +3,20 @@ package com.example.roomatchapp.presentation.owner.property
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import com.example.roomatchapp.data.model.*
-
-data class EditPropertyState(
-    val title: String = "",
-    val price: Int = 0,
-    val features: List<CondoPreference> = emptyList(),
-    val canContainRoommates: Int = 1,
-    val photos: List<String> = emptyList(),
-    val type: PropertyType = PropertyType.ROOM
-)
+import com.example.roomatchapp.data.model.CondoPreference
+import com.example.roomatchapp.data.model.PropertyType
 
 class EditPropertyViewModel : ViewModel() {
+
+    data class EditPropertyState(
+        val title: String = "",
+        val price: Int = 0,
+        val features: List<CondoPreference> = emptyList(),
+        val canContainRoommates: Int = 1,
+        val type: PropertyType = PropertyType.APARTMENT,
+        val photos: List<String> = emptyList()
+    )
+
     private val _state = MutableStateFlow(EditPropertyState())
     val state: StateFlow<EditPropertyState> = _state
 
@@ -27,24 +29,24 @@ class EditPropertyViewModel : ViewModel() {
     }
 
     fun toggleFeature(feature: CondoPreference) {
-        val current = _state.value.features.toMutableList()
-        if (feature in current) current.remove(feature) else current.add(feature)
-        _state.value = _state.value.copy(features = current)
+        val currentFeatures = _state.value.features.toMutableList()
+        if (currentFeatures.contains(feature)) {
+            currentFeatures.remove(feature)
+        } else {
+            currentFeatures.add(feature)
+        }
+        _state.value = _state.value.copy(features = currentFeatures)
     }
 
-    fun updateRoommateCapacity(count: Int) {
-        _state.value = _state.value.copy(canContainRoommates = count)
+    fun updateRoommateCapacity(capacity: Int) {
+        _state.value = _state.value.copy(canContainRoommates = capacity)
     }
 
-    fun addPhoto(url: String) {
-        _state.value = _state.value.copy(photos = _state.value.photos + url)
+    fun addPhoto(photoUrl: String) {
+        _state.value = _state.value.copy(photos = _state.value.photos + photoUrl)
     }
 
-    fun removePhoto(url: String) {
-        _state.value = _state.value.copy(photos = _state.value.photos - url)
-    }
-
-    fun setType(type: PropertyType) {
-        _state.value = _state.value.copy(type = type)
+    fun deletePhoto(photoUrl: String) {
+        _state.value = _state.value.copy(photos = _state.value.photos.filter { it != photoUrl })
     }
 }
