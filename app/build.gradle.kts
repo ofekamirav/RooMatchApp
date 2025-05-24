@@ -119,6 +119,10 @@ dependencies {
     //Google Places API
     implementation(libs.places)
 
+    // google photo pager
+    implementation (libs.accompanist.pager)
+    implementation (libs.google.accompanist.pager.indicators)
+
 }
 
 ksp {
