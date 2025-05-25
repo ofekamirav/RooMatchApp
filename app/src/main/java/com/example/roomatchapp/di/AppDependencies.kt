@@ -2,6 +2,7 @@ package com.example.roomatchapp.di
 
 
 import android.content.Context
+import android.util.Log
 import com.example.roomatchapp.BuildConfig
 import com.example.roomatchapp.data.local.AppLocalDB
 import com.example.roomatchapp.data.local.LocalDatabaseProvider
@@ -27,7 +28,9 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -37,11 +40,12 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import java.util.Locale
 import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "10.0.2.2" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "192.168.1.158" //if your are using emulator change ip to 10.0.2.2
 
     internal const val BASE_URL = "http://$computerIP:8080"
 
@@ -55,7 +59,7 @@ object AppDependencies {
 
     fun init(context: Context){
         localDB = LocalDatabaseProvider.getDatabase(context)
-        tokenAuthenticator = TokenAuthenticator(sessionManager, BASE_URL)
+        tokenAuthenticator = TokenAuthenticator(sessionManager, BASE_URL, httpClient)
         initPlaces(context)
     }
 
@@ -80,24 +84,20 @@ object AppDependencies {
                     if (response.status == HttpStatusCode.Unauthorized) {
                         val refreshed = tokenAuthenticator.refreshToken()
                         if (refreshed == null) {
-                            throw Exception("Unauthorized and failed to refresh token")
+                            Log.e("Token", "Unable to refresh session, logging out")
+                            throw ClientRequestException(response, "Session expired")
                         }
                     }
                 }
             }
 
-            defaultRequest {
-                val token = runBlocking { tokenAuthenticator.getValidToken() }
-                token?.let {
-                    headers.append(HttpHeaders.Authorization, "Bearer $it")
-                }
-            }
+
         }
     }
 
     fun initPlaces(context: Context) {
         if (!Places.isInitialized()) {
-            Places.initializeWithNewPlacesApiEnabled(context, BuildConfig.GOOGLE_PLACES_API_KEY)
+            Places.initializeWithNewPlacesApiEnabled(context, BuildConfig.GOOGLE_PLACES_API_KEY, Locale.ENGLISH)
         }
         googlePlacesClient = Places.createClient(context)
     }
@@ -127,12 +127,14 @@ object AppDependencies {
             localDB.roommateDao(),
             localDB.propertyDao(),
             localDB.cacheDao(),
-            localDB.matchDao()
+            localDB.matchDao(),
+            localDB.suggestedMatchDao(),
+            sessionManager
         )
     }
 
     val propertyApiService: PropertyApiService by lazy {
-        PropertyApiServiceImplementation(httpClient, BASE_URL, sessionManager)
+        PropertyApiServiceImplementation(httpClient, BASE_URL)
     }
 
     val propertyRepository: PropertyRepository by lazy {

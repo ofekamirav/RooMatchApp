@@ -47,7 +47,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.model.CondoPreference
+import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PriceRangeSelector
@@ -63,7 +65,7 @@ import kotlin.text.replace
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RoommateStep4(
-    onSubmit: () -> Unit,
+    onSubmit: EmptyCallback,
     viewModel: RegistrationViewModel
 ) {
     val context = LocalContext.current
@@ -176,13 +178,14 @@ fun RoommateStep4(
                 value = preferredRadius.toFloat(),
                 onValueChange = { preferredRadius = it.toInt() },
                 valueRange = 0.5f..100f,
-                steps = 49,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !viewModel.isLoading,
                 colors = SliderDefaults.colors(
                     thumbColor = Primary,
                     activeTrackColor = Primary,
-                    inactiveTrackColor = Secondary
+                    inactiveTrackColor = Secondary,
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent
                 )
             )
 
@@ -249,9 +252,11 @@ fun RoommateStep4(
 @Composable
 fun RoommateStep4Preview() {
     RooMatchAppTheme {
-//        RoommateStep4(
-//            onSubmit = {},
-//            viewModel = RegistrationViewModel()
-//        )
+        RoommateStep4(
+            onSubmit = {},
+            viewModel = RegistrationViewModel(
+                userSessionManager = AppDependencies.sessionManager
+            )
+        )
     }
 }

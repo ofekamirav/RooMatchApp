@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.SurveyTopAppProgress
 import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
@@ -49,7 +50,7 @@ import kotlinx.coroutines.delay
 fun AddPropertyFlow(
     navigator: NavController,
     viewModel: AddPropertyViewModel,
-    onEndFlow: () -> Unit
+    onEndFlow: EmptyCallback
 )
 {
     var stepIndex by rememberSaveable { mutableStateOf(0) }

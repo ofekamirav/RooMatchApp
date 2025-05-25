@@ -43,7 +43,7 @@ data class RoommateRegistrationState(
     val gender: Gender ?= null,
     val work: String = "",
     val workError: String? = null,
-    val profilePicture: String = "",
+    val profilePicture: String? = "",
     val personalBio: String = "",
     val personalBioError: String? = null,
     val attributes: List<Attribute> = emptyList(),
@@ -76,6 +76,9 @@ class RegistrationViewModel(
         public set
 
     var isUploadingImage by mutableStateOf(false)
+        public set
+
+    var googleSignInPic by mutableStateOf(null as String?)
         public set
 
 
@@ -215,7 +218,7 @@ fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) 
         val state = _roommateState.value
         return state.gender != null &&
                 state.work.isNotBlank() &&
-                state.profilePicture.isNotBlank()
+                state.profilePicture?.let { !it.isEmpty() } == true
         Log.d("TAG", "RegistrationViewModel- Registration state status: ${roommateState.value.gender}, ${roommateState.value.work}, ${roommateState.value.profilePicture}")
     }
 
@@ -356,6 +359,7 @@ fun prefillGoogleData(email: String, fullName: String, profilePicture: String?) 
 
                 clearBaseState()
                 clearRoommateState()
+                delay(1500)
                 _navigateToMain.value = true
 
             } catch (e: Exception) {

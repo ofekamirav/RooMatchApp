@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
+import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 
@@ -56,7 +57,7 @@ fun RoommateStep2(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEEEEE1))
+            .background(Background)
             .padding(top = 0.dp, start = 4.dp, end = 4.dp, bottom = 8.dp),
         contentAlignment = Alignment.Center
     ) {

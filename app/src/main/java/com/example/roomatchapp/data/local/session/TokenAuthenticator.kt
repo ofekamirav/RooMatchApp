@@ -15,61 +15,59 @@ import com.auth0.jwt.JWT
 
 class TokenAuthenticator(
     private val sessionManager: UserSessionManager,
-    private val baseUrl: String
+    private val baseUrl: String,
+    private val client: HttpClient
 ) {
 
-    suspend fun getValidToken(): String? {
+    suspend fun getValidToken(): String {
         val token = sessionManager.tokenFlow.first()
 
-        if (!token.isNullOrBlank()) {
-            val isExpired = try {
-                val decodedJWT = JWT.decode(token)
-                val expiresAt = decodedJWT.expiresAt
-                expiresAt?.before(Date()) ?: true
-            } catch (e: Exception) {
-                true // אם לא ניתן לפענח – תתייחס כלא תקף
-            }
-
-            if (!isExpired) {
-                return token
-            }
+        val isExpired = try {
+            val decodedJWT = JWT.decode(token)
+            val expiresAt = decodedJWT.expiresAt
+            expiresAt?.before(Date()) ?: true
+        } catch (e: Exception) {
+            true
         }
 
-        // טוקן ריק או שפג תוקף => מנסה לרענן
-        return refreshToken()
+        return if (!isExpired && !token.isNullOrBlank()) {
+            token
+        } else {
+            refreshToken() ?: throw Exception("Missing tokens – cannot refresh session")
+        }
     }
 
+
     suspend fun refreshToken(): String? {
-        val refreshToken = sessionManager.refreshTokenFlow.first() ?: return null
-        val accessToken = sessionManager.tokenFlow.first() ?: return null
-        val client = HttpClient {
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
+        val refreshToken = sessionManager.refreshTokenFlow.first()
+        val accessToken = sessionManager.tokenFlow.first()
+
+        if (refreshToken.isNullOrBlank() || accessToken.isNullOrBlank()) {
+            return null
         }
-        val response: HttpResponse = client.post("$baseUrl/auth/refresh") {
+
+        val response = client.post("$baseUrl/auth/refresh") {
             contentType(ContentType.Application.Json)
-            setBody(RequestRefresh(
-                accessToken = accessToken,
-                refreshToken = refreshToken
-            ))
+            setBody(RequestRefresh(accessToken, refreshToken))
         }
 
         return if (response.status == HttpStatusCode.OK) {
-            val responseBody = response.bodyAsText()
-            val json = JSONObject(responseBody)
-            val newToken = json.getString("accessToken")
-            val newRefresh = json.getString("refreshToken")
+            val body = response.bodyAsText()
+            val json = JSONObject(body)
+            val newAccessToken = json.getString("accessToken")
+            val newRefreshToken = json.getString("refreshToken")
 
             sessionManager.saveUserSession(
-                token = newToken,
-                refreshToken = newRefresh,
+                token = newAccessToken,
+                refreshToken = newRefreshToken,
                 userId = sessionManager.userIdFlow.first() ?: "",
                 userType = sessionManager.userTypeFlow.first() ?: ""
             )
-            newToken
+
+            newAccessToken
         } else {
             null
         }
     }
 }
+
