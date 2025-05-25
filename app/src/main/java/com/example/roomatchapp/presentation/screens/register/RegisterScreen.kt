@@ -102,7 +102,10 @@ fun RegisterScreen(
                         supportingText = { state.emailError?.let { Text(text = it) } },
                         singleLine = true,
                         label = { Text("Enter your email address") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        )
                     )
                     OutlinedTextField(
                         value = state.fullName,

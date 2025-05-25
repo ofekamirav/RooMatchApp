@@ -5,8 +5,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.base.EmptyCallback
+import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.roommate.CardDetailsState
@@ -50,7 +53,10 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
-fun DiscoverScreen(viewModel: DiscoverViewModel) {
+fun DiscoverScreen(
+    viewModel: DiscoverViewModel,
+    onClickProperty: StringCallback = {}
+) {
     val state by viewModel.state.collectAsState()
     val cardDetails by viewModel.cardDetails.collectAsState()
     val nextCardDetails by viewModel.nextCardDetails.collectAsState()
@@ -87,7 +93,7 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(Background),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.TopCenter,
     ) {
         LoadingAnimation(
             isLoading = showInitialLoading,
@@ -97,17 +103,24 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
                 state = rememberSwipeRefreshState(isRefreshing),
                 onRefresh = { viewModel.refreshContent() }
             ) {
+                Text(
+                    text = "roomatch",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Primary,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text("roomatch", style = MaterialTheme.typography.titleLarge, color = Primary)
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    if (state.matches.isEmpty() && state.endOfMatches) {
+                    if (!state.isLoading && state.endOfMatches) {
+                        viewModel.stopInitialLoading()
                         Text("No more matches available!", color = Primary)
                     } else if (state.errorMessage != null) {
                         Text(
@@ -126,7 +139,8 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
                                     modifier = Modifier
                                         .zIndex(1f),
                                     swipeable = true,
-                                    viewModel = viewModel
+                                    viewModel = viewModel,
+                                    onClickProperty = onClickProperty
                                 )
                             }
 
@@ -138,7 +152,8 @@ fun DiscoverScreen(viewModel: DiscoverViewModel) {
                                         .scale(0.95f)
                                         .alpha(0.7f),
                                     swipeable = false,
-                                    viewModel = viewModel
+                                    viewModel = viewModel,
+                                    onClickProperty = onClickProperty
                                 )
                             }
                         }
@@ -155,14 +170,19 @@ fun MatchCard(
     cardDetails: CardDetailsState,
     viewModel: DiscoverViewModel,
     modifier: Modifier = Modifier,
+    onClickProperty: StringCallback,
     swipeable: Boolean,
 ) {
+    var isAnimatingOut by remember { mutableStateOf(false) }
     val offsetX = remember { Animatable(0f) }
     val iconScale = remember { Animatable(0f) }
     val iconOffsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     var swipeDirection by remember { mutableStateOf<String?>(null) }
     var isSwipeAction by remember { mutableStateOf(false) }
+    var iconVisibleForType by remember { mutableStateOf<String?>(null) }
+
+    if (isAnimatingOut) return
 
     LaunchedEffect(swipeable) {
         Log.d("TAG", "MatchCard-Card is swipable: $swipeable")
@@ -177,15 +197,12 @@ fun MatchCard(
                     Modifier.pointerInput(swipeable) {
                         detectDragGestures(
                             onDragStart = {
-                                Log.d("TAG", "MatchCard-Drag started")
                             },
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 scope.launch {
                                     val newOffset = offsetX.value + dragAmount.x
                                     offsetX.snapTo(newOffset)
-
-                                    Log.d("TAG", "MatchCard-Dragging: offset = $newOffset")
 
                                     val progress = (newOffset / 300f).coerceIn(-1f, 1f)
                                     iconScale.snapTo(abs(progress))
@@ -194,35 +211,40 @@ fun MatchCard(
                                 }
                             },
                             onDragEnd = {
-                                // Debug log
-                                Log.d("TAG", "MatchCard-Drag ended with offset: ${offsetX.value}")
-
                                 if (abs(offsetX.value) > 300f) {
                                     isSwipeAction = true
                                     scope.launch {
+                                        isAnimatingOut = true
                                         iconOffsetX.snapTo(if (swipeDirection == "right") 300f else -300f)
                                         launch { iconOffsetX.animateTo(0f, tween(300)) }
                                         launch { iconScale.animateTo(1f, tween(300)) }
+
+                                        val direction = swipeDirection
 
                                         offsetX.animateTo(
                                             targetValue = if (offsetX.value > 0) 2000f else -2000f,
                                             animationSpec = tween(durationMillis = 300)
                                         )
-                                        offsetX.snapTo(0f)
+
+                                        swipeDirection = null
                                         iconScale.snapTo(0f)
                                         iconOffsetX.snapTo(0f)
-                                        val finalDirection = swipeDirection
-                                        swipeDirection = null
-                                        isSwipeAction = false
-                                        if (finalDirection == "right") viewModel.fullLike() else viewModel.dislike()
+                                        offsetX.snapTo(0f)
+
+                                        if (direction == "right") {
+                                            viewModel.fullLike()
+                                        } else {
+                                            viewModel.dislike()
+                                        }
+                                        isAnimatingOut = false
+
                                     }
-                                } else {
+                                } else{
                                     scope.launch {
                                         offsetX.animateTo(0f, tween(300))
                                         iconScale.animateTo(0f, tween(300))
                                         iconOffsetX.animateTo(0f, tween(300))
-                                        swipeDirection = null
-                                    }
+                                        swipeDirection = null                                    }
                                 }
                             }
                         )
@@ -251,7 +273,6 @@ fun MatchCard(
                 model = cardDetails.photos,
                 onSuccess = {
                     viewModel.notifyImageLoaded()
-                    Log.d("TAG", "MatchCard-Property image loaded")
                 },
                 onError = {
                     viewModel.notifyImageLoaded()
@@ -267,6 +288,10 @@ fun MatchCard(
                     .fillMaxWidth()
                     .height(240.dp)
                     .clip(RoundedCornerShape(24.dp))
+                    .clickable(onClick = {
+                        Log.d("TAG", "MatchCard-onClickProperty called")
+                        onClickProperty(cardDetails.propertyId)
+                    })
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -315,7 +340,24 @@ fun MatchCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ){
                 Button(
-                    onClick = { viewModel.likeProperty() },
+                    onClick = {
+                        if (swipeable && !isAnimatingOut) {
+                            isAnimatingOut = true
+                            scope.launch {
+                                iconVisibleForType = "right"
+                                iconOffsetX.snapTo(0f)
+                                iconScale.snapTo(0f)
+
+                                iconScale.animateTo(1f, tween(300))
+                                delay(400)
+                                viewModel.likeProperty()
+                                Log.d("TAG", "MatchCard-viewModel.likeProperty() called")
+
+                                iconScale.animateTo(0f, tween(200))
+                                iconVisibleForType = null
+                            }
+                         }
+                    },
                     modifier = Modifier.height(50.dp).weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Primary,
@@ -332,7 +374,23 @@ fun MatchCard(
                     )
                 }
                 Button(
-                    onClick = { viewModel.likeRoommates() },
+                    onClick = {
+                        if (swipeable && !isAnimatingOut) {
+                            isAnimatingOut = true
+                            scope.launch {
+                            iconVisibleForType = "right"
+                            iconOffsetX.snapTo(0f)
+                            iconScale.snapTo(0f)
+
+                            iconScale.animateTo(1f, tween(300))
+                            delay(400)
+                            viewModel.likeRoommates()
+                            Log.d("TAG", "MatchCard-viewModel.likeRoommates() called")
+
+                            iconScale.animateTo(0f, tween(200))
+                            iconVisibleForType = null
+                        }
+                    } },
                     modifier = Modifier.height(50.dp).weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Primary,
@@ -351,7 +409,8 @@ fun MatchCard(
             }
         }
 
-        swipeDirection?.let { direction ->
+        if (iconVisibleForType != null || swipeDirection != null) {
+            val direction = iconVisibleForType ?: swipeDirection
             val icon = when (direction) {
                 "right" -> R.drawable.ic_like
                 "left" -> R.drawable.ic_dislike
@@ -365,7 +424,8 @@ fun MatchCard(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .offset {
-                            if (isSwipeAction) IntOffset(iconOffsetX.value.roundToInt(), 0)
+                            if (isSwipeAction || iconVisibleForType != null)
+                                IntOffset(iconOffsetX.value.roundToInt(), 0)
                             else IntOffset(0, 0)
                         }
                         .size((iconScale.value * 120).dp)

@@ -37,10 +37,12 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
-fun RoommateMatchesScreen(viewModel: MatchesViewModel) {
-    val matches = viewModel.matches.collectAsState().value
-    val loading = viewModel.loading.collectAsState().value
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
+fun RoommateMatchesScreen(
+    viewModel: MatchesViewModel) {
+    val state by viewModel.uiState.collectAsState()
+    val matches = state.matches
+    val loading = state.isLoading
+    val isRefreshing = state.isRefreshing
 
     LoadingAnimation(
         isLoading = loading,
@@ -55,7 +57,6 @@ fun RoommateMatchesScreen(viewModel: MatchesViewModel) {
                     .fillMaxSize()
                     .background(Background)
                     .padding(2.dp),
-                contentAlignment = Alignment.TopCenter
             ) {
                 Column(
                     modifier = Modifier
@@ -80,7 +81,8 @@ fun RoommateMatchesScreen(viewModel: MatchesViewModel) {
                             item {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.fillMaxWidth()
+                                    verticalArrangement = Arrangement.Center,
+                                    modifier = Modifier.fillMaxSize()
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Star,
@@ -113,7 +115,9 @@ fun RoommateMatchesScreen(viewModel: MatchesViewModel) {
 }
 
 @Composable
-fun MatchRow(match: MatchCardModel) {
+fun MatchRow(
+    match: MatchCardModel,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
