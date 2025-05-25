@@ -40,6 +40,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import java.util.Locale
 import kotlin.getValue
 
 object AppDependencies {
@@ -96,7 +97,7 @@ object AppDependencies {
 
     fun initPlaces(context: Context) {
         if (!Places.isInitialized()) {
-            Places.initializeWithNewPlacesApiEnabled(context, BuildConfig.GOOGLE_PLACES_API_KEY)
+            Places.initializeWithNewPlacesApiEnabled(context, BuildConfig.GOOGLE_PLACES_API_KEY, Locale.ENGLISH)
         }
         googlePlacesClient = Places.createClient(context)
     }

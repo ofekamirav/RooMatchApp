@@ -44,6 +44,7 @@ import com.example.roomatchapp.R
 import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.screens.login.ForgotPasswordViewModel
+import com.example.roomatchapp.presentation.screens.welcome.Onboarding
 import kotlinx.coroutines.delay
 
 
@@ -109,15 +110,14 @@ fun WelcomeScreenComposable(
     navigator: DestinationsNavigator,
     sessionManager: UserSessionManager) {
     val scope = rememberCoroutineScope()
-    WelcomeScreen(
-        onGetStartedClick = {
+    Onboarding(
+        onFinish = {
             scope.launch {
                 sessionManager.setHasSeenWelcome(true)
                 navigator.navigate(LoginScreenComposableDestination) {
                     popUpTo(WelcomeScreenComposableDestination) { inclusive = true }
                 }
             }
-
         }
     )
 }

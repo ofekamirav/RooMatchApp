@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.charts)
     implementation(libs.accompanist.swiperefresh)
     implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.pager.indicators)
     //ktor
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio)
@@ -102,6 +104,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.datastore.preferences)
+    //videos
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
