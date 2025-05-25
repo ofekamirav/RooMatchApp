@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -40,6 +41,7 @@ import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.text.input.KeyboardType
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.theme.Secondary
 import com.example.roomatchapp.presentation.theme.cardBackground
@@ -115,7 +117,10 @@ fun RegisterCompletionScreen(
                         supportingText = { state.fullNameError?.let { Text(text = it) } },
                         singleLine = true,
                         label = { Text("Full name") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        )
                     )
 
                     Row(
@@ -148,7 +153,10 @@ fun RegisterCompletionScreen(
                             supportingText = { state.phoneNumberError?.let { Text(text = it) } },
                             singleLine = true,
                             label = { Text("Phone Number") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone
+                            )
                         )
                     }
                     // Register button
@@ -165,10 +173,11 @@ fun RegisterCompletionScreen(
                         ),
                         enabled = registrationViewModel.validateCompleteFields()
                     ) {
-                        Text("Registration",
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.SansSerif)
+                        Text(
+                            text = "Registration",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White
+                        )
                     }
                 }
             }

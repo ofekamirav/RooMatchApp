@@ -60,9 +60,20 @@ class UserApiServiceImplementation(
             val response = client.post("$baseUrl/login") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
-            }.body<UserResponse>()
+            }
             Log.d("TAG", "ApiService-Response received: $response")
-            return response
+            if (!response.status.isSuccess()) {
+                val errorResponse = response.body<Map<String, String>>()
+                val errorMessage = errorResponse["error"] ?: "Unknown error"
+
+                throw when (response.status) {
+                    HttpStatusCode.BadRequest -> IllegalArgumentException(errorMessage)
+                    HttpStatusCode.InternalServerError -> RuntimeException("Server error: $errorMessage")
+                    else -> Exception("Unexpected error: $errorMessage")
+                }
+            }
+
+            return response.body()
         } catch (e: Exception) {
             Log.e("TAG", "ApiService-API call failed: ${e.message}", e)
             throw e

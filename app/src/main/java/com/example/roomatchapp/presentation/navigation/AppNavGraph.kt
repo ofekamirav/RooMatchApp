@@ -44,6 +44,7 @@ import com.example.roomatchapp.R
 import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.screens.login.ForgotPasswordViewModel
+import kotlinx.coroutines.delay
 
 
 @NavHostGraph
@@ -197,15 +198,7 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                 },
                 onError = { error ->
                     loginViewModel.isLoading =false
-                    val errorMessage = if (error.contains("Invalid password", ignoreCase = true) ||
-                        error.contains("User is not exists", ignoreCase = true)
-                    ) {
-                        "Incorrect email or password"
-                    } else {
-                        "Server error: $error"
-                    }
-
-                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
                     Log.e("TAG", "AppNavGraph-LoginScreenComposable-Login error: $error")
                 }
             )
@@ -256,7 +249,8 @@ fun ChooseTypeUserScreenComposable(navigator: DestinationsNavigator,registration
                 fullName = state.value.fullName,
                 phoneNumber = state.value.phoneNumber,
                 birthDate = state.value.birthDate,
-                password = state.value.password
+                password = state.value.password,
+                profilePicture = registrationViewModel.googleSignInPic
             )
 
             ownerViewModel.registerOwner(

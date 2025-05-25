@@ -127,4 +127,25 @@ class PropertyRepositoryImpl(
         return response
     }
 
+    override suspend fun updateProperty(
+        propertyId: String,
+        property: Property,
+    ): Boolean {
+        Log.d("TAG", "PropertyRepositoryImpl- updateProperty - propertyId: $propertyId")
+        val response = apiService.updateProperty(propertyId, property)
+        if (response) {
+            propertyDao.insert(property)
+            cacheDao.insert(
+                CacheEntity(
+                    type = CacheType.PROPERTY,
+                    entityId = property.id,
+                    lastUpdatedAt = System.currentTimeMillis()
+                )
+            )
+        }else{
+            Log.e("TAG", "PropertyRepositoryImpl- updateProperty - ERROR")
+        }
+        return response
+    }
+
 }

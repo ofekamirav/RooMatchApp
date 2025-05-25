@@ -8,6 +8,7 @@ import com.example.roomatchapp.data.model.CacheType
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.remote.api.like.LikeApiService
 import com.example.roomatchapp.domain.repository.LikeRepository
+import com.example.roomatchapp.utils.Resource
 import kotlin.toString
 
 class LikeRepositoryImpl(
@@ -48,53 +49,44 @@ class LikeRepositoryImpl(
         seekerId: String,
         forceRefresh: Boolean,
         maxCacheAgeMillis: Long,
-    ): List<Match>? {
-        val cacheEntities = cacheDao.getAllByType(CacheType.MATCH)
-        val now = System.currentTimeMillis()
+    ): Resource<List<Match>> {
+        return try {
+            Log.d("TAG","LikeRepositoryImpl- getRoommateMatches called")
+            val cacheEntities = cacheDao.getAllByType(CacheType.MATCH)
+            val now = System.currentTimeMillis()
 
-        //Get all matches from the ROOM
-        val matchesWithCache  = cacheEntities.mapNotNull { cacheEntry ->
-            matchDao.getMatchById(cacheEntry.entityId)?.let { match ->
-                match to cacheEntry
+            val matchesWithCache = cacheEntities.mapNotNull { cacheEntry ->
+                matchDao.getMatchById(cacheEntry.entityId)?.let { match ->
+                    match to cacheEntry
+                }
             }
-        }
 
-        //Check if the matches are fresh enough
-        val isCacheFresh = matchesWithCache .all { (_, cacheEntry) ->
-            (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
-        }
+            val isCacheFresh = matchesWithCache.all { (_, cacheEntry) ->
+                (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
+            }
 
-        if (forceRefresh || isCacheFresh) {
-            val freshMatches = apiService.getRoommateMatches(seekerId)
+            if (forceRefresh || !isCacheFresh) {
+                val freshMatches = apiService.getRoommateMatches(seekerId)
 
-            freshMatches?.let{ matches ->
-                matches.forEach { match ->
+                freshMatches?.forEach { match ->
                     matchDao.insert(match)
-
                     val existingCache = cacheDao.getByEntityId(match.id.toString())
-
-                    val updatedCache = if (existingCache != null) {
-                        existingCache.copy(lastUpdatedAt = now)
-                    } else {
-                        CacheEntity(
-                            type = CacheType.MATCH,
-                            entityId = match.id.toString(),
-                            lastUpdatedAt = now
-                        )
-                    }
+                    val updatedCache = existingCache?.copy(lastUpdatedAt = now)
+                        ?: CacheEntity(CacheType.MATCH, match.id.toString(), now)
                     cacheDao.insert(updatedCache)
                 }
 
+                return Resource.Success(freshMatches ?: emptyList())
             }
 
-            return freshMatches
+            val matches = matchesWithCache
+                .filter { (match, _) -> match.seekerId == seekerId }
+                .map { it.first }
+            Log.d("TAG","LikeRepositoryImpl- getRoommateMatches success- ${matches.size} matches returned")
+            Resource.Success(matches)
+        } catch (e: Exception) {
+            Resource.Error(e.message)
         }
-
-        return matchesWithCache
-            .filter { (match, _) -> match.seekerId == seekerId }
-            .map { it.first }
-            .ifEmpty { null }
     }
-
 
 }

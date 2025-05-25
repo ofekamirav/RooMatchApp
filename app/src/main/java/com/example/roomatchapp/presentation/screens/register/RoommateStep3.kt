@@ -20,6 +20,7 @@ import com.example.roomatchapp.data.model.Attribute
 import com.example.roomatchapp.presentation.components.CapsuleTextField
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
+import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
 
@@ -43,7 +44,7 @@ fun RoommateStep3(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEEEEE1))
+            .background(Background)
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {

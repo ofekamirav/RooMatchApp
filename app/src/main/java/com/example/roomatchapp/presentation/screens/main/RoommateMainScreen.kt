@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.main
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -84,7 +86,11 @@ fun RoommateMainScreen(
                             userSessionManager = AppDependencies.sessionManager
                         )
                     }
-                    DiscoverScreen(viewModel = viewModel)
+                    DiscoverScreen(
+                        viewModel = viewModel,
+                        onClickProperty = {
+                        }
+                    )
                 }
             }
 
@@ -107,6 +113,7 @@ fun RoommateMainScreen(
             }
 
             composable("edit_profile") {
+                val context = LocalContext.current
                 if (seekerId.isNotBlank()) {
                     val viewModel = remember(seekerId) {
                         EditProfileViewModel(
@@ -114,7 +121,16 @@ fun RoommateMainScreen(
                             seekerId = seekerId
                         )
                     }
-                    EditProfileScreen(viewModel = viewModel)
+                    EditProfileScreen(
+                        viewModel = viewModel,
+                        onSaveClick = {
+                            navController.popBackStack()
+                            Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                        },
+                        onBackClick = {
+                            navController.popBackStack()
+                        }
+                    )
                 }
             }
         }

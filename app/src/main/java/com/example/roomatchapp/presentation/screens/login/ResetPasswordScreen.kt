@@ -55,7 +55,7 @@ fun ResetPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () -> 
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Reset Password", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text("Reset Password",fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
 
                     OutlinedTextField(
                         value = token,
@@ -90,7 +90,8 @@ fun ResetPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () -> 
                             disabledContainerColor = Primary.copy(alpha = 0.5f)
                         )
                     ) {
-                        Text("Reset Password", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.SansSerif)
+                        Text("Reset Password", style = MaterialTheme.typography.titleMedium,
+                            color = Color.White)
                     }
 
                     status?.let {

@@ -79,7 +79,6 @@ class UserRepositoryImpl(
         forceRefresh: Boolean,
         maxCacheAgeMillis: Long,
     ): Roommate? {
-
         val cacheEntry = cacheDao.getByIdAndType(roommateId, CacheType.ROOMMATE)
         val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
         Log.d("TAG", "UserRepositoryImp- getRoommate -isCacheValid: $isCacheValid")

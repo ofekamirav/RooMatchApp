@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.remote.dto.IncompleteRegistrationException
 import com.example.roomatchapp.data.remote.dto.LoginRequest
@@ -43,15 +44,14 @@ class LoginViewModel(
     fun login(
         request: LoginRequest,
         onSuccess: (UserResponse) -> Unit,
-        onError: (String) -> Unit
+        onError: StringCallback
     ) {
         viewModelScope.launch {
+            isLoading = true
             try {
-                Log.d("TAG", "LoginViewModel-Login owner with request: ${request.email}, ${request.password}")
+                Log.d("TAG", "LoginViewModel-Login with: ${request.email}")
                 val response = repository.login(request)
-                Log.d("TAG", "LoginViewModel-User login response: $response")
 
-                // Save session before proceeding
                 sessionManager.saveUserSession(
                     token = response.token,
                     refreshToken = response.refreshToken,
@@ -61,13 +61,18 @@ class LoginViewModel(
 
                 onSuccess(response)
                 clearState()
+            } catch (e: IllegalArgumentException) {
+                Log.e("TAG", "Login failed - invalid credentials: ${e.message}")
+                onError("Incorrect email or password")
             } catch (e: Exception) {
-                Log.e("TAG", "LoginViewModel-Login failed: ${e.message}", e)
-                onError(e.message ?: "Unknown error")
-                clearState()
+                Log.e("TAG", "Login failed - unknown error: ${e.message}")
+                onError("Unable to connect to the server. Please try again.")
+            } finally {
+                isLoading = false
             }
         }
     }
+
 
     fun updateEmail(email: String) {
         _state.value = _state.value.copy(email = email)
@@ -128,6 +133,7 @@ class LoginViewModel(
                                 e.fullName,
                                 uploadedUrl
                             )
+                            registerViewModel.googleSignInPic = uploadedUrl
                         },
                         onError = {
                             Log.e("TAG", "Upload Error: $it")

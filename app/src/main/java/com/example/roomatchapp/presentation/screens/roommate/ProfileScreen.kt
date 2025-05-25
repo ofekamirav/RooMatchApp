@@ -29,7 +29,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.navigation.NavController
+import coil.compose.AsyncImagePainter
 import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
@@ -43,6 +45,12 @@ fun ProfileScreen(
     val roommate by viewModel.roommate.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
+    val painter = rememberAsyncImagePainter(roommate?.profilePicture)
+    val imageState = painter.state
+    val isImageReady = imageState is AsyncImagePainter.State.Success
+    val shouldShowLoading = isLoading || !isImageReady
+
+
 
     if (showLogoutDialog) {
         CustomAlertDialog(
@@ -58,7 +66,7 @@ fun ProfileScreen(
     }
 
     LoadingAnimation(
-        isLoading = isLoading,
+        isLoading =  shouldShowLoading,
         animationResId = R.raw.loading_animation
     ) {
 
@@ -71,11 +79,12 @@ fun ProfileScreen(
             roommate?.let {
                 ProfileContent(
                     roommate = it,
+                    painter = painter,
                     onLogoutClick = {
                         showLogoutDialog = true
                     },
                     onEditClick = {
-                        onEditClick
+                        onEditClick()
                     }
                 )
             }
@@ -89,6 +98,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     roommate: Roommate,
+    painter: Painter,
     onEditClick: EmptyCallback,
     onLogoutClick: EmptyCallback
 ) {
@@ -107,16 +117,10 @@ fun ProfileContent(
                 color = Primary,
             )
 
-            val profilePainter = if (roommate.profilePicture != null) {
-                rememberAsyncImagePainter(roommate.profilePicture)
-            } else {
-                painterResource(id = R.drawable.avatar)
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Image(
-                painter = profilePainter,
+                painter = painter,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(120.dp)

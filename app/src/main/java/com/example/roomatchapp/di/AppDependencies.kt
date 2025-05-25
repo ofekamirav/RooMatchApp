@@ -2,6 +2,7 @@ package com.example.roomatchapp.di
 
 
 import android.content.Context
+import android.util.Log
 import com.example.roomatchapp.BuildConfig
 import com.example.roomatchapp.data.local.AppLocalDB
 import com.example.roomatchapp.data.local.LocalDatabaseProvider
@@ -27,6 +28,7 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -56,7 +58,7 @@ object AppDependencies {
 
     fun init(context: Context){
         localDB = LocalDatabaseProvider.getDatabase(context)
-        tokenAuthenticator = TokenAuthenticator(sessionManager, BASE_URL)
+        tokenAuthenticator = TokenAuthenticator(sessionManager, BASE_URL, httpClient)
         initPlaces(context)
     }
 
@@ -81,18 +83,14 @@ object AppDependencies {
                     if (response.status == HttpStatusCode.Unauthorized) {
                         val refreshed = tokenAuthenticator.refreshToken()
                         if (refreshed == null) {
-                            throw Exception("Unauthorized and failed to refresh token")
+                            Log.e("Token", "Unable to refresh session, logging out")
+                            throw ClientRequestException(response, "Session expired")
                         }
                     }
                 }
             }
 
-            defaultRequest {
-                val token = runBlocking { tokenAuthenticator.getValidToken() }
-                token?.let {
-                    headers.append(HttpHeaders.Authorization, "Bearer $it")
-                }
-            }
+
         }
     }
 
@@ -135,7 +133,7 @@ object AppDependencies {
     }
 
     val propertyApiService: PropertyApiService by lazy {
-        PropertyApiServiceImplementation(httpClient, BASE_URL, sessionManager)
+        PropertyApiServiceImplementation(httpClient, BASE_URL)
     }
 
     val propertyRepository: PropertyRepository by lazy {

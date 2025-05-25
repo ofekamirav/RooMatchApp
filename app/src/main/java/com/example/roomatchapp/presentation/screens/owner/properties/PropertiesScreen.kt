@@ -44,7 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.data.model.Property
+import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
@@ -52,17 +54,17 @@ import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 import com.example.roomatchapp.presentation.theme.cardBackground
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.android.gms.location.LocationAvailability
 
 
 @Composable
 fun PropertiesScreen(
     onAddProperty: () -> Unit,
-    onPropertyClick: (String) -> Unit, // PropertyID
+    onPropertyClick: StringCallback, // PropertyID
     viewModel: PropertiesViewModel
 ) {
     val properties by viewModel.properties.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing),
@@ -75,54 +77,60 @@ fun PropertiesScreen(
                 .padding(2.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            LoadingAnimation(
+                isLoading = isLoading,
+                animationResId = R.raw.loading_animation
             ) {
-                Text(
-                    text = "Properties",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Primary,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 16.dp)
+                        .padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    items(properties) { property ->
-                        PropertyRow(property = property, viewModel)
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Properties",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Primary,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 16.dp)
+                    ) {
+                        items(properties) { property ->
+                            PropertyRow(property = property, viewModel)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-            ) {
-                FloatingActionButton(
-                    onClick = {onAddProperty() },
-                    containerColor = Color.Unspecified,
-                    contentColor = Color.Unspecified,
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier.size(60.dp),
-                    elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                    content = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_add),
-                            contentDescription = "Add Property",
-                            modifier = Modifier.size(60.dp),
-                            tint = Color.Unspecified
-                        )
-                    }
-                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    FloatingActionButton(
+                        onClick = {onAddProperty() },
+                        containerColor = Color.Unspecified,
+                        contentColor = Color.Unspecified,
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.size(60.dp),
+                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                        content = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_add),
+                                contentDescription = "Add Property",
+                                modifier = Modifier.size(60.dp),
+                                tint = Color.Unspecified
+                            )
+                        }
+                    )
+                }
             }
         }
-    }
+            }
+
 }
 
 
