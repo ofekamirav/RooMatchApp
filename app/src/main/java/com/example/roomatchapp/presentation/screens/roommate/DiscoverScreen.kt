@@ -375,6 +375,7 @@ fun MatchCard(
                 }
                 Button(
                     onClick = {
+
                         if (swipeable && !isAnimatingOut) {
                             isAnimatingOut = true
                             scope.launch {
