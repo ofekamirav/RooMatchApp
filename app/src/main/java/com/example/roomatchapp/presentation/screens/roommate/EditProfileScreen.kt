@@ -101,7 +101,8 @@ fun EditProfileScreen(
                     uiState = uiState,
                     roommate = it,
                     viewModel = viewModel,
-                    onSaveClick = onSaveClick
+                    onSaveClick = onSaveClick,
+                    onBackClick = onBackClick
                 )
             }
         }
@@ -114,7 +115,8 @@ fun EditProfileContent(
     uiState: EditProfileUiState,
     roommate: Roommate,
     viewModel: EditProfileViewModel,
-    onSaveClick: EmptyCallback
+    onSaveClick: EmptyCallback,
+    onBackClick: EmptyCallback
 ) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
@@ -189,6 +191,21 @@ fun EditProfileContent(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier
+                            .size(30.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Primary,
+                            modifier = Modifier
+                                .size(30.dp)
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(

@@ -1,16 +1,27 @@
 package com.example.roomatchapp.presentation.owner.property
 
 import android.content.Context
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.model.CondoPreference
+import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.PropertyType
+import com.example.roomatchapp.di.CloudinaryModel
+import com.example.roomatchapp.domain.repository.PropertyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-open class EditPropertyViewModel : ViewModel() {
+class EditPropertyViewModel(
+    private val propertyId: String,
+    private val propertyRepository: PropertyRepository,
+) : ViewModel() {
 
     data class EditPropertyState(
         val title: String = "",
@@ -18,12 +29,44 @@ open class EditPropertyViewModel : ViewModel() {
         val features: List<CondoPreference> = emptyList(),
         val canContainRoommates: Int = 1,
         val type: PropertyType = PropertyType.APARTMENT,
-        val photoUris: List<Uri> = emptyList(),
+        val photoUris: List<String> = emptyList(),
         val isLoading: Boolean = false
     )
 
     private val _state = MutableStateFlow(EditPropertyState())
     val state: StateFlow<EditPropertyState> = _state
+
+    private val _property = MutableStateFlow<Property?>(null)
+    val property: StateFlow<Property?> = _property
+
+    private val _selectedUris = MutableStateFlow<List<Uri>>(emptyList())
+    val selectedUris: StateFlow<List<Uri>> = _selectedUris.asStateFlow()
+
+    init {
+        loadProperty()
+    }
+
+    fun loadProperty() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                val property = propertyRepository.getProperty(propertyId)
+                _property.value = property
+                _state.value = _state.value.copy(
+                    title = property?.title ?: "",
+                    price = property?.pricePerMonth ?: 0,
+                    features = property?.features ?: emptyList(),
+                    canContainRoommates = property?.canContainRoommates ?: 1,
+                    type = property?.type ?: PropertyType.APARTMENT,
+                    photoUris = property?.photos?: emptyList()
+                )
+                _state.value = _state.value.copy(isLoading = false)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _state.value = _state.value.copy(isLoading = false)
+            }
+        }
+    }
 
     fun updateTitle(title: String) {
         _state.value = _state.value.copy(title = title)
@@ -47,43 +90,83 @@ open class EditPropertyViewModel : ViewModel() {
         _state.value = _state.value.copy(canContainRoommates = capacity)
     }
 
-    fun setPhotoUris(uris: List<Uri>) {
-        _state.value = _state.value.copy(photoUris = uris)
-    }
-
     fun addPhotoUri(uri: Uri) {
-        if (!_state.value.photoUris.contains(uri)) {
-            _state.value = _state.value.copy(photoUris = _state.value.photoUris + uri)
-        }
+        _selectedUris.value = _selectedUris.value + uri
     }
 
-    fun removePhotoUri(uri: Uri) {
-        _state.value = _state.value.copy(photoUris = _state.value.photoUris.filter { it != uri })
-    }
-
-    fun setLoading(loading: Boolean) {
-        _state.value = _state.value.copy(isLoading = loading)
+    fun updatePhoto(url: String) {
+        val updated = _state.value.photoUris + url
+        _state.value = _state.value.copy(photoUris = updated)
     }
 
     fun clearPhotoUris() {
-        _state.value = _state.value.copy(photoUris = emptyList())
+        _selectedUris.value = emptyList()
     }
 
-    fun prefillFromProperty(
-        title: String,
-        price: Int,
-        features: List<CondoPreference>,
-        roommates: Int,
-        type: PropertyType,
-        photoUris: List<Uri>
+    fun setIsLoading(isLoading: Boolean) {
+        _state.value = _state.value.copy(isLoading = isLoading)
+    }
+
+    fun uploadPicsToCloudinary(
+        uris: List<Uri>,
+        context: Context,
+        onComplete: EmptyCallback = {}
     ) {
-        _state.value = EditPropertyState(
-            title = title,
-            price = price,
-            features = features,
-            canContainRoommates = roommates,
-            type = type,
-            photoUris = photoUris
-        )
+        viewModelScope.launch {
+            try {
+                for (uri in uris) {
+                    try {
+                        val source = ImageDecoder.createSource(context.contentResolver, uri)
+                        val bitmap = ImageDecoder.decodeBitmap(source)
+
+                        CloudinaryModel().uploadImage(
+                            bitmap = bitmap,
+                            name = "property_${System.currentTimeMillis()}",
+                            folder = "roomatchapp/properties",
+                            onSuccess = { url ->
+                                updatePhoto(url.toString())
+                            },
+                            onError = { error ->
+                                Log.e("CloudinaryUpload", "Error uploading image: $error")
+                            },
+                            context = context
+                        )
+                    } catch (e: Exception) {
+                        Log.e("CloudinaryUpload", "Failed to process URI: $uri", e)
+                    }
+                }
+            } finally {
+                onComplete()
+                Log.d("TAG", "EditPropertyViewModel - Upload pics to cloudinary")
+            }
+        }
+    }
+
+    suspend fun updateProperty(): Boolean {
+        return try {
+            val updatedProperty = Property(
+                id = propertyId,
+                ownerId = _property.value?.ownerId,
+                available = _property.value?.available,
+                type = _state.value.type,
+                address = _property.value?.address,
+                latitude = _property.value?.latitude,
+                longitude = _property.value?.longitude,
+                title = _state.value.title,
+                canContainRoommates = _state.value.canContainRoommates,
+                CurrentRoommatesIds = _property.value?.CurrentRoommatesIds ?: emptyList(),
+                roomsNumber = _property.value?.roomsNumber,
+                bathrooms = _property.value?.bathrooms,
+                floor = _property.value?.floor,
+                size = _property.value?.size,
+                pricePerMonth = _state.value.price,
+                features = _state.value.features,
+                photos = _state.value.photoUris
+            )
+            propertyRepository.updateProperty(propertyId, updatedProperty)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 }

@@ -10,4 +10,5 @@ interface PropertyRepository {
     suspend fun addProperty(property: PropertyDto): Boolean?
     suspend fun changeAvailability(propertyId: String, isAvailable: Boolean): Boolean
     suspend fun updateProperty(propertyId: String, property: Property): Boolean
+    suspend fun deleteProperty(propertyId: String): Boolean
 }

@@ -82,6 +82,10 @@ class UserSessionManager(private val context: Context) {
         return System.currentTimeMillis() - last > 5 * 60 * 1000
     }
 
+    suspend fun getUserId(): String? {
+        return userIdFlow.firstOrNull()
+    }
+
 
 }
 

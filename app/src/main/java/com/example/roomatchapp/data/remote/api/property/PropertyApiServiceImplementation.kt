@@ -8,6 +8,7 @@ import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -25,7 +26,7 @@ class PropertyApiServiceImplementation(
     override suspend fun getProperty(propertyId: String): Property? {
         Log.d("TAG","PropertyApiService- getProperty called")
         val token = AppDependencies.tokenAuthenticator.getValidToken()
-        val response = client.get("$baseUrl/properties/$propertyId"){
+        val response = client.get("$baseUrl/properties/id/$propertyId") {
             headers {
                 append("Authorization", "Bearer $token")
             }
@@ -42,7 +43,7 @@ class PropertyApiServiceImplementation(
     override suspend fun getOwnerProperties(ownerId: String): List<Property>? {
         Log.d("TAG","PropertyApiService- getOwnerProperties called")
         val token = AppDependencies.tokenAuthenticator.getValidToken()
-        val response = client.get("$baseUrl/properties/$ownerId"){
+        val response = client.get("$baseUrl/properties/owner/$ownerId"){
             headers {
                 append("Authorization", "Bearer $token")
             }
@@ -117,6 +118,23 @@ class PropertyApiServiceImplementation(
             return true
         }else {
             Log.d("TAG", "PropertyApiService- updateProperty failed: ${response.status.value}")
+            return false
+        }
+    }
+
+    override suspend fun deleteProperty(propertyId: String): Boolean {
+        Log.d("TAG","PropertyApiService- deleteProperty called")
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
+        val response = client.delete("$baseUrl/properties/$propertyId") {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+        }
+        if(response.status.value == 200){
+            Log.d("TAG","PropertyApiService- deleteProperty success")
+            return true
+        }else {
+            Log.d("TAG", "PropertyApiService- deleteProperty failed: ${response.status.value}")
             return false
         }
     }

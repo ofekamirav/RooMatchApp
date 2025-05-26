@@ -9,4 +9,5 @@ interface PropertyApiService {
     suspend fun addProperty(property: PropertyDto): Property?
     suspend fun changeAvailability(propertyId: String, isAvailable: Boolean): Boolean
     suspend fun updateProperty(propertyId: String, property: Property): Boolean
+    suspend fun deleteProperty(propertyId: String): Boolean
 }

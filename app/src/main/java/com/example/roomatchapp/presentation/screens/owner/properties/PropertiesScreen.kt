@@ -2,6 +2,7 @@ package com.example.roomatchapp.presentation.screens.owner.properties
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,13 +32,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +58,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 @Composable
 fun PropertiesScreen(
     onAddProperty: () -> Unit,
-    onPropertyClick: StringCallback, // PropertyID
+    onPropertyClick: StringCallback,
     viewModel: PropertiesViewModel
 ) {
     val properties by viewModel.properties.collectAsState()
@@ -69,7 +68,7 @@ fun PropertiesScreen(
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing),
         onRefresh = { viewModel.refreshContent() }
-    ){
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,7 +99,13 @@ fun PropertiesScreen(
                             .padding(bottom = 16.dp)
                     ) {
                         items(properties) { property ->
-                            PropertyRow(property = property, viewModel)
+                            PropertyRow(
+                                property = property,
+                                onPropertyClick = { propertyId->
+                                    onPropertyClick(propertyId)
+                                },
+                                viewModel = viewModel
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
@@ -111,7 +116,7 @@ fun PropertiesScreen(
                         .padding(16.dp)
                 ) {
                     FloatingActionButton(
-                        onClick = {onAddProperty() },
+                        onClick = { onAddProperty() },
                         containerColor = Color.Unspecified,
                         contentColor = Color.Unspecified,
                         shape = RoundedCornerShape(50),
@@ -129,13 +134,17 @@ fun PropertiesScreen(
                 }
             }
         }
-            }
+    }
 
 }
 
 
 @Composable
-fun PropertyRow(property: Property, viewModel: PropertiesViewModel) {
+fun PropertyRow(
+    property: Property,
+    viewModel: PropertiesViewModel,
+    onPropertyClick: StringCallback
+) {
     val context = LocalContext.current
     val updatingPropertyId by viewModel.updatingPropertyId.collectAsState()
     val isChecked = property.available ?: false
@@ -143,7 +152,13 @@ fun PropertyRow(property: Property, viewModel: PropertiesViewModel) {
 
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                property.id.let {
+                    onPropertyClick(it)
+                }
+            },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
@@ -166,6 +181,7 @@ fun PropertyRow(property: Property, viewModel: PropertiesViewModel) {
                     },
                     modifier = Modifier.size(64.dp).clip(CircleShape),
                     contentDescription = "Property Image",
+                    contentScale = ContentScale.Fit
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))

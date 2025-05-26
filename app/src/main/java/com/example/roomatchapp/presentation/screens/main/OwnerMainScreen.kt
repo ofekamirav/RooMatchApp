@@ -1,42 +1,45 @@
 package com.example.roomatchapp.presentation.screens.main
 
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.navigation.BottomNavItems
 import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
 import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
 import com.example.roomatchapp.presentation.owner.OwnerAnalyticsViewModel
 import com.example.roomatchapp.presentation.owner.OwnerProfileViewModel
+import com.example.roomatchapp.presentation.owner.property.EditPropertyViewModel
+import com.example.roomatchapp.presentation.screens.owner.properties.PropertyPreviewScreen
 import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
+import com.example.roomatchapp.presentation.owner.property.PropertyPreviewViewModel
+import com.example.roomatchapp.presentation.roommate.RoommatePreviewViewModel
 import com.example.roomatchapp.presentation.screens.owner.OwnerAnalyticsScreen
 import com.example.roomatchapp.presentation.screens.owner.OwnerProfileScreen
 import com.example.roomatchapp.presentation.screens.owner.properties.AddPropertyFlow
+import com.example.roomatchapp.presentation.screens.owner.properties.EditPropertyScreen
 import com.example.roomatchapp.presentation.screens.owner.properties.PropertiesScreen
+import com.example.roomatchapp.presentation.screens.roommate.RoommatePreviewScreen
 import com.example.roomatchapp.presentation.theme.Background
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable
 fun OwnerMainScreen(
     ownerId: String,
-    onLogout: () -> Unit
+    onLogout: EmptyCallback
 ) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
@@ -80,7 +83,7 @@ fun OwnerMainScreen(
                             navController.navigate("add_property")
                         },
                         onPropertyClick = { propertyId ->
-                            // Handle property preview
+                            navController.navigate("property_preview/$propertyId")
                         },
                         viewModel = viewModel
                     )
@@ -126,6 +129,63 @@ fun OwnerMainScreen(
                     viewModel = viewModel,
                     onEndFlow = {
                         navController.popBackStack("owner_properties", inclusive = false)
+                    }
+                )
+            }
+
+            composable("property_preview/{propertyId}") {
+                if (ownerId.isNotBlank()) {
+                    val viewModel = remember(ownerId) {
+                        PropertyPreviewViewModel(
+                            propertyRepository = AppDependencies.propertyRepository,
+                            userRepository = AppDependencies.userRepository,
+                            propertyId = it.arguments?.getString("propertyId").toString(),
+                        )
+                    }
+                    PropertyPreviewScreen(
+                        viewModel = viewModel,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onEditClick = {
+                            val propertyId = it.arguments?.getString("propertyId").toString()
+                            navController.navigate("edit_property/$propertyId")
+                        },
+                        onRoommateClick = {
+                            navController.navigate("roommate_preview/$it")
+                        }
+                    )
+                }
+            }
+            composable("edit_property/{propertyId}") {
+                val viewModel = remember(ownerId) {
+                    EditPropertyViewModel(
+                        propertyId = it.arguments?.getString("propertyId").toString(),
+                        propertyRepository = AppDependencies.propertyRepository
+                    )
+                }
+                if (ownerId.isNotBlank()) {
+                    EditPropertyScreen(
+                        viewModel = viewModel,
+                        onSave = {
+                            navController.popBackStack()
+                        },
+                        onBackClick = {
+                            navController.popBackStack()
+                        }
+                    )
+
+                }
+            }
+            composable("roommate_preview/{roommateId}"){
+                val viewModel = RoommatePreviewViewModel(
+                    roommateId = it.arguments?.getString("roommateId").toString(),
+                    userRepository = AppDependencies.userRepository
+                )
+                RoommatePreviewScreen(
+                    viewModel = viewModel,
+                    onBackClick = {
+                        navController.popBackStack()
                     }
                 )
             }

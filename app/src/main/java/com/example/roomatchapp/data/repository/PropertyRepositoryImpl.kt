@@ -148,4 +148,14 @@ class PropertyRepositoryImpl(
         return response
     }
 
+    override suspend fun deleteProperty(propertyId: String): Boolean {
+        Log.d("TAG", "PropertyRepositoryImpl- deleteProperty - propertyId: $propertyId")
+        val response = apiService.deleteProperty(propertyId)
+        if (response) {
+            propertyDao.delete(propertyId)
+            cacheDao.delete(propertyId)
+        }
+        return response
+    }
+
 }
