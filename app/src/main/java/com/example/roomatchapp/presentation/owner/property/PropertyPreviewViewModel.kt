@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.PropertyOwner
+import com.example.roomatchapp.data.model.PropertyType
+import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.domain.repository.PropertyRepository
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,29 +19,29 @@ data class UiState(
     val property: Property? = null,
     val OwnerName: String? = null,
     val OwnerPic: String? = null,
+    val ownerPhone: String? = null,
+    val roommates: List<RoommateUiState> = emptyList(),
     val errorMessage: String? = null
+)
+
+data class RoommateUiState(
+    val roommateId: String,
+    val roommateName: String,
+    val roommatePic: String
 )
 
 class PropertyPreviewViewModel(
     private val propertyRepository: PropertyRepository,
     private val userRepository: UserRepository,
-    private val propertyId: String
+    private val propertyId: String,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState?>(null)
-    val uiState: StateFlow<UiState?> = _uiState.asStateFlow()
-
-    private val _images = MutableStateFlow<List<String>>(emptyList())
-    val images: StateFlow<List<String>> = _images.asStateFlow()
-
-    private val _currentImageIndex = MutableStateFlow(0)
-    val currentImageIndex: StateFlow<Int> = _currentImageIndex.asStateFlow()
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     init {
         loadProperty()
@@ -56,27 +58,80 @@ class PropertyPreviewViewModel(
                 )
                 if (result != null) {
                     val owner: PropertyOwner? = userRepository.getPropertyOwner(result.ownerId.toString())
-                    if(owner != null) {
-                        _uiState.value = UiState(
-                            isLoading = false,
-                            property = result,
-                            OwnerName = owner.fullName,
-                            OwnerPic = owner.profilePicture
-                        )
+
+                    val fetchedRoommates = if (result.type == PropertyType.ROOM && result.CurrentRoommatesIds.isNotEmpty()) {
+                        result.CurrentRoommatesIds.mapNotNull { roommateId ->
+                            val roommate = userRepository.getRoommate(roommateId)
+                            roommate?.let {
+                                RoommateUiState(
+                                    roommateId = roommateId,
+                                    roommateName = it.fullName,
+                                    roommatePic = it.profilePicture.toString()
+                                )
+                            }
+                        }
+                    } else {
+                        emptyList()
                     }
-                    _images.value = result.photos
-                    _isLoading.value = false
+                    Log.d("PropertyPreviewVM", "Fetched Roommates: $fetchedRoommates")
+                    Log.d("PropertyPreviewVM", "Property: $result")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        property = result,
+                        OwnerName = owner?.fullName,
+                        OwnerPic = owner?.profilePicture,
+                        ownerPhone = owner?.phoneNumber,
+                        roommates = fetchedRoommates,
+                        errorMessage = if (owner == null) "Owner not found" else null
+                    )
                 } else {
-                    _errorMessage.value = "Property not found"
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Property not found for id=$propertyId"
+                    )
                     Log.e("PropertyPreviewVM", "Property not found for id=$propertyId")
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to load property"
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Failed to load property: ${e.localizedMessage}"
+                )
                 Log.e("PropertyPreviewVM", "Exception: ${e.message}", e)
-            } finally {
-                _isLoading.value = false
             }
         }
     }
+
+    suspend fun deleteProperty(): Boolean {
+        return try {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = null,
+                isLoading = true
+            )
+            val result = propertyRepository.deleteProperty(propertyId)
+            if (result) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = null,
+                    isLoading = false,
+                    property = null
+                )
+                Log.d("PropertyPreviewVM", "Property deleted successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Property not found",
+                    isLoading = false
+                )
+            }
+
+            result
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Failed to delete property: ${e.localizedMessage}",
+                isLoading = false
+            )
+            Log.e("PropertyPreviewVM", "Exception: ${e.message}", e)
+            false
+        }
+    }
+
 
 }

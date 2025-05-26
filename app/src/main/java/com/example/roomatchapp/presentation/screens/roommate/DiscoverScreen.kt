@@ -55,7 +55,7 @@ import kotlin.math.roundToInt
 @Composable
 fun DiscoverScreen(
     viewModel: DiscoverViewModel,
-    onClickProperty: StringCallback = {}
+    onClickProperty: StringCallback
 ) {
     val state by viewModel.state.collectAsState()
     val cardDetails by viewModel.cardDetails.collectAsState()
@@ -433,14 +433,5 @@ fun MatchCard(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDiscoverScreen() {
-    RooMatchAppTheme {
-        val viewModel = viewModel<DiscoverViewModel>()
-        DiscoverScreen(viewModel = viewModel)
     }
 }
