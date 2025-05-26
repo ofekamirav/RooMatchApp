@@ -32,4 +32,8 @@ interface UserRepository {
 
     suspend fun updateOwner(ownerId: String, propertyOwner: PropertyOwner): Boolean
 
+    suspend fun sendResetToken(email: String, userType: String): Result<String>
+
+    suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String>
+
 }

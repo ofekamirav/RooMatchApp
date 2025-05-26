@@ -1,5 +1,7 @@
 package com.example.roomatchapp.presentation.owner.preview
 
+import CustomAlertDialog
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -19,175 +20,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.PropertyType
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
-import com.example.roomatchapp.presentation.theme.Third
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.roomatchapp.domain.repository.PropertyRepository
+import com.example.roomatchapp.BuildConfig
 import com.example.roomatchapp.presentation.owner.property.PropertyPreviewViewModel
 import com.google.accompanist.pager.*
-
-@Composable
-fun PropertyPreviewScreen(
-    viewModel: PropertyPreviewViewModel,
-    onBackClick: () -> Unit
-) {
-    val property by viewModel.property.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.errorMessage.collectAsState()
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
-    ) {
-        when {
-            isLoading -> CircularProgressIndicator(color = Primary)
-            error != null -> Text(text = error ?: "Unknown error", color = Color.Red)
-            property != null -> PropertyPreviewContent(viewModel = viewModel, property = property!!, onBackClick = onBackClick)
-        }
-    }
-}
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun PropertyPreviewContent(
-    viewModel: PropertyPreviewViewModel,
-    property: Property,
+fun PropertyPreviewScreen(
+    //viewModel: PropertyPreviewViewModel,
     onBackClick: () -> Unit
 ) {
-    val images by viewModel.images.collectAsState()
-    val pagerState = rememberPagerState()
-    val coroutineScope = rememberCoroutineScope()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = "Back",
-                    tint = Primary
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (images.isNotEmpty()) {
-            HorizontalPager(
-                state = pagerState,
-                count = images.size,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            ) { page ->
-                val painter = rememberAsyncImagePainter(images[page])
-                Image(
-                    painter = painter,
-                    contentDescription = "Property Image $page",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            HorizontalPagerIndicator(
-                pagerState = pagerState,
-                activeColor = Primary,
-                inactiveColor = Color.LightGray,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_selected),
-                contentDescription = "Placeholder Image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = property.title ?: "Untitled Property",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        PropertyDetailSection("Address", property.address ?: "Not specified")
-        PropertyDetailSection("Property Type", property.type.name.lowercase().replaceFirstChar { it.uppercase() })
-        PropertyDetailSection("Price", property.pricePerMonth?.let { "₪$it / month" } ?: "Not specified")
-        PropertyDetailSection("Size", property.size?.let { "$it sqm" } ?: "Not specified")
-        PropertyDetailSection("Rooms", property.roomsNumber?.toString() ?: "Not specified")
-        PropertyDetailSection("Bathrooms", property.bathrooms?.toString() ?: "Not specified")
-        PropertyDetailSection("Floor", property.floor?.toString() ?: "Not specified")
-        PropertyDetailSection("Max Roommates", property.canContainRoommates?.toString() ?: "Not specified")
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Divider()
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-            Text("Features", style = MaterialTheme.typography.titleMedium, color = Third)
-            Spacer(modifier = Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                property.features.forEach {
-                    FeatureItem(text = it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PropertyDetailSection(title: String, value: String) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall, color = Third)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
-    }
-}
-
-@Composable
-fun FeatureItem(text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .background(Secondary, RoundedCornerShape(20.dp))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Text(text = text, color = Color.White, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PropertyPreviewScreenWithImagesPreview() {
-    val fakeProperty = Property(
+    //val state by viewModel.uiState.collectAsState()
+    //val property = state?.property
+    val property = Property(
         id = "1",
-        ownerId = "owner123",
+        ownerId = "owner123", // This will be dynamic based on the actual owner ID
         available = true,
         type = PropertyType.APARTMENT,
         address = "Rothschild Blvd 45, Tel Aviv",
@@ -201,62 +64,91 @@ fun PropertyPreviewScreenWithImagesPreview() {
         floor = 3,
         size = 120,
         pricePerMonth = 7200,
-        features = listOf(CondoPreference.GYM, CondoPreference.BALCONY, CondoPreference.PARKING),
+        features = listOf(CondoPreference.GYM, CondoPreference.BALCONY),
         photos = listOf(
-            "https://en.wikipedia.org/wiki/Harry_Potter#/media/File:Harry_Potter_wordmark.svg",
-            "https://en.wikipedia.org/wiki/Israel#/media/File:Flag_of_Israel.svg"
-            )
+            "https://picsum.photos/600/300",
+            "https://picsum.photos/601/300"
+        )
     )
-
-    val fakeImages = remember { mutableStateOf(fakeProperty.photos) }
-
-    PropertyPreviewContent_PreviewOnly(
-        property = fakeProperty,
-        images = fakeImages.value,
-        onBackClick = {}
-    )
-}
-@OptIn(ExperimentalPagerApi::class, ExperimentalLayoutApi::class)
-@Composable
-fun PropertyPreviewContent_PreviewOnly(
-    property: Property,
-    images: List<String>,
-    onBackClick: () -> Unit
-) {
+    var showDeleteMessage by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState()
+    val key = BuildConfig.GOOGLE_PLACES_API_KEY
+    val googlePlacesImage = "https://maps.googleapis.com/maps/api/staticmap?" +
+            "center=${property.latitude},${property.longitude}&zoom=15&size=600x300&maptype=roadmap" +
+            "&markers=color:0xFF01999E|${property.latitude},${property.longitude}&key=${key}"
 
-    Column(
+    val context = LocalContext.current
+    val userSessionManager = remember { UserSessionManager(context) }
+    var currentUserId by remember { mutableStateOf<String?>(null) }
+    var isOwnerOfProperty by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            currentUserId = userSessionManager.userIdFlow.firstOrNull()
+            Log.d("PropertyPreviewScreen", "Current User ID: $currentUserId")
+            Log.d("PropertyPreviewScreen", "Property Owner ID: ${property.ownerId}")
+            isOwnerOfProperty = (currentUserId == property.ownerId)
+            Log.d("PropertyPreviewScreen", "Is Owner of Property: $isOwnerOfProperty")
+        }
+    }
+
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = "Back",
-                    tint = Primary
-                )
+    ){
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // Top Back Button
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .size(30.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
+                        tint = Primary,
+                        modifier = Modifier
+                            .size(30.dp)
+                    )
+                }
             }
-        }
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+            // Property Title
+            Text(
+                text = property.title ?: "Untitled Property",
+                fontSize = 22.sp,
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
 
-        if (images.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Gallery
             HorizontalPager(
                 state = pagerState,
-                count = images.size,
+                count = property.photos.size,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
                     .clip(RoundedCornerShape(12.dp))
             ) { page ->
-                val painter = rememberAsyncImagePainter(images[page])
                 Image(
-                    painter = painter,
+                    painter = rememberAsyncImagePainter(property.photos[page]),
                     contentDescription = "Property Image $page",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -271,52 +163,211 @@ fun PropertyPreviewContent_PreviewOnly(
                 inactiveColor = Color.LightGray,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_selected),
-                contentDescription = "Placeholder Image",
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Address + Price
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
-        }
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = rememberAsyncImagePainter(googlePlacesImage),
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = property.address ?: "Not specified",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = property.pricePerMonth?.let { "₪$it" } ?: "N/A",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Primary
+                )
+            }
 
-        Text(
-            text = property.title ?: "Untitled Property",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+            // Rooms / Floor / Bathrooms
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                PropertyStat("Rooms", property.roomsNumber)
+                PropertyStat("Floor", property.floor)
+                PropertyStat("Baths", property.bathrooms)
+            }
 
-        PropertyDetailSection("Address", property.address ?: "Not specified")
-        PropertyDetailSection("Property Type", property.type.name.lowercase().replaceFirstChar { it.uppercase() })
-        PropertyDetailSection("Price", property.pricePerMonth?.let { "₪$it / month" } ?: "Not specified")
-        PropertyDetailSection("Size", property.size?.let { "$it sqm" } ?: "Not specified")
-        PropertyDetailSection("Rooms", property.roomsNumber?.toString() ?: "Not specified")
-        PropertyDetailSection("Bathrooms", property.bathrooms?.toString() ?: "Not specified")
-        PropertyDetailSection("Floor", property.floor?.toString() ?: "Not specified")
-        PropertyDetailSection("Max Roommates", property.canContainRoommates?.toString() ?: "Not specified")
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Divider()
-        Spacer(modifier = Modifier.height(16.dp))
+            Divider(modifier = Modifier.padding(horizontal = 24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-            Text("Features", style = MaterialTheme.typography.titleMedium, color = Third)
-            Spacer(modifier = Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                property.features.forEach {
-                    FeatureItem(text = it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() })
+            // Features
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                Text("Features",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    property.features.forEach {
+                        FeatureItem(text = it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() })
+                    }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Roommates section (conditionally displayed)
+            if (property.type == PropertyType.ROOM && property.CurrentRoommatesIds.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                    Text(
+                        text = "Current Roommates",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // TODO: Replace with actual roommate names fetched from the database
+                    property.CurrentRoommatesIds.forEach { roommateId ->
+                        Text(
+                            text = "Roommate ID: $roommateId", // This should be replaced with roommate's actual name
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "Owner's Name",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ){
+                Text(
+                    text = /*state?.OwnerName ?:*/ "Owner's Name", // Replace with actual owner name
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Left
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Delete and Edit FABs (conditionally displayed)
+//            if (isOwnerOfProperty) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FloatingActionButton(
+                        onClick = { showDeleteMessage = true },
+                        modifier = Modifier.size(60.dp),
+                        containerColor = Color.Transparent,
+                        elevation = FloatingActionButtonDefaults.elevation(0.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_trash),
+                            contentDescription = "Trash Icon",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(60.dp)
+                        )
+                    }
+
+                    FloatingActionButton(
+                        onClick = { /* TODO: Navigate to Edit Property Screen */ },
+                        modifier = Modifier.size(68.dp),
+                        containerColor = Color.Transparent,
+                        elevation = FloatingActionButtonDefaults.elevation(0.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_edit),
+                            contentDescription = "Edit Icon",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(68.dp)
+                        )
+                    }
+                }
+//            }
+        }
+
+        if (showDeleteMessage) {
+            CustomAlertDialog(
+                title = "Delete Property",
+                message = "Are you sure you want to delete this property?",
+                onDismiss = { showDeleteMessage = false },
+                onConfirm = {
+                    // TODO: Implement actual delete logic here
+                    Log.d("PropertyPreviewScreen", "Property deleted!")
+                    showDeleteMessage = false
+                }
+            )
         }
     }
 }
 
+@Composable
+fun FeatureItem(text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .background(Secondary, RoundedCornerShape(20.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(text = text, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+    }
+}
 
+@Preview(showBackground = true)
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun PropertyPreviewScreenPreview() {
+
+    PropertyPreviewScreen(
+        onBackClick = {}
+    )
+}
+
+
+@Composable
+fun PropertyStat(label: String, value: Int?) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            label,
+            style = MaterialTheme.typography.titleMedium,
+            color = Primary
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            text = value?.toString() ?: "-",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}

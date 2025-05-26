@@ -19,14 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.Gender
 import com.example.roomatchapp.di.CloudinaryModel
@@ -36,6 +39,7 @@ import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,11 +67,17 @@ fun RoommateStep1(
                         bitmap = bmp,
                         name = "roommate_${System.currentTimeMillis()}",
                         folder = "roomatchapp/roommates",
-                        onSuccess = { url -> viewModel.updateProfilePicture(url.toString()) },
-                        onError = { Log.e("TAG", "Upload Error: $it") },
+                        onSuccess = { url ->
+                            viewModel.updateProfilePicture(url.toString())
+                            viewModel.isUploadingImage = false
+                            Log.d("TAG", "RoommateStep1: $url")
+                        },
+                        onError = {
+                            Log.e("TAG", "Upload Error: $it")
+                            viewModel.isUploadingImage = false
+                        },
                         context = context
                     )
-                    viewModel.isUploadingImage = false
                 }
             }
         }
@@ -79,14 +89,20 @@ fun RoommateStep1(
             coroutineScope.launch {
                 viewModel.isUploadingImage = true
                 CloudinaryModel().uploadImage(
-                    bitmap = it,
+                    bitmap = bmp,
                     name = "roommate_${System.currentTimeMillis()}",
                     folder = "roomatchapp/roommates",
-                    onSuccess = { url -> viewModel.updateProfilePicture(url.toString()) },
-                    onError = { Log.e("TAG", "Upload Error: $it") },
+                    onSuccess = { url ->
+                        viewModel.updateProfilePicture(url.toString())
+                        viewModel.isUploadingImage = false
+                        Log.d("TAG", "RoommateStep1: $url")
+                    },
+                    onError = {
+                        Log.e("TAG", "Upload Error: $it")
+                        viewModel.isUploadingImage = false
+                    },
                     context = context
                 )
-                viewModel.isUploadingImage = false
             }
         }
     }
@@ -103,7 +119,7 @@ fun RoommateStep1(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(16.dp)
+            .padding(18.dp)
     ) {
         Column(
             modifier = Modifier
@@ -161,38 +177,35 @@ fun RoommateStep1(
             Text("Please upload your profile picture", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
 
             Spacer(modifier = Modifier.height(8.dp))
-            val imagePainter = rememberAsyncImagePainter(state.profilePicture.ifBlank { null })
-            val imageState = imagePainter.state
-            val showImage = imageState is AsyncImagePainter.State.Success
-            val isLoadingImage = viewModel.isUploadingImage || !showImage
+            val painter = rememberAsyncImagePainter(state.profilePicture)
+
             Box(
                 modifier = Modifier
                     .size(150.dp)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                LoadingAnimation(
-                    isLoading = isLoadingImage,
-                    animationResId = R.raw.loading_animation
-                ) {
-                    if(showImage){
-                        Image(
-                            painter = imagePainter,
-                            contentDescription = "Avatar",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    }else{
-                        Icon(
-                            painter = painterResource(id = R.drawable.avatar),
-                            contentDescription = "Avatar",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(150.dp)
-                        )
-                    }
-
+                if (viewModel.isUploadingImage) {
+                    Log.d("TAG", "RoommateStep1-Displaying: Cloudinary Upload Progress")
+                    CircularProgressIndicator(color = Primary)
+                } else if(state.profilePicture.isNullOrEmpty()){
+                    Icon(
+                        painter = painterResource(id = R.drawable.avatar),
+                        contentDescription = "Avatar",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(150.dp)
+                    )
+                }
+                else {
+                    Image(
+                        painter = painter,
+                        contentDescription = "Avatar",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(150.dp)
+                    )
                 }
             }
+
 
             Spacer(modifier = Modifier.height(12.dp))
 

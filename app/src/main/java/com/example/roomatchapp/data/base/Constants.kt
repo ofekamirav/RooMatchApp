@@ -12,5 +12,6 @@ object Constants {
         const val MATCHES = "matches"
         const val CACHE_ENTITIES = "cache_entities"
         const val OWNER_ANALYTICS = "owner_analytics"
+        const val SUGGESTED_MATCHES = "suggested_matches"
     }
 }

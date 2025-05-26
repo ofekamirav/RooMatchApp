@@ -36,11 +36,14 @@ import com.example.roomatchapp.presentation.theme.CustomTeal
 import com.example.roomatchapp.presentation.theme.Third
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.domain.repository.UserRepository
 import com.example.roomatchapp.presentation.components.CountSelector
@@ -55,22 +58,53 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun EditProfileScreen(viewModel: EditProfileViewModel) {
+fun EditProfileScreen(
+    viewModel: EditProfileViewModel,
+    onBackClick: EmptyCallback,
+    onSaveClick: EmptyCallback
+) {
     val uiState by viewModel.uiState.collectAsState()
     val roommate by viewModel.roommate.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
 
-    if (isLoading || roommate == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Background),
-            contentAlignment = Alignment.Center
+    val showScreenLoading = isLoading || roommate == null || isSaving
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background),
+        contentAlignment = Alignment.Center
+    ) {
+        LoadingAnimation(
+            isLoading = showScreenLoading,
+            animationResId = R.raw.loading_animation
         ) {
-            CircularProgressIndicator(color = CustomTeal)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(onClick = { onBackClick() }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Primary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            roommate?.let {
+                EditProfileContent(
+                    uiState = uiState,
+                    roommate = it,
+                    viewModel = viewModel,
+                    onSaveClick = onSaveClick
+                )
+            }
         }
-    } else {
-        EditProfileContent(uiState = uiState, roommate = roommate!!, viewModel = viewModel)
     }
 }
 
@@ -79,8 +113,9 @@ fun EditProfileScreen(viewModel: EditProfileViewModel) {
 fun EditProfileContent(
     uiState: EditProfileUiState,
     roommate: Roommate,
-    viewModel: EditProfileViewModel
-) {    val isLoading by viewModel.isLoading.collectAsState()
+    viewModel: EditProfileViewModel,
+    onSaveClick: EmptyCallback
+) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
     var selectedPreferences by remember { mutableStateOf(uiState.lookingForRoomies.toMutableList()) }
@@ -108,6 +143,7 @@ fun EditProfileContent(
     val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
             imageUri.value = it
+            viewModel.isUploadingImage = true
             val source = ImageDecoder.createSource(context.contentResolver, it)
             bitmap.value = ImageDecoder.decodeBitmap(source)
             bitmap.value?.let { bmp ->
@@ -116,8 +152,14 @@ fun EditProfileContent(
                         bitmap = bmp,
                         name = "roommate_${System.currentTimeMillis()}",
                         folder = "roomatchapp/roommates",
-                        onSuccess = { url -> profilePictureUrl = url.toString() },
-                        onError = { Log.e("TAG", "Upload Error: $it") },
+                        onSuccess = {
+                            url -> profilePictureUrl = url.toString()
+                            viewModel.isUploadingImage = false
+                        },
+                        onError = {
+                            Log.e("TAG", "Upload Error: $it")
+                            viewModel.isUploadingImage = false
+                        },
                         context = context
                     )
                 }
@@ -158,27 +200,32 @@ fun EditProfileContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                    Image(
-                        painter = profilePainter,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                    IconButton(
-                        onClick = {
-                            mediaPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .background(CustomTeal, CircleShape)
-                            .size(28.dp)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit Photo", tint = Color.White)
+                    if (viewModel.isUploadingImage){
+                        CircularProgressIndicator(color = Primary)
+                    }else{
+                        Image(
+                            painter = profilePainter,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = {
+                                mediaPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .background(CustomTeal, CircleShape)
+                                .size(28.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit Photo", tint = Color.White)
+                        }
                     }
+
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -192,10 +239,10 @@ fun EditProfileContent(
                     EditableTextField("Full Name", fullName) { fullName = it }
 
                     Text("Email", style = MaterialTheme.typography.titleMedium, color = Third)
-                    EditableTextField("Email", email) { email = it }
+                    EditableTextField("Email", email, KeyboardType.Email) { email = it }
 
                     Text("Phone Number", style = MaterialTheme.typography.titleMedium, color = Third)
-                    EditableTextField("Phone Number", phone) { phone = it }
+                    EditableTextField("Phone Number", phone, KeyboardType.Phone) { phone = it }
 
                     Text("Work", style = MaterialTheme.typography.titleMedium, color = Third)
                     EditableTextField("Work", work) { work = it }
@@ -664,6 +711,7 @@ fun EditProfileContent(
                     minPropertySize = sizeRange.start.toInt(),
                     maxPropertySize = sizeRange.endInclusive.toInt()
                 )
+                onSaveClick()
             },
             containerColor = CustomTeal,
             contentColor = Color.White,
@@ -680,11 +728,18 @@ fun EditProfileContent(
 fun EditableTextField(
     label: String,
     value: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
     onValueChange: (String) -> Unit,
 ) {
     var isEditing by remember { mutableStateOf(false) }
-    var currentValue by remember { mutableStateOf(value) }
+    var currentValue by remember(value, isEditing) { mutableStateOf(value) }
+
+    LaunchedEffect(value) {
+        if (!isEditing) {
+            currentValue = value
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -694,30 +749,36 @@ fun EditableTextField(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f)) {
+                val isTextFieldEnabled = isEditing
+
                 if (isPassword) {
                     CapsuleTextField(
                         value = currentValue,
                         onValueChange = {
-                            currentValue = it
-                            isEditing = currentValue != value
+                            if (isTextFieldEnabled) {
+                                currentValue = it
+                            }
                         },
                         placeholder = label,
                         isError = false,
                         supportingText = null,
-                        enabled = true,
-                        isPassword = true
+                        enabled = isTextFieldEnabled,
+                        isPassword = true,
+                        keyboardType = keyboardType
                     )
                 } else {
                     CapsuleTextField(
                         value = currentValue,
                         onValueChange = {
-                            currentValue = it
-                            isEditing = currentValue != value
+                            if (isTextFieldEnabled) {
+                                currentValue = it
+                            }
                         },
                         placeholder = label,
                         isError = false,
                         supportingText = null,
-                        enabled = true
+                        enabled = isTextFieldEnabled,
+                        keyboardType = keyboardType
                     )
                 }
             }
@@ -725,8 +786,13 @@ fun EditableTextField(
             IconButton(
                 onClick = {
                     if (isEditing) {
-                        onValueChange(currentValue)
+                        if (currentValue != value) {
+                            onValueChange(currentValue)
+                        }
                         isEditing = false
+                    } else {
+                        currentValue = value
+                        isEditing = true
                     }
                 }
             ) {
@@ -747,8 +813,8 @@ fun EditableDateField(
     selectedDate: String,
     onDateSelected: (String) -> Unit
 ) {
-    var currentDate by remember { mutableStateOf(selectedDate) }
-    var isEditing by remember { mutableStateOf(false) }
+    var currentDate by remember(selectedDate) { mutableStateOf(selectedDate) }
+    var isEditingDate by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -760,25 +826,31 @@ fun EditableDateField(
             Box(modifier = Modifier.weight(1f)) {
                 DatePickerField(
                     selectedDate = currentDate,
-                    onDateSelected = {
-                        currentDate = it
-                        isEditing = currentDate != selectedDate
+                    onDateSelected = {newDate ->
+                        if (isEditingDate) {
+                            currentDate = newDate
+                        }
                     },
-                    isEditable = true
+                    isEditable = isEditingDate
                 )
             }
 
             IconButton(
                 onClick = {
-                    if (isEditing) {
-                        onDateSelected(currentDate)
-                        isEditing = false
+                    if (isEditingDate) {
+                        if (currentDate != selectedDate) {
+                            onDateSelected(currentDate)
+                        }
+                        isEditingDate = false
+                    } else {
+                        currentDate = selectedDate
+                        isEditingDate = true
                     }
                 }
             ) {
                 Icon(
-                    imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
-                    contentDescription = if (isEditing) "Save" else "Edit",
+                    imageVector = if (isEditingDate) Icons.Default.Check else Icons.Default.Edit,
+                    contentDescription = if (isEditingDate) "Save Date" else "Edit Date",
                     tint = CustomTeal
                 )
             }

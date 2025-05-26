@@ -39,6 +39,7 @@ import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.navigation.RootNavGraph
 import com.ramcosta.composedestinations.generated.app.AppNavGraphs
 import com.ramcosta.composedestinations.generated.app.destinations.RoommateMainScreenComposableDestination
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable

@@ -20,7 +20,6 @@ import io.ktor.http.headers
 class PropertyApiServiceImplementation(
     private val client: HttpClient,
     private val baseUrl: String,
-    private val sessionManager: UserSessionManager
 ): PropertyApiService {
 
     override suspend fun getProperty(propertyId: String): Property? {
@@ -96,6 +95,28 @@ class PropertyApiServiceImplementation(
             return true
         }else {
             Log.d("TAG", "PropertyApiService- changeAvailability failed: ${response.status.value}")
+            return false
+        }
+    }
+
+    override suspend fun updateProperty(
+        propertyId: String,
+        property: Property,
+    ): Boolean {
+        Log.d("TAG","PropertyApiService- updateProperty called")
+        val token = AppDependencies.tokenAuthenticator.getValidToken()
+        val response = client.put("$baseUrl/properties/$propertyId") {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(property)
+        }
+        if(response.status.value == 200){
+            Log.d("TAG","PropertyApiService- updateProperty success")
+            return true
+        }else {
+            Log.d("TAG", "PropertyApiService- updateProperty failed: ${response.status.value}")
             return false
         }
     }

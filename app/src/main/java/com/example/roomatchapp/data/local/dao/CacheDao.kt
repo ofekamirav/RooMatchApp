@@ -37,4 +37,7 @@ interface CacheDao {
     @Query("DELETE FROM cache_entities WHERE entityId IN (:entityIds)")
     suspend fun deleteByEntityIds(entityIds: List<String>)
 
+    @Query("DELETE FROM cache_entities WHERE type = :type")
+    suspend fun clearCacheByType(type: CacheType)
+
 }

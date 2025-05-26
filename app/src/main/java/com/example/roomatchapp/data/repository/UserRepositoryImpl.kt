@@ -79,7 +79,6 @@ class UserRepositoryImpl(
         forceRefresh: Boolean,
         maxCacheAgeMillis: Long,
     ): Roommate? {
-
         val cacheEntry = cacheDao.getByIdAndType(roommateId, CacheType.ROOMMATE)
         val isCacheValid = cacheEntry != null && (System.currentTimeMillis() - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
         Log.d("TAG", "UserRepositoryImp- getRoommate -isCacheValid: $isCacheValid")
@@ -109,6 +108,21 @@ class UserRepositoryImpl(
 
     override suspend fun googleSignIn(idToken: String): UserResponse {
         return apiService.googleSignIn(idToken)
+    }
+
+    override suspend fun sendResetToken(
+        email: String,
+        userType: String
+    ): Result<String> {
+        return apiService.sendResetToken(email,userType)
+    }
+
+    override suspend fun resetPassword(
+        token: String,
+        newPassword: String,
+        userType: String
+    ): Result<String> {
+        return apiService.resetPassword(token, newPassword,userType)
     }
 
     override suspend fun getOwnerAnalytics(

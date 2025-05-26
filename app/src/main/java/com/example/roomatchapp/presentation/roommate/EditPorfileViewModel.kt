@@ -1,10 +1,14 @@
 package com.example.roomatchapp.presentation.roommate
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.model.*
 import com.example.roomatchapp.domain.repository.UserRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -47,6 +51,9 @@ class EditProfileViewModel(
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
 
+    var isUploadingImage by mutableStateOf(false)
+        public set
+
     init {
         loadRoommateProfile()
     }
@@ -54,7 +61,7 @@ class EditProfileViewModel(
     private fun loadRoommateProfile() {
         viewModelScope.launch {
             try {
-                Log.d("EditProfileViewModel", "Loading roommate for Id: $seekerId")
+                Log.d("TAG", "EditProfileViewModel-Loading roommate for Id: $seekerId")
                 val result = userRepository.getRoommate(seekerId)
                 _roommate.value = result
                 result?.let {
@@ -64,7 +71,7 @@ class EditProfileViewModel(
                         phoneNumber = it.phoneNumber,
                         password = it.password,
                         birthDate = it.birthDate,
-                        work = it.work ?: "",
+                        work = it.work,
                         profilePicture = it.profilePicture,
                         personalBio = it.personalBio ?: "",
                         attributes = it.attributes,
@@ -81,7 +88,7 @@ class EditProfileViewModel(
                 }
                 _isLoading.value = false
             } catch (e: Exception) {
-                Log.e("EditProfileViewModel", "Error loading roommate", e)
+                Log.e("TAG", "EditProfileViewModel-Error loading roommate", e)
                 _roommate.value = null
                 _isLoading.value = false
             }
@@ -144,20 +151,29 @@ class EditProfileViewModel(
                         phoneNumber = updatedRoommate.phoneNumber,
                         password = updatedRoommate.password,
                         birthDate = updatedRoommate.birthDate,
-                        work = updatedRoommate.work ?: "",
+                        work = updatedRoommate.work,
                         profilePicture = updatedRoommate.profilePicture,
                         personalBio = updatedRoommate.personalBio ?: "",
                         attributes = updatedRoommate.attributes,
-                        hobbies = updatedRoommate.hobbies
+                        hobbies = updatedRoommate.hobbies,
+                        lookingForRoomies = updatedRoommate.lookingForRoomies,
+                        lookingForCondo = updatedRoommate.lookingForCondo,
+                        preferredRadiusKm = updatedRoommate.preferredRadiusKm,
+                        roommatesNumber = updatedRoommate.roommatesNumber,
+                        minPrice = updatedRoommate.minPrice,
+                        maxPrice = updatedRoommate.maxPrice,
+                        minPropertySize = updatedRoommate.minPropertySize,
+                        maxPropertySize = updatedRoommate.maxPropertySize
                     )
-                    Log.d("EditProfileViewModel", "Profile updated successfully.")
+                    Log.d("TAG", "EditProfileViewModel-Profile updated successfully.")
                 } else {
-                    Log.e("EditProfileViewModel", "Failed to update profile: API returned false")
+                    Log.e("TAG", "EditProfileViewModel-Failed to update profile: API returned false")
                 }
 
             } catch (e: Exception) {
-                Log.e("EditProfileViewModel", "Error updating profile", e)
+                Log.e("TAG", "EditProfileViewModel-Error updating profile", e)
             } finally {
+                delay(1500)
                 _isSaving.value = false
             }
         }

@@ -30,6 +30,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import io.ktor.http.isSuccess
 
 // Implementation of the ApiService interface methods
 class UserApiServiceImplementation(
@@ -59,9 +60,20 @@ class UserApiServiceImplementation(
             val response = client.post("$baseUrl/login") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
-            }.body<UserResponse>()
+            }
             Log.d("TAG", "ApiService-Response received: $response")
-            return response
+            if (!response.status.isSuccess()) {
+                val errorResponse = response.body<Map<String, String>>()
+                val errorMessage = errorResponse["error"] ?: "Unknown error"
+
+                throw when (response.status) {
+                    HttpStatusCode.BadRequest -> IllegalArgumentException(errorMessage)
+                    HttpStatusCode.InternalServerError -> RuntimeException("Server error: $errorMessage")
+                    else -> Exception("Unexpected error: $errorMessage")
+                }
+            }
+
+            return response.body()
         } catch (e: Exception) {
             Log.e("TAG", "ApiService-API call failed: ${e.message}", e)
             throw e
@@ -174,6 +186,43 @@ class UserApiServiceImplementation(
             throw e
         }
     }
+
+    override suspend fun sendResetToken(email: String, userType: String): Result<String> {
+        return try {
+            val response = client.post("http://$baseUrl/api/auth/request-reset-token") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("email" to email, "userType" to userType))
+            }
+            if (response.status.isSuccess()) {
+                val message = response.bodyAsText()
+                Result.success(message)
+            } else {
+                Result.failure(Exception("Failed to send reset token"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String> {
+        return try {
+            val response = client.post("http://$baseUrl/api/auth/reset-password") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("token" to token, "newPassword" to newPassword, "userType" to userType))
+            }
+            if (response.status.isSuccess()) {
+                val message = response.bodyAsText()
+                Result.success(message)
+            } else {
+                Result.failure(Exception("Failed to reset password"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+
 
     override suspend fun googleSignIn(idToken: String): UserResponse {
         try {

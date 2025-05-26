@@ -29,19 +29,28 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.navigation.NavController
+import coil.compose.AsyncImagePainter
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
-    navController: NavController,
+    onEditClick: EmptyCallback,
     onLogout: () -> Unit,
 ) {
     val roommate by viewModel.roommate.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
+    val painter = rememberAsyncImagePainter(roommate?.profilePicture)
+    val imageState = painter.state
+    val isImageReady = imageState is AsyncImagePainter.State.Success
+    val shouldShowLoading = isLoading || !isImageReady
+
+
 
     if (showLogoutDialog) {
         CustomAlertDialog(
@@ -55,24 +64,33 @@ fun ProfileScreen(
             dialogBackgroundColor = Background
         )
     }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
+
+    LoadingAnimation(
+        isLoading =  shouldShowLoading,
+        animationResId = R.raw.loading_animation
     ) {
-        if (isLoading || roommate == null) {
-            LoadingAnimation(
-                isLoading = true,
-                animationResId = R.raw.loading_animation
-            ){
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
+        ) {
+            roommate?.let {
+                ProfileContent(
+                    roommate = it,
+                    painter = painter,
+                    onLogoutClick = {
+                        showLogoutDialog = true
+                    },
+                    onEditClick = {
+                        onEditClick()
+                    }
+                )
             }
-        } else {
-            ProfileContent(
-                roommate = roommate!!,
-                onLogoutClick = { showLogoutDialog = true }
-            )
+
         }
+
     }
 }
 
@@ -80,7 +98,10 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     roommate: Roommate,
-    onLogoutClick: () -> Unit = {}) {
+    painter: Painter,
+    onEditClick: EmptyCallback,
+    onLogoutClick: EmptyCallback
+) {
     Box(
         modifier = Modifier.fillMaxSize().background(Background)
     ) {
@@ -96,16 +117,10 @@ fun ProfileContent(
                 color = Primary,
             )
 
-            val profilePainter = if (roommate.profilePicture != null) {
-                rememberAsyncImagePainter(roommate.profilePicture)
-            } else {
-                painterResource(id = R.drawable.avatar)
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Image(
-                painter = profilePainter,
+                painter = painter,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(120.dp)
@@ -180,7 +195,7 @@ fun ProfileContent(
 
             FloatingActionButton(
                 onClick = {
-                    //navController.navigate("edit_profile/${roommate.id}")
+                    onEditClick()
                 },
                 modifier = Modifier.size(60.dp),
                 containerColor = Color.Transparent,
@@ -409,36 +424,4 @@ fun calculateAge(birthDate: String): Int {
         println("Error parsing date: ${e.message}")
         0
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileContentPreview() {
-    val sampleRoommate = Roommate(
-        id = "1",
-        email = "test@example.com",
-        fullName = "Bar Kobi",
-        phoneNumber = "123456789",
-        birthDate = "1998-05-20",
-        password = "password",
-        work = "Developer",
-        gender = Gender.FEMALE,
-        attributes = listOf(Attribute.STUDENT, Attribute.PET_LOVER, Attribute.CLEAN),
-        hobbies = listOf(Hobby.MUSICIAN, Hobby.SPORT, Hobby.PARTY),
-        lookingForRoomies = listOf(
-            LookingForRoomiesPreference(Attribute.CLEAN, 1.0, true),
-            LookingForRoomiesPreference(Attribute.QUIET, 1.0, true),
-            LookingForRoomiesPreference(Attribute.HAS_PET, 1.0, true)
-        ),
-        lookingForCondo = emptyList(),
-        roommatesNumber = 2,
-        minPropertySize = 50,
-        maxPropertySize = 120,
-        minPrice = 2000,
-        maxPrice = 4000,
-        personalBio = "Hey there! I'm a friendly roommate looking to share a cozy place.",
-        profilePicture = null
-    )
-        ProfileContent(roommate = sampleRoommate)
-
 }
