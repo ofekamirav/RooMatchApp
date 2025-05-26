@@ -180,7 +180,7 @@ fun ProfileContent(
 
             FloatingActionButton(
                 onClick = {
-                    navController.navigate("edit_profile/${roommate.id}")
+                    //navController.navigate("edit_profile/${roommate.id}")
                 },
                 modifier = Modifier.size(60.dp),
                 containerColor = Color.Transparent,
