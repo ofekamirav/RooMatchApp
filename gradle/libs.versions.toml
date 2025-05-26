@@ -1,5 +1,6 @@
 [versions]
 accompanistNavigationMaterial = "0.36.0"
+accompanistPager = "0.34.0"
 accompanistSwiperefresh = "0.33.2-alpha"
 accompanistSystemuicontroller = "0.27.0"
 accompanistPager = "0.34.0"
