@@ -104,9 +104,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.datastore.preferences)
-    //videos
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.ui)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -118,10 +115,6 @@ dependencies {
 
     //Google Places API
     implementation(libs.places)
-
-    // google photo pager
-    implementation (libs.accompanist.pager)
-    implementation (libs.google.accompanist.pager.indicators)
 
 }
 

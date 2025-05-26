@@ -8,9 +8,6 @@
       <SelectionState runConfigName="PropertyPreviewScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="AddPropertyScreen1Preview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="AddPropertyScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
