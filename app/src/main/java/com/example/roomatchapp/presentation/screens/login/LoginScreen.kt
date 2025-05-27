@@ -34,9 +34,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.cloudinary.api.exceptions.ApiException
 import com.example.roomatchapp.presentation.theme.Background
@@ -152,7 +154,8 @@ fun LoginScreen(
                             supportingText = { state.emailError?.let { Text(text = it) } },
                             label = { Text("Enter your email address") },
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                         )
 
                         // Password input

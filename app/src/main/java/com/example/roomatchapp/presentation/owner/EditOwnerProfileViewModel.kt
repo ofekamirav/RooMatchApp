@@ -37,40 +37,41 @@ open class EditOwnerProfileViewModel(
         }
     }
 
-    fun saveChanges(
+    suspend fun saveChanges(
         fullName: String,
         email: String,
         phoneNumber: String,
         password: String,
         birthDate: String,
         profilePicture: String?
-    ) {
-        val current = _owner.value ?: return
+    ): Boolean {
+        val current = _owner.value ?: return false
+        _isLoading.value = true
 
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val updatedOwner = current.copy(
-                    fullName = if (fullName.isNotBlank()) fullName else current.fullName,
-                    email = if (email.isNotBlank()) email else current.email,
-                    phoneNumber = if (phoneNumber.isNotBlank()) phoneNumber else current.phoneNumber,
-                    password = if (password.isNotBlank()) password else current.password,
-                    birthDate = if (birthDate.isNotBlank()) birthDate else current.birthDate,
-                    profilePicture = profilePicture ?: current.profilePicture
-                )
+        return try {
+            val updatedOwner = current.copy(
+                fullName = if (fullName.isNotBlank()) fullName else current.fullName,
+                email = if (email.isNotBlank()) email else current.email,
+                phoneNumber = if (phoneNumber.isNotBlank()) phoneNumber else current.phoneNumber,
+                password = if (password.isNotBlank()) password else current.password,
+                birthDate = if (birthDate.isNotBlank()) birthDate else current.birthDate,
+                profilePicture = profilePicture ?: current.profilePicture
+            )
 
-                val success = userRepository.updateOwner(ownerId, updatedOwner)
-                if (success) {
-                    _owner.value = updatedOwner
-                    Log.d("EditOwnerViewModel", "Profile updated successfully")
-                } else {
-                    Log.e("EditOwnerViewModel", "Failed to update owner profile")
-                }
-            } catch (e: Exception) {
-                Log.e("EditOwnerViewModel", "Error saving changes", e)
-            } finally {
-                _isLoading.value = false
+            val success = userRepository.updateOwner(ownerId, updatedOwner)
+            if (success) {
+                _owner.value = updatedOwner
+                Log.d("EditOwnerViewModel", "Profile updated successfully")
+            } else {
+                Log.e("EditOwnerViewModel", "Failed to update owner profile")
             }
+            success
+        } catch (e: Exception) {
+            Log.e("EditOwnerViewModel", "Error saving changes", e)
+            false
+        } finally {
+            _isLoading.value = false
         }
     }
+
 }

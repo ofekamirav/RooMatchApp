@@ -85,7 +85,8 @@ fun RoommateMainScreen(
                             seekerId = seekerId,
                             likeRepository = AppDependencies.likeRepository,
                             suggestedMatchDao = AppDependencies.localDB.suggestedMatchDao(),
-                            userSessionManager = AppDependencies.sessionManager
+                            userSessionManager = AppDependencies.sessionManager,
+                            matchDao = AppDependencies.localDB.matchDao()
                         )
                     }
                     DiscoverScreen(

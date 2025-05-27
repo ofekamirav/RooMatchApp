@@ -30,7 +30,7 @@ fun PriceRangeSelector(
         RangeSlider(
             value = priceRange,
             onValueChange = onValueChange,
-            valueRange = 1000f..12000f,
+            valueRange = 2000f..12000f,
             steps = 10,
             colors = SliderDefaults.colors(
                 thumbColor = Primary,

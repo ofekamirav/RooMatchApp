@@ -206,6 +206,9 @@ fun OwnerMainScreen(
                     viewModel = viewModel,
                     onBackClick = {
                         navController.popBackStack()
+                    },
+                    onSaveClick = {
+                        navController.popBackStack()
                     }
                 )
             }
