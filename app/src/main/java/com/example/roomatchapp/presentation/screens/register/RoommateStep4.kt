@@ -190,6 +190,17 @@ fun RoommateStep4(
             )
 
             Spacer(Modifier.height(16.dp))
+            Text(
+                "Features:",
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Select at least 2 features",  style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(Modifier.height(8.dp))
 
             FlowRow {
                 CondoPreference.entries.forEach { pref ->

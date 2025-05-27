@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.roommate
 
+import android.R.attr.enabled
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -10,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,7 +38,9 @@ import com.example.roomatchapp.presentation.theme.CustomTeal
 import com.example.roomatchapp.presentation.theme.Third
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.RadioButtonDefaults.colors
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -129,7 +133,7 @@ fun EditProfileContent(
     var fullName by remember { mutableStateOf(uiState.fullName) }
     var email by remember { mutableStateOf(uiState.email) }
     var phone by remember { mutableStateOf(uiState.phoneNumber) }
-    var password by remember { mutableStateOf(uiState.password) }
+    var password by remember { mutableStateOf("") }
     var isLoadingBio by remember { mutableStateOf(false) }
     var birthDate by remember { mutableStateOf(uiState.birthDate) }
     var work by remember { mutableStateOf(uiState.work) }
@@ -252,35 +256,36 @@ fun EditProfileContent(
                     isExpanded = expandedSection == "Account",
                     onToggle = { expandedSection = if (expandedSection == "Account") null else "Account" }
                 ) {
-                    Text("Full Name", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Full Name", style = MaterialTheme.typography.titleSmall, color = Third)
                     EditableTextField("Full Name", fullName) { fullName = it }
 
-                    Text("Email", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Email", style = MaterialTheme.typography.titleSmall, color = Third)
                     EditableTextField("Email", email, KeyboardType.Email) { email = it }
 
-                    Text("Phone Number", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Phone Number", style = MaterialTheme.typography.titleSmall, color = Third)
                     EditableTextField("Phone Number", phone, KeyboardType.Phone) { phone = it }
 
-                    Text("Work", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Work", style = MaterialTheme.typography.titleSmall, color = Third)
                     EditableTextField("Work", work) { work = it }
 
-                    Text("Password", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Password", style = MaterialTheme.typography.titleSmall, color = Third)
                     EditableTextField("Password", password, isPassword = true) { password = it }
 
-                    Text("Birthdate", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Birthdate", style = MaterialTheme.typography.titleSmall, color = Third)
                     EditableDateField(selectedDate = birthDate) { birthDate = it }
                 }
 
                 ExpandableSection(
                     title = "Personal Details",
                     isExpanded = expandedSection == "Personal",
-                    onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" }
+                    onToggle = { expandedSection = if (expandedSection == "Personal") null else "Personal" },
                 ) {
-                    Text("Attributes", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Attributes", style = MaterialTheme.typography.titleSmall,color = Third)
+                    Spacer(modifier = Modifier.height(8.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
                         Attribute.entries.forEach { attr ->
                             val isSelected = selectedAttributes.contains(attr)
@@ -313,9 +318,10 @@ fun EditProfileContent(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Hobbies", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Hobbies", style = MaterialTheme.typography.titleSmall,color = Third)
+                    Spacer(modifier = Modifier.height(8.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -354,7 +360,7 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Personal Bio", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Personal Bio", style = MaterialTheme.typography.titleSmall,color = Third)
                     Spacer(modifier = Modifier.height(8.dp))
 
                     CapsuleTextField(
@@ -412,9 +418,10 @@ fun EditProfileContent(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
                 ExpandableSection(
-                    title = "Looking For in Roommate",
+                    title = "Looking For Roommates",
                     isExpanded = expandedSection == "LookingForRoommate",
                     onToggle = { expandedSection = if (expandedSection == "LookingForRoommate") null else "LookingForRoommate" }
                 ) {
@@ -428,7 +435,7 @@ fun EditProfileContent(
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
                         allAttributes.forEach { attr ->
                             val existing = selectedPreferences.find { it.attribute == attr }
@@ -489,85 +496,28 @@ fun EditProfileContent(
                                 value = sliderValue.value,
                                 onValueChange = { newValue ->
                                     sliderValue.value = newValue
-                                    val index = selectedPreferences.indexOfFirst { it.attribute == pref.attribute }
+                                    val index =
+                                        selectedPreferences.indexOfFirst { it.attribute == pref.attribute }
                                     if (index != -1) {
-                                        selectedPreferences = selectedPreferences.toMutableList().apply {
-                                            set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
-                                        }
+                                        selectedPreferences =
+                                            selectedPreferences.toMutableList().apply {
+                                                set(
+                                                    index,
+                                                    pref.copy(
+                                                        weight = newValue.toDouble(),
+                                                        setWeight = true
+                                                    )
+                                                )
+                                            }
                                     }
                                 }
                             )
-
-                            Column(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = pref.attribute.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.DarkGray
-                                )
-
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp)
-                                    ) {
-                                        val density = LocalDensity.current
-                                        val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp
-                                        val offsetFraction = (sliderValue.value - 0f) / (1f - 0f)
-
-                                        val xOffset = with(density) {
-                                            ((screenWidthDp - 80.dp).toPx() * offsetFraction).toDp()
-                                        }
-
-                                        Text(
-                                            text = String.format("%.2f", sliderValue.value),
-                                            modifier = Modifier
-                                                .offset(x = xOffset)
-                                                .padding(bottom = 4.dp),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = CustomTeal
-                                        )
-                                    }
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-                                    ) {
-                                        Text("0", modifier = Modifier.padding(end = 8.dp))
-                                        Slider(
-                                            value = sliderValue.value,
-                                            onValueChange = { newValue ->
-                                                sliderValue.value = newValue
-                                                val index = selectedPreferences.indexOfFirst { it.attribute == pref.attribute }
-                                                if (index != -1) {
-                                                    selectedPreferences = selectedPreferences.toMutableList().apply {
-                                                        set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
-                                                    }
-                                                }
-                                            },
-                                            valueRange = 0.0f..1.0f,
-                                            steps = 3,
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .padding(horizontal = 8.dp),
-                                            colors = SliderDefaults.colors(
-                                                thumbColor = Primary,
-                                                activeTrackColor = Primary,
-                                                inactiveTrackColor = Secondary
-                                            )
-                                        )
-                                        Text("1", modifier = Modifier.padding(start = 8.dp))
-                                    }
-                                }
-                            }
                         }
                     }
                 }
 
                 ExpandableSection(
-                    title = "Looking For in Condo",
+                    title = "Condo Preferences",
                     isExpanded = expandedSection == "LookingForCondo",
                     onToggle = { expandedSection = if (expandedSection == "LookingForCondo") null else "LookingForCondo" }
                 ) {
@@ -579,24 +529,24 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Price Range (₪)", style = MaterialTheme.typography.titleMedium, color = Third)
                     PriceRangeSelector(
                         priceRange = priceRange,
-                        onValueChange = { priceRange = it }
+                        onValueChange = { priceRange = it },
+                        color = CustomTeal
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Size Range (m²)", style = MaterialTheme.typography.titleMedium, color = Third)
                     SizeRangeSelector(
                         sizeRange = sizeRange,
-                        onValueChange = { sizeRange = it }
+                        onValueChange = { sizeRange = it },
+                        color = CustomTeal
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Roommates:", style = MaterialTheme.typography.titleMedium, color = Third)
+                        Text("Roommates:", style = MaterialTheme.typography.titleSmall, color = Third)
                         Spacer(Modifier.width(8.dp))
                         CountSelector(
                             count = roommatesNumber,
@@ -608,7 +558,7 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Preferred radius: ${preferredRadius}km", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Preferred radius: ${preferredRadius}km", style = MaterialTheme.typography.titleSmall, color = Third)
 
                     Slider(
                         value = preferredRadius.toFloat(),
@@ -624,10 +574,11 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Condo Features", style = MaterialTheme.typography.titleMedium, color = Third)
+                    Text("Condo Features", style = MaterialTheme.typography.titleSmall, color = Third)
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -659,7 +610,7 @@ fun EditProfileContent(
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier
                                     .height(42.dp)
-                                    .width(112.dp)
+                                    .width(115.dp)
                             ) {
                                 Text(
                                     text = pref.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
@@ -682,7 +633,7 @@ fun EditProfileContent(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.DarkGray
                             )
-
+                            Spacer(modifier = Modifier.height(8.dp))
                             WeightedSlider(
                                 value = sliderValue.value,
                                 onValueChange = { newValue ->
@@ -848,7 +799,7 @@ fun EditableDateField(
                             currentDate = newDate
                         }
                     },
-                    isEditable = isEditingDate
+                    isEditable = true
                 )
             }
 
@@ -882,7 +833,7 @@ fun ExpandableSection(
     title: String,
     isExpanded: Boolean,
     onToggle: () -> Unit,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -909,7 +860,6 @@ fun ExpandableSection(
         Divider()
     }
 }
-
 @Composable
 fun WeightedSlider(
     value: Float,
@@ -920,43 +870,55 @@ fun WeightedSlider(
         (value * 4).toInt() / 4f
     }
 
+    var sliderWidth by remember { mutableStateOf(0f) }
+    var textWidth by remember { mutableStateOf(0f) }
+
+    val density = LocalDensity.current
+    val offsetFraction = (roundedValue - 0f) / (1f - 0f)
+    val xOffsetDp = with(density) {
+        (sliderWidth * offsetFraction - textWidth / 2).toDp()
+    }
+
     Box(modifier = modifier) {
-        val density = LocalDensity.current
-        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-        val offsetFraction = (roundedValue - 0f) / (1f - 0f)
-
-        val xOffsetPx = with(density) { (screenWidth - 80.dp).toPx() * offsetFraction }
-
         Text(
             text = String.format("%.2f", roundedValue),
             modifier = Modifier
-                .offset(x = with(density) { xOffsetPx.toDp() })
+                .offset(x = xOffsetDp)
+                .onGloballyPositioned {
+                    textWidth = it.size.width.toFloat()
+                }
                 .padding(bottom = 8.dp),
             style = MaterialTheme.typography.labelSmall,
             color = CustomTeal
         )
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("0", modifier = Modifier.padding(end = 8.dp))
-            Slider(
-                value = roundedValue,
-                onValueChange = {
-                    val stepped = (it * 4).roundToInt() / 4f // still rounds to 0.25
-                    onValueChange(stepped)
-                },
-                valueRange = 0f..1f,
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp),
-                colors = SliderDefaults.colors(
-                    thumbColor = Primary,
-                    activeTrackColor = Primary,
-                    inactiveTrackColor = Secondary
+                    .padding(horizontal = 8.dp)
+                    .onGloballyPositioned {
+                        sliderWidth = it.size.width.toFloat()
+                    }
+            ) {
+                Slider(
+                    value = roundedValue,
+                    onValueChange = {
+                        val stepped = (it * 4).roundToInt() / 4f
+                        onValueChange(stepped)
+                    },
+                    valueRange = 0f..1f,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Primary,
+                        activeTrackColor = Primary,
+                        inactiveTrackColor = Secondary
+                    )
                 )
-            )
-            Text("1", modifier = Modifier.padding(start = 8.dp))
+            }
         }
     }
 }

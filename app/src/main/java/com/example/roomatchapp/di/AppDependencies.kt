@@ -45,7 +45,7 @@ import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "192.168.1.158" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "192.168.1.159" //if your are using emulator change ip to 10.0.2.2
 
     internal const val BASE_URL = "http://$computerIP:8080"
 

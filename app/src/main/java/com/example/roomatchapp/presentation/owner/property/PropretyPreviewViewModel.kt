@@ -14,17 +14,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class UiState(
+data class PropertyPreviewUiState(
     val isLoading: Boolean = true,
     val property: Property? = null,
     val OwnerName: String? = null,
     val OwnerPic: String? = null,
     val ownerPhone: String? = null,
-    val roommates: List<RoommateUiState> = emptyList(),
+    val roommates: List<RoommatesUiState> = emptyList(),
     val errorMessage: String? = null
 )
 
-data class RoommateUiState(
+data class RoommatesUiState(
     val roommateId: String,
     val roommateName: String,
     val roommatePic: String
@@ -36,8 +36,8 @@ class PropertyPreviewViewModel(
     private val propertyId: String,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(PropertyPreviewUiState())
+    val uiState: StateFlow<PropertyPreviewUiState> = _uiState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -63,7 +63,7 @@ class PropertyPreviewViewModel(
                         result.CurrentRoommatesIds.mapNotNull { roommateId ->
                             val roommate = userRepository.getRoommate(roommateId)
                             roommate?.let {
-                                RoommateUiState(
+                                RoommatesUiState(
                                     roommateId = roommateId,
                                     roommateName = it.fullName,
                                     roommatePic = it.profilePicture.toString()

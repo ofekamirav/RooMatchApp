@@ -3,6 +3,7 @@ package com.example.roomatchapp.presentation.roommate
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.dao.MatchDao
 import com.example.roomatchapp.data.local.dao.SuggestedMatchDao
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Match
@@ -48,7 +49,8 @@ class DiscoverViewModel(
     private val seekerId: String,
     private val suggestedMatchDao: SuggestedMatchDao,
     private val likeRepository: LikeRepository,
-    private val userSessionManager: UserSessionManager
+    private val userSessionManager: UserSessionManager,
+    private val matchDao: MatchDao
 ): ViewModel() {
 
     private val _state = MutableStateFlow(DiscoverState())
@@ -241,13 +243,14 @@ class DiscoverViewModel(
             ?: matchBuffer.firstOrNull()
             ?: return
         val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
+        onSwiped()
         viewModelScope.launch {
             val response = matchRepository.likeRoommates(match)
             if (response) {
-                onSwiped()
+                Log.d("TAG", "DiscoverViewModel-likeRoommates success")
             } else {
                 retryQueue.add(SwipeAction.LikeRoommates(match))
-                onSwiped()
+                Log.d("TAG", "DiscoverViewModel-likeRoommates failed")
             }
         }
         Log.d("TAG", "DiscoverViewModel-likeRoommates called")
@@ -259,15 +262,15 @@ class DiscoverViewModel(
             ?: matchBuffer.firstOrNull()
             ?: return
         val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
+        onSwiped()
         viewModelScope.launch {
             val response = matchRepository.likeProperty(match)
             if (response) {
-                onSwiped()
+                Log.d("TAG", "DiscoverViewModel-likeProperty success")
             } else {
                 retryQueue.add(SwipeAction.LikeProperty(match))
-                onSwiped()
+                Log.d("TAG", "DiscoverViewModel-likeProperty failed")
             }
-            Log.d("TAG", "DiscoverViewModel-likeProperty called")
 
         }
     }
@@ -278,17 +281,26 @@ class DiscoverViewModel(
             ?: matchBuffer.firstOrNull()
             ?: return
         val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
+        onSwiped()
         viewModelScope.launch {
             val response = likeRepository.fullLike(match)
-            if (response) {
-                onSwiped()
+            delay(1500)
+            if (!response) {
+                val matchExists = matchDao.getMatchById(match.id.toString()) != null
+                if (!matchExists) {
+                    retryQueue.add(SwipeAction.FullLike(match))
+                    Log.d("TAG", "DiscoverViewModel-Retry-Added to retry queue: ${match.id}")
+                } else {
+                    Log.d("TAG", "DiscoverViewModel-Skip retry: match already exists: ${match.id}")
+                }
             } else {
-                retryQueue.add(SwipeAction.FullLike(match))
-                onSwiped()
+                Log.d("TAG", "DiscoverViewModel-fullLike succeeded for ${match.id}")
             }
-            Log.d("TAG", "DiscoverViewModel-fullLike called")
+
+
         }
     }
+
 
     fun dislike() {
         val currentCardId = _cardDetails.value?.id ?: return
@@ -296,14 +308,14 @@ class DiscoverViewModel(
             ?: matchBuffer.firstOrNull()
             ?: return
         val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
+        onSwiped()
         viewModelScope.launch {
             val response = likeRepository.dislike(match)
             if (!response) {
                 retryQueue.add(SwipeAction.Dislike(match))
+                Log.d("TAG", "DiscoverViewModel-dislike failed")
             }
-            onSwiped()
         }
-        Log.d("TAG", "DiscoverViewModel-dislike called")
     }
 
     fun refreshContent() {

@@ -9,6 +9,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.roomatchapp.presentation.theme.Primary
@@ -19,11 +20,13 @@ import com.example.roomatchapp.presentation.theme.Secondary
 fun SizeRangeSelector(
     sizeRange: ClosedFloatingPointRange<Float>,
     onValueChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    color: Color = Color.Black ,
     enabled: Boolean = true
 ) {
     Column {
         Text("Size Range: ${sizeRange.start.toInt()}m² - ${sizeRange.endInclusive.toInt()}m²",
-            style = MaterialTheme.typography.titleSmall
+            style = MaterialTheme.typography.titleSmall,
+            color = color
         )
         RangeSlider(
             value = sizeRange,

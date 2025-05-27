@@ -19,6 +19,7 @@ import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.navigation.BottomNavItems
 import com.example.roomatchapp.presentation.navigation.BottomNavigationBar
+import com.example.roomatchapp.presentation.owner.EditOwnerProfileViewModel
 import com.example.roomatchapp.presentation.owner.property.AddPropertyViewModel
 import com.example.roomatchapp.presentation.owner.OwnerAnalyticsViewModel
 import com.example.roomatchapp.presentation.owner.OwnerProfileViewModel
@@ -27,6 +28,7 @@ import com.example.roomatchapp.presentation.screens.owner.properties.PropertyPre
 import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
 import com.example.roomatchapp.presentation.owner.property.PropertyPreviewViewModel
 import com.example.roomatchapp.presentation.roommate.RoommatePreviewViewModel
+import com.example.roomatchapp.presentation.screens.owner.EditOwnerProfileScreen
 import com.example.roomatchapp.presentation.screens.owner.OwnerAnalyticsScreen
 import com.example.roomatchapp.presentation.screens.owner.OwnerProfileScreen
 import com.example.roomatchapp.presentation.screens.owner.properties.AddPropertyFlow
@@ -113,6 +115,9 @@ fun OwnerMainScreen(
                     viewModel = viewModel,
                     onLogout = {
                         onLogout()
+                    },
+                    onEditClick = {
+                        navController.navigate("edit_profile")
                     }
                 )
             }
@@ -185,6 +190,24 @@ fun OwnerMainScreen(
                 RoommatePreviewScreen(
                     viewModel = viewModel,
                     onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+            composable("edit_profile") {
+                // Edit profile screen
+                val viewModel = remember(ownerId) {
+                    EditOwnerProfileViewModel(
+                        userRepository = AppDependencies.userRepository,
+                        ownerId = ownerId
+                    )
+                }
+                EditOwnerProfileScreen(
+                    viewModel = viewModel,
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onSaveClick = {
                         navController.popBackStack()
                     }
                 )
