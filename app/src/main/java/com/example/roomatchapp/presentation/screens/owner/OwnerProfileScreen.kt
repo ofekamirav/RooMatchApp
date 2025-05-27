@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.owner.OwnerProfileViewModel
@@ -30,8 +31,9 @@ import com.example.roomatchapp.presentation.theme.Third
 
 @Composable
 fun OwnerProfileScreen(
-    onLogout: () -> Unit = {},
-    viewModel: OwnerProfileViewModel
+    onLogout: EmptyCallback,
+    viewModel: OwnerProfileViewModel,
+    onEditClick: EmptyCallback
 ) {
     val owner by viewModel.owner.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -164,7 +166,9 @@ fun OwnerProfileScreen(
                 }
 
                 FloatingActionButton(
-                    onClick = { /* Edit logic */ },
+                    onClick = {
+                        onEditClick()
+                    },
                     modifier = Modifier.size(60.dp),
                     containerColor = Color.Transparent,
                     elevation = FloatingActionButtonDefaults.elevation(0.dp)

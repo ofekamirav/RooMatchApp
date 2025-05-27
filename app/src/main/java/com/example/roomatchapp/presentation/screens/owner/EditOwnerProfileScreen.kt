@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.owner.EditOwnerProfileViewModel
@@ -37,7 +38,10 @@ import com.example.roomatchapp.presentation.theme.Primary
 import kotlinx.coroutines.launch
 
 @Composable
-fun EditOwnerProfileScreen(viewModel: EditOwnerProfileViewModel) {
+fun EditOwnerProfileScreen(
+    viewModel: EditOwnerProfileViewModel,
+    onBackClick: EmptyCallback
+) {
     val owner by viewModel.owner.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 

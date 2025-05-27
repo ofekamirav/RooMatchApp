@@ -37,7 +37,7 @@ import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.owner.property.PropertyPreviewViewModel
-import com.example.roomatchapp.presentation.owner.property.RoommateUiState
+import com.example.roomatchapp.presentation.owner.property.RoommatesUiState
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -240,7 +240,10 @@ fun PropertyPreviewScreen(
                         color = Primary
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         property?.features?.forEach {
                             FeatureItem(
                                 text = it.name.replace("_", " ").lowercase()
@@ -423,7 +426,7 @@ fun FeatureItem(text: String) {
 
 @Composable
 fun RoommateItem(
-    roommate: RoommateUiState,
+    roommate: RoommatesUiState,
     onRoommateClick: StringCallback
 ) {
     Row(

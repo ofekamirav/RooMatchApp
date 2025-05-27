@@ -2,7 +2,9 @@ package com.example.roomatchapp.presentation.components
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
@@ -40,17 +42,22 @@ fun DatePickerField(
     }
 
     if(isEditable){
-        CapsuleTextField(
-            value = selectedDate,
-            onValueChange = {},
-            placeholder = "Birthdate",
+        Box(
             modifier = modifier
                 .fillMaxWidth()
-                .clickable { datePickerDialog.show() },
-            isEditable = true,
-            datePicker = { datePickerDialog.show() }
-        )
-
+                .clickable { datePickerDialog.show() }
+        ) {
+            CapsuleTextField(
+                value = selectedDate,
+                onValueChange = {},
+                placeholder = "Birthdate",
+                isEditable = true,
+                datePicker = { datePickerDialog.show() },
+                enabled = false,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(50),
+            )
+        }
     }else{
         OutlinedTextField(
             value = selectedDate,
@@ -70,13 +77,13 @@ fun DatePickerField(
             colors = OutlinedTextFieldDefaults.colors(
                 disabledTextColor = Color.Black,
                 disabledLabelColor = Color.Black,
-                disabledBorderColor = Color.Gray
+                disabledBorderColor = Color.Gray,
+                focusedBorderColor = Color.Gray,
+                unfocusedBorderColor = Color.Gray
             ),
             modifier = modifier
                 .fillMaxWidth()
                 .clickable { datePickerDialog.show() }
         )
     }
-
-
 }
