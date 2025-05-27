@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
@@ -121,7 +117,11 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
                     .background(Primary, CircleShape)
                     .size(28.dp)
             ) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_edit),
+                    contentDescription = "Edit",
+                    tint = Color.White
+                )
             }
         }
 
@@ -139,7 +139,12 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
     Box(modifier = Modifier.fillMaxSize()) {
         ExtendedFloatingActionButton(
             text = { Text("Save Changes") },
-            icon = { Icon(Icons.Default.Check, contentDescription = "Save") },
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_save),
+                    contentDescription = "Save"
+                )
+            },
             onClick = {
                 viewModel.saveChanges(
                     fullName = fullName,
