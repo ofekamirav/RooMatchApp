@@ -26,7 +26,12 @@ import com.example.roomatchapp.di.AppDependencies
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.presentation.theme.Primary
+import com.example.roomatchapp.presentation.theme.cardBackground
 
+enum class UserType(val displayName: String) {
+    ROOMMATE("Roommate"),
+    PROPERTY_OWNER("Property Owner")
+}
 
 @Composable
 fun ForgotPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () -> Unit) {
@@ -38,25 +43,24 @@ fun ForgotPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () ->
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(horizontal = 24.dp),
-        contentAlignment = Alignment.Center
+            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(modifier = Modifier.height(16.dp))
-
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.logoname),
                 contentDescription = "Logo",
-                modifier = Modifier.size(140.dp)
+                modifier = Modifier.size(200.dp)
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -67,18 +71,10 @@ fun ForgotPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () ->
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LockReset,
-                            contentDescription = null,
-                            tint = Primary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Reset Your Password",
+                            text = "Reset Password",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Primary
                         )
                     }
 
@@ -86,47 +82,44 @@ fun ForgotPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () ->
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email Address") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = null,
-                                tint = Primary
-                            )
-                        },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Segmented control for user type
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        UserTypeSegment(
-                            label = "Roommate",
-                            selected = userType == "Roommate",
-                            onClick = { userType = "Roommate" }
-                        )
-                        UserTypeSegment(
-                            label = "Owner",
-                            selected = userType == "PropertyOwner",
-                            onClick = { userType = "PropertyOwner" }
-                        )
+                    // Type selection chips
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        UserType.entries.forEach { type ->
+                            FilterChip(
+                                selected = userType == type.displayName,
+                                onClick = { userType = type.displayName  },
+                                label = { Text(type.displayName) },
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Primary,
+                                    selectedLabelColor = Color.White,
+                                )
+                            )
+                        }
                     }
 
                     Button(
-                        onClick = { viewModel.requestPasswordReset(email, userType) },
+                        onClick = { viewModel.requestPasswordReset(email, userType)},
+                        enabled = email.isNotBlank(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                            .height(50.dp)
+                        ,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Primary,
+                            contentColor = Color.White,
+                            disabledContainerColor = Primary.copy(alpha = 0.5f)
+                        ),
                     ) {
-                        Text(
-                            text = "Send Reset Link",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
+                        Text("Send",
+                            style = MaterialTheme.typography.titleMedium,
                             color = Color.White
                         )
                     }

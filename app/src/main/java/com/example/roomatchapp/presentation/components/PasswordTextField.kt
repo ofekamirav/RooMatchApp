@@ -1,6 +1,7 @@
 package com.example.roomatchapp.presentation.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
@@ -24,7 +25,10 @@ fun PasswordTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String = "Password",
-    error: String? = null
+    error: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    modifier: Modifier = Modifier
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
 
@@ -46,6 +50,8 @@ fun PasswordTextField(
                 Icon(imageVector = image, contentDescription = "Toggle password visibility")
             }
         },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
     )
 }

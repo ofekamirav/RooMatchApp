@@ -27,9 +27,11 @@ import com.example.roomatchapp.presentation.owner.property.PropertyPreviewViewMo
 import com.example.roomatchapp.presentation.roommate.DiscoverViewModel
 import com.example.roomatchapp.presentation.roommate.EditProfileViewModel
 import com.example.roomatchapp.presentation.roommate.ProfileViewModel
+import com.example.roomatchapp.presentation.roommate.RoommatePreviewViewModel
 import com.example.roomatchapp.presentation.screens.owner.properties.PropertyPreviewScreen
 import com.example.roomatchapp.presentation.screens.roommate.EditProfileScreen
 import com.example.roomatchapp.presentation.screens.roommate.RoommateMatchesScreen
+import com.example.roomatchapp.presentation.screens.roommate.RoommatePreviewScreen
 import com.example.roomatchapp.presentation.theme.Background
 
 
@@ -75,7 +77,15 @@ fun RoommateMainScreen(
                     )
                 }
 
-                RoommateMatchesScreen(viewModel = viewModel)
+                RoommateMatchesScreen(
+                    viewModel = viewModel,
+                    onPropertyClick = { propertyId ->
+                        navController.navigate("property_preview/$propertyId")
+                    },
+                    onRoommateClick = { roommateId ->
+                        navController.navigate("roommate_preview/$roommateId")
+                    }
+                )
             }
             composable("roommate_discover") {
                 if (seekerId.isNotBlank()) {
@@ -158,6 +168,19 @@ fun RoommateMainScreen(
                     }
                 )
 
+            }
+            composable("roommate_preview/{roommateId}") {
+                val roommateId = it.arguments?.getString("roommateId")
+                val viewModel = RoommatePreviewViewModel(
+                    roommateId = roommateId ?: "",
+                    userRepository = AppDependencies.userRepository
+                )
+                if (roommateId != null) {
+                    RoommatePreviewScreen(
+                        viewModel = viewModel,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

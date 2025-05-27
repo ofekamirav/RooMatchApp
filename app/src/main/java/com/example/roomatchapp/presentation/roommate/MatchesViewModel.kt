@@ -14,9 +14,11 @@ import kotlinx.coroutines.launch
 data class MatchCardModel(
     val matchId: String,
     val apartmentTitle: String,
+    val propertyId: String?,
     val apartmentImage: String?,
     val roommateNames: List<String>,
-    val roommatePictures: List<String>
+    val roommatePictures: List<String>,
+    val roommateIds: List<String> = emptyList()
 )
 
 data class MatchesUiState(
@@ -36,13 +38,12 @@ class MatchesViewModel(
     val uiState: StateFlow<MatchesUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.value = _uiState.value.copy(isLoading = true)
         loadMatches()
     }
 
     fun loadMatches() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null,matches = emptyList())
             when (val result = likeRepository.getRoommateMatches(seekerId)) {
                 is Resource.Success -> {
                     Log.d("TAG", "MatchesViewModel- Got matches: ${result.data.size}")
@@ -52,7 +53,9 @@ class MatchesViewModel(
                             apartmentTitle = match.propertyAddress,
                             apartmentImage = match.propertyPhoto,
                             roommateNames = match.roommateMatches.map { it.roommateName },
-                            roommatePictures = match.roommateMatches.map { it.roommatePhoto }
+                            roommatePictures = match.roommateMatches.map { it.roommatePhoto },
+                            propertyId = match.propertyId,
+                            roommateIds = match.roommateMatches.map { it.roommateId }
                         )
                     }
                     _uiState.value = _uiState.value.copy(
@@ -63,6 +66,7 @@ class MatchesViewModel(
                 }
                 is Resource.Error -> {
                     _uiState.value = _uiState.value.copy(
+                        matches = emptyList(),
                         isLoading = false,
                         errorMessage = result.message
                     )
@@ -79,7 +83,7 @@ class MatchesViewModel(
 
     fun refreshContent() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            _uiState.value = _uiState.value.copy(isRefreshing = true, errorMessage = null)
             try {
                 matchRepository.clearLocalMatches()
                 val result = likeRepository.getRoommateMatches(seekerId, forceRefresh = true)
@@ -90,7 +94,9 @@ class MatchesViewModel(
                             apartmentTitle = match.propertyAddress,
                             apartmentImage = match.propertyPhoto,
                             roommateNames = match.roommateMatches.map { it.roommateName },
-                            roommatePictures = match.roommateMatches.map { it.roommatePhoto }
+                            roommatePictures = match.roommateMatches.map { it.roommatePhoto },
+                            propertyId = match.propertyId,
+                            roommateIds = match.roommateMatches.map { it.roommateId }
                         )
                     }
                     _uiState.value = _uiState.value.copy(

@@ -50,6 +50,7 @@ import com.example.roomatchapp.presentation.owner.property.PropertiesViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
+import com.example.roomatchapp.presentation.theme.Secondary
 import com.example.roomatchapp.presentation.theme.cardBackground
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -92,23 +93,36 @@ fun PropertiesScreen(
                         color = Primary,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = 16.dp)
-                    ) {
-                        items(properties) { property ->
-                            PropertyRow(
-                                property = property,
-                                onPropertyClick = { propertyId->
-                                    onPropertyClick(propertyId)
-                                },
-                                viewModel = viewModel
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                    if (properties.isEmpty()) {
+                        Text(
+                            text = "No properties available",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Secondary,
+                        )
+                        Text(
+                            "Add a property and publish it so new renters can find it!",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    else{
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 16.dp)
+                        ) {
+                            items(properties) { property ->
+                                PropertyRow(
+                                    property = property,
+                                    onPropertyClick = { propertyId->
+                                        onPropertyClick(propertyId)
+                                    },
+                                    viewModel = viewModel
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                         }
                     }
+
                 }
                 Row(
                     modifier = Modifier
@@ -181,7 +195,7 @@ fun PropertyRow(
                     },
                     modifier = Modifier.size(64.dp).clip(CircleShape),
                     contentDescription = "Property Image",
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))

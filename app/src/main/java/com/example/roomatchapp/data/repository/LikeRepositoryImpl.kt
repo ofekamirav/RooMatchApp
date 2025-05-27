@@ -55,15 +55,7 @@ class LikeRepositoryImpl(
             val cacheEntities = cacheDao.getAllByType(CacheType.MATCH)
             val now = System.currentTimeMillis()
 
-            val matchesWithCache = cacheEntities.mapNotNull { cacheEntry ->
-                matchDao.getMatchById(cacheEntry.entityId)?.let { match ->
-                    match to cacheEntry
-                }
-            }
-
-            val isCacheFresh = matchesWithCache.all { (_, cacheEntry) ->
-                (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
-            }
+            val isCacheFresh = cacheEntities.all { now - it.lastUpdatedAt <= maxCacheAgeMillis }
 
             if (forceRefresh || !isCacheFresh) {
                 val freshMatches = apiService.getRoommateMatches(seekerId)
@@ -78,10 +70,7 @@ class LikeRepositoryImpl(
 
                 return Resource.Success(freshMatches ?: emptyList())
             }
-
-            val matches = matchesWithCache
-                .filter { (match, _) -> match.seekerId == seekerId }
-                .map { it.first }
+            val matches = matchDao.getMatchesBySeekerId(seekerId)?: emptyList()
             Log.d("TAG","LikeRepositoryImpl- getRoommateMatches success- ${matches.size} matches returned")
             Resource.Success(matches)
         } catch (e: Exception) {

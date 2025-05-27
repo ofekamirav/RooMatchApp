@@ -34,6 +34,7 @@ fun Onboarding(onFinish: () -> Unit) {
         OnboardingPage("Like Property", "Click like on property you want to see again.", R.drawable.like_property),
         OnboardingPage("Like Roommates", "Click like on roommates you want to see again.", R.drawable.like_roommates),
         OnboardingPage("Matches List", "Click on the match to see more details.", R.drawable.matches_list),
+        OnboardingPage("Edit Preference Priority", "Edit preferences thats matter to you.", R.drawable.edit_weights),
         OnboardingPage("Ready to Go!", "Get started and find your next home.", R.drawable.last_page)
     )
 
@@ -41,7 +42,7 @@ fun Onboarding(onFinish: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .padding(24.dp),
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(24.dp))
@@ -78,14 +79,16 @@ fun Onboarding(onFinish: () -> Unit) {
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    pages[page].description,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = Color.Gray,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        pages[page].description,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.Gray,
+                    )
+                }
             }
         }
 
