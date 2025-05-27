@@ -492,6 +492,8 @@ fun EditProfileContent(
 
                             val sliderValue = remember { mutableStateOf(pref.weight.toFloat()) }
 
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             WeightedSlider(
                                 value = sliderValue.value,
                                 onValueChange = { newValue ->
