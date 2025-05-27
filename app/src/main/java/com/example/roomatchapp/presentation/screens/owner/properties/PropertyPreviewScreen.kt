@@ -317,25 +317,29 @@ fun PropertyPreviewScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         IconButton(
                             onClick = {
-                                val message = "Hi ${state.OwnerName}, I saw your property at RoomMatch and I'm interested in it."
-                                val ownerPhone = state.ownerPhone
-                                val whatsappNumber = "+972" + ownerPhone?.removePrefix("0")
+                                val message = "Hi ${state.OwnerName ?: "there"}, I saw your property at RoomMatch and I'm interested in it."
+                                val phoneNumber = state.ownerPhone
 
-                                if (ownerPhone != null) {
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        data = Uri.parse("https://wa.me/$whatsappNumber?text=${Uri.encode(message)}")
+                                if (!phoneNumber.isNullOrBlank()) {
+
+                                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                        data = Uri.parse("smsto:$phoneNumber")
+                                        putExtra("sms_body", message)
                                     }
+
                                     if (intent.resolveActivity(context.packageManager) != null) {
                                         context.startActivity(intent)
                                     } else {
-                                        Toast.makeText(context, "You do not have WhatsApp installed", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "No SMS app found", Toast.LENGTH_SHORT).show()
                                     }
+                                } else {
+                                    Toast.makeText(context, "Owner phone number is not available", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_whatsapp),
+                                painter = painterResource(id = R.drawable.ic_sms),
                                 contentDescription = "WhatsApp",
                                 tint = Primary,
                                 modifier = Modifier

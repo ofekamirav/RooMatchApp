@@ -22,9 +22,10 @@ import java.util.Calendar
 fun DatePickerField(
     selectedDate: String,
     onDateSelected: (String) -> Unit,
+    isEditable: Boolean = false,
     modifier: Modifier = Modifier,
-    isEditable: Boolean = false
-) {
+    onNext: () -> Unit = {},
+    ) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
 
@@ -34,6 +35,7 @@ fun DatePickerField(
             { _, year, month, day ->
                 val formatted = "%02d/%02d/%04d".format(day, month + 1, year)
                 onDateSelected(formatted)
+                onNext()
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),

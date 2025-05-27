@@ -2,6 +2,7 @@ package com.example.roomatchapp.presentation.screens.roommate
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,6 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
+import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.presentation.roommate.MatchCardModel
 import com.example.roomatchapp.presentation.roommate.MatchesViewModel
 import com.example.roomatchapp.presentation.components.LoadingAnimation
@@ -38,7 +41,10 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun RoommateMatchesScreen(
-    viewModel: MatchesViewModel) {
+    viewModel: MatchesViewModel,
+    onPropertyClick: StringCallback,
+    onRoommateClick: StringCallback
+) {
     val state by viewModel.uiState.collectAsState()
     val matches = state.matches
     val loading = state.isLoading
@@ -84,12 +90,6 @@ fun RoommateMatchesScreen(
                                     verticalArrangement = Arrangement.Center,
                                     modifier = Modifier.fillMaxSize()
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Star,
-                                        contentDescription = null,
-                                        tint = Third,
-                                        modifier = Modifier.size(48.dp)
-                                    )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         "No matches yet.",
@@ -104,7 +104,7 @@ fun RoommateMatchesScreen(
                             }
                         } else {
                             items(matches) { match ->
-                                MatchRow(match)
+                                MatchRow(match, onPropertyClick, onRoommateClick)
                             }
                         }
                     }
@@ -117,6 +117,8 @@ fun RoommateMatchesScreen(
 @Composable
 fun MatchRow(
     match: MatchCardModel,
+    onPropertyClick: StringCallback,
+    onRoommateClick: StringCallback
 ) {
     Card(
         modifier = Modifier
@@ -140,7 +142,8 @@ fun MatchRow(
                 contentDescription = "Apartment Image",
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .clickable { onPropertyClick(match.propertyId) },
                 contentScale = ContentScale.Crop
             )
 
@@ -177,7 +180,8 @@ fun MatchRow(
                                 contentDescription = "Roommate Picture",
                                 modifier = Modifier
                                     .size(32.dp)
-                                    .clip(CircleShape),
+                                    .clip(CircleShape)
+                                    .clickable { onRoommateClick(match.roommateIds[match.roommateNames.indexOf(name)]) },
                                 contentScale = ContentScale.Crop
                             )
                             Text(

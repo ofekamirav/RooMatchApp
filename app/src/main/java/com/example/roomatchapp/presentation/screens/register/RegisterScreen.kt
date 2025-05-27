@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,6 +42,11 @@ import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
 import androidx.compose.material3.ColorScheme
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.roomatchapp.presentation.components.PasswordTextField
 import com.example.roomatchapp.presentation.theme.Secondary
@@ -54,6 +60,13 @@ fun RegisterScreen(
     registrationViewModel: RegistrationViewModel
 ){
     val state by registrationViewModel.baseState.collectAsState()
+    val focusRequesterEmail = remember { FocusRequester() }
+    val focusRequesterFullName = remember { FocusRequester() }
+    val focusRequesterPhone = remember { FocusRequester() }
+    val focusRequesterPassword = remember { FocusRequester() }
+    val focusRequesterConfirm = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
 
     Box(
         modifier = Modifier
@@ -85,7 +98,7 @@ fun RegisterScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ){
-                    Text("Create Account", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
+                    Text("Create Account",style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
                     // Email input
                     OutlinedTextField(
@@ -102,10 +115,16 @@ fun RegisterScreen(
                         supportingText = { state.emailError?.let { Text(text = it) } },
                         singleLine = true,
                         label = { Text("Enter your email address") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequesterEmail),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email
-                        )
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusRequesterFullName.requestFocus() }
+                        ),
                     )
                     OutlinedTextField(
                         value = state.fullName,
@@ -121,7 +140,16 @@ fun RegisterScreen(
                         supportingText = { state.fullNameError?.let { Text(text = it) } },
                         singleLine = true,
                         label = { Text("Full name") },
-                        modifier = Modifier.fillMaxWidth()
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusRequesterPhone.requestFocus() }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequesterFullName)
                     )
 
                     Row(
@@ -138,8 +166,10 @@ fun RegisterScreen(
                                     )
                                 )
                             },
+                            onNext = { focusRequesterPhone.requestFocus() },
                             modifier = Modifier.weight(1f)
                         )
+
                         OutlinedTextField(
                             value = state.phoneNumber,
                             onValueChange = { phone ->
@@ -154,10 +184,16 @@ fun RegisterScreen(
                             supportingText = { state.phoneNumberError?.let { Text(text = it) } },
                             singleLine = true,
                             label = { Text("Phone Number") },
-                            modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Phone
-                            )
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusRequesterPassword.requestFocus() }
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .focusRequester(focusRequesterPhone)
                         )
                     }
                     // Password input
@@ -172,7 +208,10 @@ fun RegisterScreen(
                             )
                         },
                         label = "Enter your Password",
-                        error = state.passwordError
+                        error = state.passwordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusRequesterConfirm.requestFocus() }),
+                        modifier = Modifier.focusRequester(focusRequesterPassword)
                     )
                     // Confirm Password input
                     PasswordTextField(
@@ -186,7 +225,10 @@ fun RegisterScreen(
                             )
                         },
                         label = "Confirm Password",
-                        error = state.confirmPasswordError
+                        error = state.confirmPasswordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                        modifier = Modifier.focusRequester(focusRequesterConfirm)
                     )
 
                     // Register button

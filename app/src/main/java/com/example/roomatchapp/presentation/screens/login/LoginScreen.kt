@@ -34,10 +34,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.cloudinary.api.exceptions.ApiException
@@ -64,6 +69,9 @@ fun LoginScreen(
     val state by loginViewModel.state.collectAsState()
     val isLoading = loginViewModel.isLoading
     val context = LocalContext.current
+    val focusRequesterPassword = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
 
     val googleSignInClient = remember {
         GoogleSignIn.getClient(
@@ -120,7 +128,7 @@ fun LoginScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text("Log in", fontSize = MaterialTheme.typography.titleLarge.fontSize, fontWeight = FontWeight.Bold)
+                        Text("Log in",style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
                         // Google Sign in
                         Button(
@@ -155,7 +163,13 @@ fun LoginScreen(
                             label = { Text("Enter your email address") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusRequesterPassword.requestFocus() }
+                            )
                         )
 
                         // Password input
@@ -163,7 +177,13 @@ fun LoginScreen(
                             value = state.password,
                             onValueChange = { loginViewModel.updatePassword(it) },
                             label = "Enter your password",
-                            error = state.passwordError
+                            error = state.passwordError,
+                            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(
+                                onDone = { focusManager.clearFocus() }
+                            ),
+                            modifier = Modifier.focusRequester(focusRequesterPassword)
+
                         )
 
                         // Forgot password
