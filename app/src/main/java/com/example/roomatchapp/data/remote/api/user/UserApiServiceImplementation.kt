@@ -193,11 +193,26 @@ class UserApiServiceImplementation(
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("email" to email, "userType" to userType))
             }
-            if (response.status.isSuccess()) {
-                val message = response.bodyAsText()
-                Result.success(message)
-            } else {
-                Result.failure(Exception("Failed to send reset token"))
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    val message = response.bodyAsText()
+                    Result.success(message)
+                }
+                HttpStatusCode.BadRequest -> {
+                    val message = response.bodyAsText()
+                    Result.failure(Exception(message))
+                }
+                HttpStatusCode.InternalServerError -> {
+                    val message = response.bodyAsText()
+                    Result.failure(Exception(message))
+                }
+                HttpStatusCode.NotFound -> {
+                    val message = response.bodyAsText()
+                    Result.failure(Exception(message))
+                }
+                else -> {
+                    Result.failure(Exception("Unexpected response status: ${response.status}"))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
