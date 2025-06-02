@@ -1,4 +1,6 @@
 import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.implementation
+
 
 plugins {
     alias(libs.plugins.android.application)
@@ -47,6 +49,12 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    sourceSets{
+        getByName("test"){
+            java.srcDir("src/test/java")
+        }
     }
 
 }
@@ -102,13 +110,11 @@ dependencies {
     implementation(libs.play.services.location)
     //Data-Base and Cloud
     implementation(libs.androidx.room.runtime)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.datastore.preferences)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
@@ -117,10 +123,24 @@ dependencies {
 
     //Google Places API
     implementation(libs.places)
+    testImplementation(libs.turbine)
+
 
     // photos
     implementation (libs.accompanist.pager)
     implementation (libs.accompanist.pager.indicators)
+    implementation(kotlin("test"))
+
+    //JUNIT 4
+    testImplementation(libs.junit)
+
+    // Mockito
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+
+// Coroutines testing (testing suspend functions)
+    testImplementation(libs.kotlinx.coroutines.test)
+
 
 }
 

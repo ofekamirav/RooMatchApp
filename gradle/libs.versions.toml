@@ -7,13 +7,13 @@ agp = "8.9.2"
 auth0 = "4.5.0"
 charts = "0.2.4-alpha"
 coilCompose = "2.4.0"
+junit = "4.13.2"
+kotlinxCoroutinesTest = "1.7.3"
 vico = "2.1.2"
 core = "2.1.0"
 kotlin = "2.1.10"
 ksp = "2.1.10-1.0.31"
 coreKtx = "1.16.0"
-junit = "4.13.2"
-junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxSerializationJson = "1.8.0"
 ktorClientCio = "3.1.1"
@@ -40,6 +40,11 @@ cloudinaryAndroid = "3.0.2"
 roomRuntime = "2.7.1"
 runtimeSaveable = "1.8.0"
 datastore = "1.0.0"
+mockitoCore = "5.12.0"
+mockitoKotlin = "5.2.1"
+turbine = "1.0.0"
+
+
 
 
 
@@ -61,13 +66,13 @@ auth0 = { module = "com.auth0:java-jwt", version.ref = "auth0" }
 bottom-sheet = { module = "io.github.raamcosta.compose-destinations:bottom-sheet", version.ref = "core" }
 charts = { module = "com.github.tehras:charts", version.ref = "charts" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 vico-core = { group = "com.patrykandpatrick.vico", name = "core", version.ref = "vico" }
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "core" }
 compose-destinations-core = { module = "io.github.raamcosta.compose-destinations:core", version.ref = "core" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorClientLogging" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
@@ -96,6 +101,9 @@ retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 
 
