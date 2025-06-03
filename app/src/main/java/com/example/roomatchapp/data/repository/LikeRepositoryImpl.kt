@@ -9,7 +9,6 @@ import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.remote.api.like.LikeApiService
 import com.example.roomatchapp.domain.repository.LikeRepository
 import com.example.roomatchapp.utils.Resource
-import kotlin.toString
 
 class LikeRepositoryImpl(
     private val apiService: LikeApiService,

@@ -63,6 +63,7 @@ import com.example.roomatchapp.presentation.theme.Secondary
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.model.TypeFilter
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
@@ -260,8 +261,14 @@ fun PlacesAutocompleteTextField(
     val searchText by searchTextFlow.collectAsStateWithLifecycle()
     var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
     var showPredictions by remember { mutableStateOf(false) }
+    var isManualSelection by remember { mutableStateOf(false) }
 
     LaunchedEffect(searchText) {
+        if (isManualSelection) {
+            isManualSelection = false
+            return@LaunchedEffect
+        }
+
         if (searchText.length < 2) {
             predictions = emptyList()
             showPredictions = false
@@ -274,6 +281,7 @@ fun PlacesAutocompleteTextField(
         val request = FindAutocompletePredictionsRequest.builder()
             .setSessionToken(token)
             .setQuery(searchText)
+            .setTypeFilter(TypeFilter.ADDRESS)
             .build()
         try {
             val response = placesClient.findAutocompletePredictions(request).await()
@@ -304,6 +312,7 @@ fun PlacesAutocompleteTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
+                            isManualSelection = true
                             searchTextFlow.value = address
                             showPredictions = false
                             predictions = emptyList()
