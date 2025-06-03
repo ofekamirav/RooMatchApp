@@ -105,6 +105,7 @@ fun RoommateMatchesScreen(
                         } else {
                             items(matches) { match ->
                                 MatchRow(match, onPropertyClick, onRoommateClick)
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
                     }

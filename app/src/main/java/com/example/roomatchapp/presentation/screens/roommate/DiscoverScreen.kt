@@ -178,11 +178,11 @@ fun MatchCard(
     val iconScale = remember { Animatable(0f) }
     val iconOffsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
-    var swipeDirection by remember { mutableStateOf<String?>(null) }
     var isSwipeAction by remember { mutableStateOf(false) }
     var iconVisibleForType by remember { mutableStateOf<String?>(null) }
-
-    if (isAnimatingOut) return
+    var swipeDirection by remember { mutableStateOf<String?>(null) }
+    var showAnimatedIcon by remember { mutableStateOf(false) }
+    var buttonActionInProgress by remember { mutableStateOf(false) }
 
     LaunchedEffect(swipeable) {
         Log.d("TAG", "MatchCard-Card is swipable: $swipeable")
@@ -341,22 +341,22 @@ fun MatchCard(
             ){
                 Button(
                     onClick = {
-                        if (swipeable && !isAnimatingOut) {
-                            isAnimatingOut = true
+                        if (swipeable && !buttonActionInProgress) {
+                            buttonActionInProgress = true
                             scope.launch {
-                                iconVisibleForType = "right"
-                                iconOffsetX.snapTo(0f)
+                                showAnimatedIcon = true
                                 iconScale.snapTo(0f)
-
                                 iconScale.animateTo(1f, tween(300))
+
                                 delay(400)
+
                                 viewModel.likeProperty()
-                                Log.d("TAG", "MatchCard-viewModel.likeProperty() called")
 
                                 iconScale.animateTo(0f, tween(200))
-                                iconVisibleForType = null
+                                showAnimatedIcon = false
+                                buttonActionInProgress = false
                             }
-                         }
+                        }
                     },
                     modifier = Modifier.height(50.dp).weight(1f),
                     colors = ButtonDefaults.buttonColors(
@@ -375,23 +375,23 @@ fun MatchCard(
                 }
                 Button(
                     onClick = {
-
-                        if (swipeable && !isAnimatingOut) {
-                            isAnimatingOut = true
+                        if (swipeable && !buttonActionInProgress) {
+                            buttonActionInProgress = true
                             scope.launch {
-                            iconVisibleForType = "right"
-                            iconOffsetX.snapTo(0f)
-                            iconScale.snapTo(0f)
+                                showAnimatedIcon = true
+                                iconScale.snapTo(0f)
+                                iconScale.animateTo(1f, tween(300))
 
-                            iconScale.animateTo(1f, tween(300))
-                            delay(400)
-                            viewModel.likeRoommates()
-                            Log.d("TAG", "MatchCard-viewModel.likeRoommates() called")
+                                delay(400)
 
-                            iconScale.animateTo(0f, tween(200))
-                            iconVisibleForType = null
+                                viewModel.likeRoommates()
+
+                                iconScale.animateTo(0f, tween(200))
+                                showAnimatedIcon = false
+                                buttonActionInProgress = false
+                            }
                         }
-                    } },
+                     },
                     modifier = Modifier.height(50.dp).weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Primary,
@@ -409,27 +409,34 @@ fun MatchCard(
                 }
             }
         }
+        if (showAnimatedIcon && iconScale.value > 0f) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_like),
+                contentDescription = "Like action",
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .scale(iconScale.value)
+                    .size(120.dp)
+            )
+        }
 
-        if (iconVisibleForType != null || swipeDirection != null) {
-            val direction = iconVisibleForType ?: swipeDirection
-            val icon = when (direction) {
+        val dragIconType = if (swipeDirection != null && !showAnimatedIcon) swipeDirection else null
+        if (dragIconType != null) {
+            val iconRes = when (dragIconType) {
                 "right" -> R.drawable.ic_like
                 "left" -> R.drawable.ic_dislike
                 else -> null
             }
-            if (icon != null) {
+            iconRes?.let {
                 Icon(
-                    painter = painterResource(id = icon),
+                    painter = painterResource(id = it),
                     contentDescription = null,
                     tint = Color.Unspecified,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset {
-                            if (isSwipeAction || iconVisibleForType != null)
-                                IntOffset(iconOffsetX.value.roundToInt(), 0)
-                            else IntOffset(0, 0)
-                        }
-                        .size((iconScale.value * 120).dp)
+                        .offset { IntOffset(iconOffsetX.value.roundToInt(), 0) }
+                        .size((abs(offsetX.value / 300f).coerceIn(0f,1f) * 120).dp)
                 )
             }
         }

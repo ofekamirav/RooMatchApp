@@ -16,8 +16,9 @@ class LikeApiServiceImplementation(
     private val client: HttpClient,
     private val baseUrl: String
 ): LikeApiService {
+
     override suspend fun fullLike(match: Match): Boolean {
-        Log.d("TAG","LikeApiServiceImplementation- fullLike called")
+        Log.d("TAG", "LikeApiServiceImplementation - fullLike called")
         val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.post("$baseUrl/likes") {
             headers {
@@ -26,16 +27,18 @@ class LikeApiServiceImplementation(
             contentType(ContentType.Application.Json)
             setBody(match)
         }
-        if(response.status.value == 200){
-            Log.d("TAG","LikeApiServiceImplementation- fullLike success")
-            return true
+
+        return if (response.status.value in 200..299) {
+            Log.d("TAG", "LikeApiServiceImplementation - fullLike success with status ${response.status}")
+            true
+        } else {
+            Log.d("TAG", "LikeApiServiceImplementation - fullLike failed with status ${response.status}")
+            false
         }
-        Log.d("TAG","LikeApiServiceImplementation- fullLike failed")
-        return false
     }
 
     override suspend fun dislike(match: Match): Boolean {
-        Log.d("TAG","LikeApiServiceImplementation- dislike called")
+        Log.d("TAG", "LikeApiServiceImplementation - dislike called")
         val token = AppDependencies.tokenAuthenticator.getValidToken()
         val response = client.post("$baseUrl/dislike") {
             headers {
@@ -44,29 +47,31 @@ class LikeApiServiceImplementation(
             contentType(ContentType.Application.Json)
             setBody(match)
         }
-        if(response.status.value == 200){
-            Log.d("TAG","LikeApiServiceImplementation- dislike success")
-            return true
+
+        return if (response.status.value in 200..299) {
+            Log.d("TAG", "LikeApiServiceImplementation - dislike success with status ${response.status}")
+            true
+        } else {
+            Log.d("TAG", "LikeApiServiceImplementation - dislike failed with status ${response.status}")
+            false
         }
-        Log.d("TAG","LikeApiServiceImplementation- dislike failed")
-        return false
     }
 
-    //Get all matches that specific roommate has liked
     override suspend fun getRoommateMatches(seekerId: String): List<Match>? {
-        Log.d("TAG","MatchApiService- getRoommateMatches called")
+        Log.d("TAG", "LikeApiServiceImplementation - getRoommateMatches called")
         val token = AppDependencies.tokenAuthenticator.getValidToken()
-        val response = client.get("$baseUrl/likes/$seekerId"){
+        val response = client.get("$baseUrl/likes/$seekerId") {
             headers {
                 append("Authorization", "Bearer $token")
             }
         }
-        if(response.status.value == 200){
-            Log.d("TAG","MatchApiService- getRoommateMatches success")
-            return response.body()
-        }else{
-            Log.d("TAG","MatchApiService- getRoommateMatches failed")
-            return null
+
+        return if (response.status.value in 200..299) {
+            Log.d("TAG", "LikeApiServiceImplementation - getRoommateMatches success with status ${response.status}")
+            response.body()
+        } else {
+            Log.d("TAG", "LikeApiServiceImplementation - getRoommateMatches failed with status ${response.status}")
+            null
         }
     }
 }

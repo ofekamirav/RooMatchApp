@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import com.example.roomatchapp.utils.toMatch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
@@ -243,8 +244,8 @@ class DiscoverViewModel(
             ?: matchBuffer.firstOrNull()
             ?: return
         val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
-        onSwiped()
         viewModelScope.launch {
+            onSwiped()
             val response = matchRepository.likeRoommates(match)
             if (response) {
                 Log.d("TAG", "DiscoverViewModel-likeRoommates success")
@@ -259,21 +260,18 @@ class DiscoverViewModel(
     fun likeProperty() {
         val currentCardId = _cardDetails.value?.id ?: return
         val suggestedMatch = matchBuffer.firstOrNull { it.matchId == currentCardId }
-            ?: matchBuffer.firstOrNull()
             ?: return
         val match = suggestedMatch.toMatch(seekerId, suggestedMatch.propertyMatchScore)
-        onSwiped()
-        viewModelScope.launch {
-            val response = matchRepository.likeProperty(match)
-            if (response) {
-                Log.d("TAG", "DiscoverViewModel-likeProperty success")
-            } else {
-                retryQueue.add(SwipeAction.LikeProperty(match))
-                Log.d("TAG", "DiscoverViewModel-likeProperty failed")
-            }
 
+        viewModelScope.launch {
+            onSwiped()
+            val response = matchRepository.likeProperty(match)
+            if (!response) {
+                retryQueue.add(SwipeAction.LikeProperty(match))
+            }
         }
     }
+
 
     fun fullLike() {
         val currentCardId = _cardDetails.value?.id ?: return

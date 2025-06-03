@@ -3,6 +3,7 @@ package com.example.roomatchapp.presentation.screens.owner.properties
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -94,15 +95,23 @@ fun PropertiesScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     if (properties.isEmpty()) {
-                        Text(
-                            text = "No properties available",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Secondary,
-                        )
-                        Text(
-                            "Add a property and publish it so new renters can find it!",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "No properties available",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Secondary,
+                            )
+                            Text(
+                                "Add a property and publish it so new renters can find it!",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                     else{
                         LazyColumn(
@@ -195,7 +204,7 @@ fun PropertyRow(
                     },
                     modifier = Modifier.size(64.dp).clip(CircleShape),
                     contentDescription = "Property Image",
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
