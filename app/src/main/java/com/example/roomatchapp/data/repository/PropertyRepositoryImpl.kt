@@ -57,7 +57,7 @@ class PropertyRepositoryImpl(
             (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
         }
 
-        if (forceRefresh || isCacheFresh) {
+        if (forceRefresh || !isCacheFresh) {
             val freshProperties = apiService.getOwnerProperties(ownerId)
 
             freshProperties?.let { properties ->
@@ -82,14 +82,13 @@ class PropertyRepositoryImpl(
                 cacheDao.deleteByEntityIds(idsToDelete)
             }
 
-
             return freshProperties
+        } else{
+            //Cache is fresh, return cached properties
+            val cachedProperties = propertiesWithCache.filter { (property, _) -> property.ownerId == ownerId  }
+                .map {it.first}
+            return if (cachedProperties.isNotEmpty()) cachedProperties else null
         }
-
-        return propertiesWithCache
-            .filter { (property, _) -> property.ownerId == ownerId }
-            .map { it.first }
-            .ifEmpty { null }
     }
 
     override suspend fun addProperty(property: PropertyDto): Boolean? {

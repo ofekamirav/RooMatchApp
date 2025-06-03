@@ -67,20 +67,20 @@ fun PropertiesScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    SwipeRefresh(
-        state = rememberSwipeRefreshState(isRefreshing),
-        onRefresh = { viewModel.refreshContent() }
+    LoadingAnimation(
+        isLoading = isLoading,
+        animationResId = R.raw.loading_animation
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Background)
-                .padding(2.dp),
-            contentAlignment = Alignment.TopCenter
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(isRefreshing),
+            onRefresh = { viewModel.refreshContent() }
         ) {
-            LoadingAnimation(
-                isLoading = isLoading,
-                animationResId = R.raw.loading_animation
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Background)
+                    .padding(4.dp),
+                contentAlignment = Alignment.TopCenter
             ) {
                 Column(
                     modifier = Modifier
@@ -99,30 +99,25 @@ fun PropertiesScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
                             Text(
                                 text = "No properties available",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Secondary,
                             )
-                            Text(
-                                "Add a property and publish it so new renters can find it!",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
                         }
-                    }
-                    else{
+
+                    } else {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(bottom = 16.dp)
                         ) {
                             items(properties) { property ->
                                 PropertyRow(
                                     property = property,
-                                    onPropertyClick = { propertyId->
+                                    onPropertyClick = { propertyId ->
                                         onPropertyClick(propertyId)
                                     },
                                     viewModel = viewModel
@@ -130,6 +125,7 @@ fun PropertiesScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
 
                 }

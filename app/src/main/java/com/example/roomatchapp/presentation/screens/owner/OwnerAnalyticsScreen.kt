@@ -3,9 +3,11 @@ package com.example.roomatchapp.presentation.screens.owner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,71 +34,132 @@ import java.util.Locale
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.theme.Secondary
 
-
 @Composable
 fun OwnerAnalyticsScreen(viewModel: OwnerAnalyticsViewModel) {
 
-    val analyticsResponse = viewModel.analyticsResponse.collectAsState()
-    val message = viewModel.message.collectAsState()
-    var isLoading = remember { mutableStateOf(true) }
+    val analyticsState = viewModel.analyticsResponse.collectAsState()
+    val messageState = viewModel.message.collectAsState()
+    val isLoadingState = remember { mutableStateOf(true) }
+
+    LaunchedEffect(analyticsState.value, messageState.value) {
+        if (analyticsState.value.analytics != null || messageState.value.isNotEmpty()) {
+            isLoadingState.value = false
+        } else {
+            isLoadingState.value = true
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-    ){
+    ) {
         LoadingAnimation(
-            isLoading = isLoading.value,
+            isLoading = isLoadingState.value,
             animationResId = R.raw.loading_animation
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Background)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Properties Analytics",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Primary,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                when {
-                    analyticsResponse.value.analytics == null && message.value.isEmpty() -> {
-                        isLoading.value = true
+            val currentAnalytics = analyticsState.value.analytics
+            val currentMessage = messageState.value
+
+            if (currentAnalytics != null) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Background),
+                    contentPadding = PaddingValues(all = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "Properties Analytics",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Primary,
+                        )
                     }
-                    analyticsResponse.value.analytics == null && message.value.isNotEmpty() -> {
-                        isLoading.value = false
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
+
+                    item {
+                        OverviewCard(analyticsResponse = currentAnalytics)
+                    }
+
+                    val matchesList = currentAnalytics.matchesPerProperty
+                    if (matchesList.isEmpty()) {
+                        item {
                             Text(
-                                text = message.value,
+                                "No property match data available.",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Secondary,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                color = Secondary
                             )
                         }
+                    } else {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Property",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Primary
+                                )
+                                Text(
+                                    text = "Matches",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Primary
+                                )
+                            }
+                        }
+
+                        val maxMatchCount = matchesList.maxOfOrNull { it.matchCount } ?: 1
+                        items(
+                            items = matchesList,
+                            key = { it.title }
+                        ) { propertyMatch ->
+                            PropertyMatchRow(propertyMatch, maxMatchCount)
+                        }
                     }
-                    else -> {
-                        isLoading.value = false
-                        val analytics = analyticsResponse.value.analytics
-                        OverviewCard(analyticsResponse = analytics)
-                        Spacer(modifier = Modifier.height(24.dp))
-                        MatchesPerPropertySection(analytics?.matchesPerProperty)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        PropertyScoreBreakdownSection(analytics?.matchesPerProperty)
+
+                    item {
+                        PropertyScoreBreakdownSection(matchesList)
                     }
+                }
+            } else if (currentMessage.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = currentMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Secondary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No analytics data available at the moment.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
     }
-
-
 }
 
 @Composable
@@ -107,7 +170,6 @@ fun OverviewCard(analyticsResponse: AnalyticsResponse?) {
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround,
@@ -118,37 +180,33 @@ fun OverviewCard(analyticsResponse: AnalyticsResponse?) {
                     value = analyticsResponse?.totalMatches.toString(),
                     modifier = Modifier.weight(1f)
                 )
-
                 Divider(
                     modifier = Modifier
                         .height(50.dp)
                         .width(1.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 )
-
                 OverviewItem(
                     title = "Roommates",
                     value = analyticsResponse?.uniqueRoommates.toString(),
                     modifier = Modifier.weight(1f)
                 )
-
                 Divider(
                     modifier = Modifier
                         .height(50.dp)
                         .width(1.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 )
-
                 OverviewItem(
                     title = "Avg. Score",
-                    value = String.format(Locale.getDefault(), "%.2f", analyticsResponse?.averageMatchScore),
+                    value = String.format(Locale.getDefault(), "%.2f", analyticsResponse?.averageMatchScore ?: 0.0),
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 }
+
 @Composable
 fun OverviewItem(title: String, value: String, modifier: Modifier = Modifier) {
     Column(
@@ -172,45 +230,6 @@ fun OverviewItem(title: String, value: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MatchesPerPropertySection(matchesList: List<PropertyMatchAnalytics>?) {
-    val maxMatchCount = matchesList?.maxOfOrNull { it.matchCount } ?: 1
-
-    if (matchesList == null || matchesList.isEmpty()) {
-        Text("No property match data available.")
-        return
-    }
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Property",
-                style = MaterialTheme.typography.titleSmall,
-                color = Primary
-            )
-            Text(
-                text = "Matches",
-                style = MaterialTheme.typography.titleSmall,
-                color = Primary
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(matchesList.size) { propertyMatch ->
-                PropertyMatchRow(matchesList[propertyMatch], maxMatchCount)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
 fun PropertyMatchRow(propertyMatch: PropertyMatchAnalytics, maxMatchCount: Int) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -222,8 +241,6 @@ fun PropertyMatchRow(propertyMatch: PropertyMatchAnalytics, maxMatchCount: Int) 
             modifier = Modifier.weight(2f)
         )
         Spacer(modifier = Modifier.width(8.dp))
-
-        // Bar representation
         Box(
             modifier = Modifier
                 .weight(3f)
@@ -242,9 +259,7 @@ fun PropertyMatchRow(propertyMatch: PropertyMatchAnalytics, maxMatchCount: Int) 
                     .background(Primary, RoundedCornerShape(4.dp))
             )
         }
-
         Spacer(modifier = Modifier.width(8.dp))
-
         Text(
             text = propertyMatch.matchCount.toString(),
             style = MaterialTheme.typography.labelSmall,
@@ -253,53 +268,60 @@ fun PropertyMatchRow(propertyMatch: PropertyMatchAnalytics, maxMatchCount: Int) 
         )
     }
 }
+
 @Composable
 fun PropertyScoreBreakdownSection(matchesPerProperty: List<PropertyMatchAnalytics>?) {
-    if (matchesPerProperty == null || matchesPerProperty.isEmpty()) return
+    if (matchesPerProperty.isNullOrEmpty()) {
+        return
+    }
 
     val excellentThreshold = 0.85
     val goodThresholdMin = 0.70
 
-    val excellent = matchesPerProperty.count { it.averageMatchScore >= excellentThreshold }
-    val good = matchesPerProperty.count { it.averageMatchScore in goodThresholdMin..<excellentThreshold }
-    val needsAttention = matchesPerProperty.count { it.averageMatchScore < goodThresholdMin }
+    val excellent = matchesPerProperty.count { (it.averageMatchScore ?: 0.0) >= excellentThreshold }
+    val good = matchesPerProperty.count { (it.averageMatchScore ?: 0.0) in goodThresholdMin..<excellentThreshold }
+    val needsAttention = matchesPerProperty.count { (it.averageMatchScore ?: 0.0) < goodThresholdMin }
 
     val pieData = listOfNotNull(
         if (excellent > 0) PieChartData.Slice(value = excellent.toFloat(), color = Primary) else null,
         if (good > 0) PieChartData.Slice(value = good.toFloat(), color = Color(0xFF7DDADB)) else null,
         if (needsAttention > 0) PieChartData.Slice(value = needsAttention.toFloat(), color = Color(0xFFF45B69)) else null
-    )
+    ).ifEmpty { null }
 
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                "Property Scores Breakdown",
-                style = MaterialTheme.typography.titleSmall,
-                color = Primary,
-                modifier = Modifier.align(Alignment.Start)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            "Property Scores Breakdown",
+            style = MaterialTheme.typography.titleSmall,
+            color = Primary,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (pieData != null) {
+            PieChart(
+                pieChartData = PieChartData(pieData),
+                modifier = Modifier
+                    .size(180.dp)
+                    .padding(vertical = 16.dp),
+                animation = simpleChartAnimation(),
+                sliceDrawer = SimpleSliceDrawer(100f)
             )
-
-            if (pieData.isNotEmpty()) {
-                PieChart(
-                    pieChartData = PieChartData(pieData),
-                    modifier = Modifier
-                        .size(180.dp)
-                        .padding(vertical = 16.dp),
-                    animation = simpleChartAnimation(),
-                    sliceDrawer = SimpleSliceDrawer(100f)
-                )
-            } else {
-                Text("You do not have any property matches")
-            }
-
-            ScoreBreakdownItem("Excellent Properties (>85%)", excellent, Primary)
-            ScoreBreakdownItem("Good Properties (70-85%)", good, Color(0xFF7DDADB))
-            ScoreBreakdownItem("Needs Attention (<70%)", needsAttention, Color(0xFFF45B69))
+        } else {
+            Text(
+                "You do not have any property matches to display scores for.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
         }
-    }
 
+        ScoreBreakdownItem("Excellent Properties (>85%)", excellent, Primary)
+        ScoreBreakdownItem("Good Properties (70-85%)", good, Color(0xFF7DDADB))
+        ScoreBreakdownItem("Needs Attention (<70%)", needsAttention, Color(0xFFF45B69))
+    }
+}
 
 @Composable
 fun ScoreBreakdownItem(label: String, count: Int, colorIndicator: Color? = null) {
@@ -315,7 +337,6 @@ fun ScoreBreakdownItem(label: String, count: Int, colorIndicator: Color? = null)
                 .background(colorIndicator ?: Color.Gray, shape = RoundedCornerShape(2.dp))
         )
         Spacer(modifier = Modifier.width(8.dp))
-
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
@@ -323,7 +344,6 @@ fun ScoreBreakdownItem(label: String, count: Int, colorIndicator: Color? = null)
             fontWeight = FontWeight.Normal,
             modifier = Modifier.weight(1f)
         )
-
         Text(
             text = count.toString(),
             style = MaterialTheme.typography.bodyMedium,
@@ -332,13 +352,8 @@ fun ScoreBreakdownItem(label: String, count: Int, colorIndicator: Color? = null)
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun AnalyticsScreenPreview() {
-
-    //OwnerAnalyticsScreen(analyticsResponse = mockData)
+    Text("Preview for OwnerAnalyticsScreen - ViewModel needed")
 }
-
-
-
