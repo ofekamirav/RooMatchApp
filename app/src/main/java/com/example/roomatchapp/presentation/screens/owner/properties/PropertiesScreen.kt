@@ -94,7 +94,7 @@ fun PropertiesScreen(
                         color = Primary,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    if (properties.isEmpty()) {
+                    if (!isLoading && properties.isEmpty()) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()

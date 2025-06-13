@@ -97,7 +97,8 @@ fun OwnerMainScreen(
                     val viewModel = remember(ownerId) {
                         OwnerAnalyticsViewModel(
                             userRepository = AppDependencies.userRepository,
-                            ownerId = ownerId
+                            ownerId = ownerId,
+                            userSessionManager = AppDependencies.sessionManager
                         )
                     }
                     OwnerAnalyticsScreen(viewModel = viewModel)
@@ -145,6 +146,7 @@ fun OwnerMainScreen(
                             propertyRepository = AppDependencies.propertyRepository,
                             userRepository = AppDependencies.userRepository,
                             propertyId = it.arguments?.getString("propertyId").toString(),
+                            userSessionManager = AppDependencies.sessionManager
                         )
                     }
                     PropertyPreviewScreen(

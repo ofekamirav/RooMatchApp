@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 data class DiscoverState(
-    //val matches: List<Match> = emptyList(),
     val isLoading: Boolean = false,
     val endOfMatches: Boolean = false,
     val errorMessage: String? = null
@@ -90,11 +89,18 @@ class DiscoverViewModel(
             if (!isInitialized) {
                 isInitialized = true
 
-                val cached = suggestedMatchDao.getAll()
-                if (cached.isEmpty() || userSessionManager.shouldRefetchMatches()) {
+                val prefsUpdated = userSessionManager.consumeUpdatedPreferencesFlag()
+
+                if (prefsUpdated) {
                     suggestedMatchDao.clearAll()
+                }
+
+                val cached = suggestedMatchDao.getAll()
+
+                if (cached.isEmpty()) {
                     matchRepository.getNextMatches(seekerId, limit = 5)
                 }
+
                 preloadMatches()
                 processRetryQueue()
             }
@@ -107,38 +113,36 @@ class DiscoverViewModel(
             if (isRequestInProgress) return@launch
             isRequestInProgress = true
 
-            if (_cardDetails.value == null && !_showInitialLoading.value) {
-                _state.value = _state.value.copy(isLoading = true, errorMessage = null)
-            }
-
             try {
-                val stored = suggestedMatchDao.getAll()
-                matchBuffer.clear()
-                matchBuffer.addAll(stored)
+                if (_cardDetails.value == null && !_showInitialLoading.value) {
+                    _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+                }
 
-                if (matchBuffer.isEmpty()) {
-                    try {
-                        val newMatches = matchRepository.getNextMatches(seekerId, limit = 5)
-                        if (newMatches.isNotEmpty()) {
-                            matchBuffer.addAll(newMatches)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("TAG", "Error fetching matches: ${e.message}", e)
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            errorMessage = "Cannot connect to server. Please check your connection and try again."
-                        )
-                    }
+                val stored = suggestedMatchDao.getAll()
+                val existingIds = stored.map { it.matchId }.toSet()
+
+                matchBuffer.retainAll { it.matchId in existingIds }
+
+                val newFromRoom = stored.filter { it.matchId !in matchBuffer.map { b -> b.matchId } }
+                matchBuffer.addAll(newFromRoom)
+
+                if (matchBuffer.size <= preloadThreshold) {
+                    val newMatches = matchRepository.getNextMatches(seekerId, limit = 5)
+                    val uniqueMatches = newMatches.filter { it.matchId !in matchBuffer.map { b -> b.matchId } }
+                    matchBuffer.addAll(uniqueMatches)
                 }
 
                 _state.value = _state.value.copy(
                     endOfMatches = matchBuffer.isEmpty(),
                     isLoading = false
                 )
+
                 if (matchBuffer.isNotEmpty()) {
                     _showInitialLoading.value = false
                 }
+
                 loadNextCards()
+
             } catch (e: Exception) {
                 Log.e("TAG", "Error in preloadMatches: ${e.message}", e)
                 _state.value = _state.value.copy(
@@ -151,6 +155,7 @@ class DiscoverViewModel(
             }
         }
     }
+
 
     private fun processRetryQueue() {
         viewModelScope.launch {
@@ -184,6 +189,10 @@ class DiscoverViewModel(
     private fun loadNextCards() {
         matchBuffer.getOrNull(0)?.let { loadCardDetailsFor(it, isCurrent = true) }
         matchBuffer.getOrNull(1)?.let { loadCardDetailsFor(it, isCurrent = false) }
+
+        if (matchBuffer.size <= preloadThreshold && !isRequestInProgress) {
+            preloadMatches()
+        }
     }
 
     fun onSwiped() {

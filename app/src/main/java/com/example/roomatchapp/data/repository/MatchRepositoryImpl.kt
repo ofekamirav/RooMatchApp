@@ -27,28 +27,24 @@ class MatchRepositoryImpl(
 ) : MatchRepository {
 
     override suspend fun getNextMatches(seekerId: String, limit: Int): List<SuggestedMatchEntity> {
-        //trying to get the matches from the ROOM first and if it's not updated, get it from the API
-        if (userSessionManager.shouldRefetchMatches() || suggestedMatchDao.getAll().isEmpty()) {
-            suggestedMatchDao.clearAll()
-            val matches = apiService.getNextMatches(seekerId, limit)
-            val matchesEntities = matches.map { match ->
-                SuggestedMatchEntity(
-                    matchId = match.id,
-                    propertyId = match.propertyId,
-                    propertyAddress = match.propertyAddress,
-                    propertyPhoto = match.propertyPhoto,
-                    propertyTitle = match.propertyTitle,
-                    propertyPrice = match.propertyPrice,
-                    roommateMatches = match.roommateMatches,
-                    propertyMatchScore = match.propertyMatchScore
-                )
-            }
-            suggestedMatchDao.insertAll(matchesEntities)
-            userSessionManager.updateLastFetchTimestamp()
-            return matchesEntities
+        val matches = apiService.getNextMatches(seekerId, limit)
+        val matchesEntities = matches.map { match ->
+            SuggestedMatchEntity(
+                matchId = match.id,
+                propertyId = match.propertyId,
+                propertyAddress = match.propertyAddress,
+                propertyPhoto = match.propertyPhoto,
+                propertyTitle = match.propertyTitle,
+                propertyPrice = match.propertyPrice,
+                roommateMatches = match.roommateMatches,
+                propertyMatchScore = match.propertyMatchScore
+            )
         }
-        return suggestedMatchDao.getAll()
+        suggestedMatchDao.insertAll(matchesEntities)
+        userSessionManager.updateLastMatchFetchTimestamp()
+        return matchesEntities
     }
+
 
     override suspend fun likeRoommates(match: Match): Boolean {
         return apiService.likeRoommates(match)
@@ -58,6 +54,11 @@ class MatchRepositoryImpl(
         return apiService.likeProperty(match)
     }
 
+    override suspend fun clearLocalSuggestedMatches() {
+        Log.d("MatchRepository", "Clearing all local suggested matches.")
+        suggestedMatchDao.clearAll()
+        userSessionManager.forceRefetchMatchesOnNextLoad()
+    }
     override suspend fun getRoommate(roommateId: String): Roommate? {
         //trying to get the roommate from the ROOM first and if it's not there, get it from the API
         val cacheEntry = cacheDao.getByIdAndType(roommateId, CacheType.ROOMMATE)

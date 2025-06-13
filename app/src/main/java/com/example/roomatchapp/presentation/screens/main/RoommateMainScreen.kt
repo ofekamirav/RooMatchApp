@@ -132,7 +132,9 @@ fun RoommateMainScreen(
                     val viewModel = remember(seekerId) {
                         EditProfileViewModel(
                             userRepository = AppDependencies.userRepository,
-                            seekerId = seekerId
+                            seekerId = seekerId,
+                            matchRepository = AppDependencies.matchRepository,
+                            userSessionManager = AppDependencies.sessionManager
                         )
                     }
                     EditProfileScreen(
@@ -157,7 +159,8 @@ fun RoommateMainScreen(
                     PropertyPreviewViewModel(
                         propertyId = propertyId,
                         propertyRepository = AppDependencies.propertyRepository,
-                        userRepository = AppDependencies.userRepository
+                        userRepository = AppDependencies.userRepository,
+                        userSessionManager = AppDependencies.sessionManager
                     )
                 }
                 PropertyPreviewScreen(

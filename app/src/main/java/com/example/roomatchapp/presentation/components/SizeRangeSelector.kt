@@ -23,6 +23,7 @@ fun SizeRangeSelector(
     color: Color = Color.Black ,
     enabled: Boolean = true
 ) {
+    val step = 10
     Column {
         Text("Size Range: ${sizeRange.start.toInt()}m² - ${sizeRange.endInclusive.toInt()}m²",
             style = MaterialTheme.typography.titleSmall,
@@ -30,9 +31,13 @@ fun SizeRangeSelector(
         )
         RangeSlider(
             value = sizeRange,
-            onValueChange = onValueChange,
+            onValueChange = { newRange ->
+                val roundedStart = ((newRange.start / step).toInt() * step).toFloat()
+                val roundedEnd = ((newRange.endInclusive / step).toInt() * step).toFloat()
+                onValueChange(roundedStart..roundedEnd)
+            },
             valueRange = 10f..200f,
-            steps = 18,
+            steps = ((200 - 10) / step) - 1,
             enabled = enabled,
             colors = SliderDefaults.colors(
                 thumbColor = Primary, 

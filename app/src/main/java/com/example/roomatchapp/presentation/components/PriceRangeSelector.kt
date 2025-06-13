@@ -29,9 +29,14 @@ fun PriceRangeSelector(
         )
         RangeSlider(
             value = priceRange,
-            onValueChange = onValueChange,
+            onValueChange = { newRange ->
+                val step = 500
+                val roundedStart = ((newRange.start / step).toInt() * step).toFloat()
+                val roundedEnd = ((newRange.endInclusive / step).toInt() * step).toFloat()
+                onValueChange(roundedStart..roundedEnd)
+            },
             valueRange = 2000f..12000f,
-            steps = 10,
+            steps = ((12000 - 2000) / 500) - 1,
             colors = SliderDefaults.colors(
                 thumbColor = Primary,
                 disabledThumbColor = Primary.copy(alpha = 0.3f),
