@@ -27,6 +27,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -299,8 +300,13 @@ fun MatchCard(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(cardDetails.title, fontWeight = FontWeight.Normal)
-                Text("${cardDetails.price} ₪", fontWeight = FontWeight.Bold)
+                Text(
+                    text = cardDetails.title,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text("${cardDetails.price} ₪", fontWeight = FontWeight.Bold, maxLines = 1)
             }
             Spacer(modifier = Modifier.height(12.dp))
 

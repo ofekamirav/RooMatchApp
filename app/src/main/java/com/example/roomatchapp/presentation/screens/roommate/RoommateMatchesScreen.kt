@@ -83,7 +83,7 @@ fun RoommateMatchesScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        if (matches.isEmpty()) {
+                        if (!loading && matches.isEmpty()) {
                             item {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,

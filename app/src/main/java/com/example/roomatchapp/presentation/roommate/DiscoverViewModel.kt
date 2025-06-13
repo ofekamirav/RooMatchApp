@@ -184,6 +184,10 @@ class DiscoverViewModel(
     private fun loadNextCards() {
         matchBuffer.getOrNull(0)?.let { loadCardDetailsFor(it, isCurrent = true) }
         matchBuffer.getOrNull(1)?.let { loadCardDetailsFor(it, isCurrent = false) }
+
+        if (matchBuffer.size <= preloadThreshold && !isRequestInProgress) {
+            preloadMatches()
+        }
     }
 
     fun onSwiped() {
