@@ -6,7 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.dao.SuggestedMatchDao
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.*
+import com.example.roomatchapp.domain.repository.MatchRepository
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +39,9 @@ data class EditProfileUiState(
 
 class EditProfileViewModel(
     private val userRepository: UserRepository,
-    private val seekerId: String
+    private val seekerId: String,
+    private val matchRepository: MatchRepository,
+    private val userSessionManager: UserSessionManager
 ) : ViewModel() {
 
     private val _roommate = MutableStateFlow<Roommate?>(null)
@@ -118,6 +123,15 @@ class EditProfileViewModel(
         val current = _roommate.value ?: return
         _isSaving.value = true
 
+        val preferencesChanged = current.lookingForRoomies != lookingForRoomies ||
+                current.lookingForCondo != lookingForCondo ||
+                current.preferredRadiusKm != preferredRadiusKm ||
+                current.roommatesNumber != roommatesNumber ||
+                current.minPrice != minPrice ||
+                current.maxPrice != maxPrice ||
+                current.minPropertySize != minPropertySize ||
+                current.maxPropertySize != maxPropertySize
+
         viewModelScope.launch {
             try {
                 val updatedRoommate = current.copy(
@@ -165,6 +179,11 @@ class EditProfileViewModel(
                         minPropertySize = updatedRoommate.minPropertySize,
                         maxPropertySize = updatedRoommate.maxPropertySize
                     )
+                    if (preferencesChanged) {
+                        Log.d("TAG", "EditProfileViewModel-Updating suggested matches because preferences changed")
+                        matchRepository.clearLocalSuggestedMatches()
+                        userSessionManager.setUpdatedPreferencesFlag(true)
+                    }
                     Log.d("TAG", "EditProfileViewModel-Profile updated successfully.")
                 } else {
                     Log.e("TAG", "EditProfileViewModel-Failed to update profile: API returned false")

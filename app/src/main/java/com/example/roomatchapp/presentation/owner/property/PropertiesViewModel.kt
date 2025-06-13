@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.*
 import com.example.roomatchapp.domain.repository.PropertyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class PropertiesViewModel(
     private val propertyRepository: PropertyRepository,
-    private val ownerId: String
+    private val ownerId: String,
 ) : ViewModel() {
 
     private val _properties = MutableStateFlow(emptyList<Property>())

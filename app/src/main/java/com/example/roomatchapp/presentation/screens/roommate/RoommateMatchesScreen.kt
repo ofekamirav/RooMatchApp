@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.base.EmptyCallback
@@ -39,6 +40,7 @@ import com.example.roomatchapp.presentation.roommate.MatchesViewModel
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.presentation.theme.Primary
+import com.example.roomatchapp.presentation.theme.RooMatchAppTheme
 import com.example.roomatchapp.presentation.theme.Third
 import com.example.roomatchapp.presentation.theme.cardBackground
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -67,7 +69,6 @@ fun RoommateMatchesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Background)
-                    .padding(2.dp),
             ) {
                 Column(
                     modifier = Modifier
@@ -147,13 +148,10 @@ fun MatchRow(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.weight(1f)) {
-                Image(
-                    painter = if (!match.apartmentImage.isNullOrEmpty()) {
-                        rememberAsyncImagePainter(match.apartmentImage)
-                    } else {
-                        painterResource(id = R.drawable.ic_location)
-                    },
+                AsyncImage(
+                    model = match.apartmentImage,
                     contentDescription = "Apartment Image",
+                    placeholder = painterResource(id = R.drawable.ic_location),
                     modifier = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
@@ -184,13 +182,13 @@ fun MatchRow(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         match.roommateNames.zip(match.roommatePictures) { name, picture ->
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                val painter = if (!picture.isNullOrEmpty()) {
-                                    rememberAsyncImagePainter(picture)
+                                val painter = if (picture.isNotEmpty()) {
+                                    picture
                                 } else {
-                                    painterResource(R.drawable.default_icon)
+                                    R.drawable.avatar
                                 }
-                                Image(
-                                    painter = painter,
+                                AsyncImage(
+                                    model = painter,
                                     contentDescription = "Roommate Picture",
                                     modifier = Modifier
                                         .size(32.dp)
@@ -235,5 +233,4 @@ fun MatchRow(
         }
     }
 }
-
 

@@ -3,6 +3,7 @@ package com.example.roomatchapp.presentation.owner.property
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.PropertyOwner
 import com.example.roomatchapp.data.model.PropertyType
@@ -34,6 +35,7 @@ class PropertyPreviewViewModel(
     private val propertyRepository: PropertyRepository,
     private val userRepository: UserRepository,
     private val propertyId: String,
+    private val userSessionManager: UserSessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PropertyPreviewUiState())
@@ -115,6 +117,7 @@ class PropertyPreviewViewModel(
                     property = null
                 )
                 Log.d("PropertyPreviewVM", "Property deleted successfully")
+                userSessionManager.setUpdatedPreferencesFlag(true)
             } else {
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "Property not found",
