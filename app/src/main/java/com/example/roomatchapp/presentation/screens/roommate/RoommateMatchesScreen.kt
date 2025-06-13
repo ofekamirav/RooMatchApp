@@ -1,5 +1,6 @@
 package com.example.roomatchapp.presentation.screens.roommate
 
+import CustomAlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
@@ -18,12 +20,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
@@ -104,7 +109,12 @@ fun RoommateMatchesScreen(
                             }
                         } else {
                             items(matches) { match ->
-                                MatchRow(match, onPropertyClick, onRoommateClick)
+                                MatchRow(
+                                    match = match,
+                                    onPropertyClick = onPropertyClick,
+                                    onRoommateClick = onRoommateClick,
+                                    onDeleteClick = { viewModel.deleteMatch(match.matchId) }
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
@@ -119,11 +129,12 @@ fun RoommateMatchesScreen(
 fun MatchRow(
     match: MatchCardModel,
     onPropertyClick: StringCallback,
-    onRoommateClick: StringCallback
+    onRoommateClick: StringCallback,
+    onDeleteClick: () -> Unit
 ) {
+    val openDialog = remember { mutableStateOf(false) }
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
@@ -132,68 +143,97 @@ fun MatchRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Image(
-                painter = if (!match.apartmentImage.isNullOrEmpty()) {
-                    rememberAsyncImagePainter(match.apartmentImage)
-                } else {
-                    painterResource(id = R.drawable.ic_location)
-                },
-                contentDescription = "Apartment Image",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .clickable { onPropertyClick(match.propertyId) },
-                contentScale = ContentScale.Crop
-            )
+            Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.weight(1f)) {
+                Image(
+                    painter = if (!match.apartmentImage.isNullOrEmpty()) {
+                        rememberAsyncImagePainter(match.apartmentImage)
+                    } else {
+                        painterResource(id = R.drawable.ic_location)
+                    },
+                    contentDescription = "Apartment Image",
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .clickable { onPropertyClick(match.propertyId) },
+                    contentScale = ContentScale.Crop
+                )
 
-            Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = Primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = match.apartmentTitle ?: "Unknown address",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Location",
+                            tint = Primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = match.apartmentTitle ?: "Unknown address",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    match.roommateNames.zip(match.roommatePictures) { name, picture ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            val painter = if (!picture.isNullOrEmpty()) {
-                                rememberAsyncImagePainter(picture)
-                            } else {
-                                painterResource(R.drawable.default_icon)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        match.roommateNames.zip(match.roommatePictures) { name, picture ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                val painter = if (!picture.isNullOrEmpty()) {
+                                    rememberAsyncImagePainter(picture)
+                                } else {
+                                    painterResource(R.drawable.default_icon)
+                                }
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "Roommate Picture",
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .clickable {
+                                            val roommateId = match.roommateIds.getOrNull(match.roommateNames.indexOf(name))
+                                            roommateId?.let { onRoommateClick(it) }
+                                        },
+                                    contentScale = ContentScale.Crop
+                                )
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
+                                )
                             }
-                            Image(
-                                painter = painter,
-                                contentDescription = "Roommate Picture",
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .clickable { onRoommateClick(match.roommateIds[match.roommateNames.indexOf(name)]) },
-                                contentScale = ContentScale.Crop
-                            )
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = MaterialTheme.typography.labelSmall.fontSize
-                            )
                         }
                     }
                 }
             }
+
+            IconButton(onClick = { onDeleteClick() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_garbage),
+                    contentDescription = "Delete match",
+                    tint = Color.Unspecified                )
+            }
+            if (openDialog.value) {
+                if (openDialog.value) {
+                    CustomAlertDialog(
+                        title = "Delete Match?",
+                        message = "Are you sure you want to delete this match? This action cannot be undone.",
+                        onDismiss = { openDialog.value = false },
+                        onConfirm = {
+                            openDialog.value = false
+                            onDeleteClick()
+                        }
+                    )
+                }
+
+            }
         }
     }
 }
+
+

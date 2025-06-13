@@ -116,4 +116,19 @@ class MatchesViewModel(
             }
         }
     }
+    fun deleteMatch(matchId: String) {
+        viewModelScope.launch {
+            try {
+                val success = matchRepository.deleteMatch(matchId)
+                if (success) {
+                    _uiState.value = _uiState.value.copy(
+                        matches = _uiState.value.matches.filterNot { it.matchId == matchId }
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("MatchesViewModel", "Failed to delete match", e)
+            }
+        }
+    }
+
 }
