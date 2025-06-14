@@ -124,7 +124,6 @@ class PropertyPreviewViewModel(
                     isLoading = false
                 )
             }
-
             result
         } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(

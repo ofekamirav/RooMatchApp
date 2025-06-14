@@ -49,8 +49,10 @@ import com.cloudinary.api.exceptions.ApiException
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.base.EmptyCallback
+import com.example.roomatchapp.data.base.StringCallback
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PasswordTextField
+import com.example.roomatchapp.presentation.login.ForgotPasswordViewModel
 import com.example.roomatchapp.presentation.login.LoginViewModel
 import com.example.roomatchapp.presentation.register.RegistrationViewModel
 import com.example.roomatchapp.presentation.theme.Primary
@@ -64,7 +66,8 @@ fun LoginScreen(
     onForgotPasswordClick: EmptyCallback,
     onRegisterClick: EmptyCallback,
     loginViewModel: LoginViewModel,
-    registrationViewModel: RegistrationViewModel
+    registrationViewModel: RegistrationViewModel,
+    forgotPasswordViewModel: ForgotPasswordViewModel
 ){
     val state by loginViewModel.state.collectAsState()
     val isLoading = loginViewModel.isLoading
@@ -193,7 +196,10 @@ fun LoginScreen(
                             color = Primary,
                             modifier = Modifier
                                 .align(Alignment.End)
-                                .clickable { onForgotPasswordClick() }
+                                .clickable {
+                                    forgotPasswordViewModel.updateEmail(state.email)
+                                    onForgotPasswordClick()
+                                }
                         )
 
                         Spacer(Modifier.height(8.dp))

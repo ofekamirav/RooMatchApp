@@ -11,3 +11,5 @@ data class RefreshTokenResponse(
     val token: String,
     val refreshToken: String
 )
+@Serializable
+data class ServerMessageResponse(val message: String? = null, val error: String? = null)
