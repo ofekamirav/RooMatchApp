@@ -32,13 +32,15 @@ interface UserApiService {
 
     suspend fun sendResetToken(email: String, userType: String): Result<String>
 
-    suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String>
+    suspend fun resetPassword(email:String, otpCode: String, newPassword: String, userType: String): Result<String>
 
     suspend fun getOwnerAnalytics(ownerId: String): AnalyticsResponse?
 
     suspend fun updateRoommate(seekerId: String, roommate: Roommate): Boolean
 
     suspend fun updateOwner(ownerId: String, propertyOwner: PropertyOwner): Boolean
+
+    suspend fun checkEmailRegistered(email: String): Boolean
 
 
 }

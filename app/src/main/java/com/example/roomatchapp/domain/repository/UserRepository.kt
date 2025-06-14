@@ -34,6 +34,8 @@ interface UserRepository {
 
     suspend fun sendResetToken(email: String, userType: String): Result<String>
 
-    suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String>
+    suspend fun resetPassword(email:String, otpCode: String, newPassword: String, userType: String): Result<String>
+
+    suspend fun checkEmailRegistered(email: String): Boolean
 
 }

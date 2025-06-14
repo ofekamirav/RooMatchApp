@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.base.StringCallback
@@ -78,8 +79,7 @@ fun PropertiesScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Background)
-                    .padding(4.dp),
+                    .background(Background),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(
@@ -192,12 +192,9 @@ fun PropertyRow(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = if (property.photos.isNotEmpty()) {
-                        rememberAsyncImagePainter(property.photos[0])
-                    } else {
-                        painterResource(id = R.drawable.ic_location)
-                    },
+                AsyncImage(
+                    model = property.photos[0],
+                    placeholder = painterResource(id = R.drawable.ic_location),
                     modifier = Modifier.size(64.dp).clip(CircleShape),
                     contentDescription = "Property Image",
                     contentScale = ContentScale.Crop,

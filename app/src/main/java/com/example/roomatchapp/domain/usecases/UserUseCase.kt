@@ -54,7 +54,7 @@ class UserUseCase(private val userRepository: UserRepository) {
         return userRepository.sendResetToken(email, userType)
     }
 
-    suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String> {
-        return userRepository.resetPassword(token, newPassword, userType)
+    suspend fun resetPassword(email: String, otpCode: String, newPassword: String, userType: String): Result<String> {
+        return userRepository.resetPassword(email,otpCode, newPassword, userType)
     }
 }

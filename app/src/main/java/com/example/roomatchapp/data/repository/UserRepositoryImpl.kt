@@ -118,11 +118,16 @@ class UserRepositoryImpl(
     }
 
     override suspend fun resetPassword(
-        token: String,
+        email:String,
+        otpCode: String,
         newPassword: String,
         userType: String
     ): Result<String> {
-        return apiService.resetPassword(token, newPassword,userType)
+        return apiService.resetPassword(email,otpCode,newPassword,userType)
+    }
+
+    override suspend fun checkEmailRegistered(email: String): Boolean {
+        return apiService.checkEmailRegistered(email)
     }
 
     override suspend fun getOwnerAnalytics(

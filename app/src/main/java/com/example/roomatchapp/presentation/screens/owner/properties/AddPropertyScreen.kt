@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.PropertyType
 import com.example.roomatchapp.di.AppDependencies
@@ -80,157 +81,150 @@ import java.nio.file.WatchEvent
 @Composable
 fun AddPropertyScreen(
     viewModel: AddPropertyViewModel,
-    onNext: () -> Unit
+    onNext: EmptyCallback
 ) {
     val state by viewModel.state.collectAsState()
     val placesClient = remember { AppDependencies.googlePlacesClient }
-    val searchTextFlow = remember { MutableStateFlow(state.address ?: "") }
+    val searchTextFlow = remember { MutableStateFlow(state.address) }
     val isStep1Valid by remember(state) {
         derivedStateOf { viewModel.isStep1Valid() }
     }
 
+    val scrollState = rememberScrollState()
+
     Box(
         modifier = Modifier.fillMaxSize()
             .background(Background)
-            .padding(8.dp),
-        ) {
-        LazyColumn(
+            .padding(horizontal = 8.dp),
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Background),
+                .background(Background)
+                .verticalScroll(scrollState)
+                .padding(bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            item {
-                Text(
-                    text = "Property Details",
-                    fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "Property Details",
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                "Find Property Location:",
+                style = MaterialTheme.typography.titleSmall
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PlacesAutocompleteTextField(
+                modifier = Modifier.fillMaxWidth(),
+                onPlaceSelected = { address, lat, lng ->
+                    Log.d("SelectedPlace", "Address: $address, Lat: $lat, Lng: $lng")
+                    viewModel.updateAddress(address, lat, lng)
+                },
+                placesClient = placesClient,
+                searchTextFlow = searchTextFlow
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Text(
+                "Choose Type:",
+                style = MaterialTheme.typography.titleSmall
+            )
+
+            // Type selection chips
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PropertyType.entries.forEach { type ->
+                    FilterChip(
+                        selected = state.type == type,
+                        onClick = { viewModel.updateRoomType(type) },
+                        label = { Text(type.name) },
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Primary,
+                            selectedLabelColor = Color.White,
+                        )
+                    )
+                }
             }
 
-            item {
+            if (state.type == PropertyType.ROOM) {
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
-                    "Find Property Location:",
-                   style = MaterialTheme.typography.titleSmall
+                    text = "Select Roommates:",
+                    style = MaterialTheme.typography.titleSmall
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-            }
-//
-            item {
-                PlacesAutocompleteTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    onPlaceSelected = { address, lat, lng ->
-                        Log.d("SelectedPlace", "Address: $address, Lat: $lat, Lng: $lng")
-                        viewModel.updateAddress(address, lat, lng)
+
+                AutocompleteTextFieldMultiSelect(
+                    suggestionsList = viewModel.fetchAllRoommates(),
+                    placeHolder = "Choose Your Roommates",
+                    onUserSelected = { roommate ->
+                        viewModel.addRoommate(roommate)
                     },
-                    placesClient = placesClient,
-                    searchTextFlow = searchTextFlow
+                    onUserRemoved = { roommateId ->
+                        viewModel.removeRoommate(roommateId)
+                    },
+                    selectedUsers = state.selectedRoommates
                 )
-
-                Spacer(modifier = Modifier.height(40.dp))
             }
 
-            item {
-                Text(
-                    "Choose Type:",
-                     style = MaterialTheme.typography.titleSmall
-                )
+            Spacer(modifier = Modifier.height(40.dp))
 
-                // Type selection chips
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PropertyType.entries.forEach { type ->
-                        FilterChip(
-                            selected = state.type == type,
-                            onClick = { viewModel.updateRoomType(type) },
-                            label = { Text(type.name) },
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Primary,
-                                selectedLabelColor = Color.White,
-                            )
+            Text(
+                "Property Features",
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Select at least 3 features", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            FlowRow {
+                CondoPreference.entries.forEach { pref ->
+                    val isSelected = state.features.any { it == pref }
+                    Button(
+                        onClick = { viewModel.toggleFeature(pref) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected) Primary else Secondary,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .height(42.dp)
+                            .width(112.dp)
+                    ) {
+                        Text(
+                            text = pref.name.replace("_", " ").lowercase()
+                                .replaceFirstChar { it.uppercase() },
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Visible
                         )
                     }
                 }
-
-                if (state.type == PropertyType.ROOM) {
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = "Select Roommates:",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    AutocompleteTextFieldMultiSelect(
-                        suggestionsList = viewModel.fetchAllRoommates(),
-                        placeHolder = "Choose Your Roommates",
-                        onUserSelected = { roommate ->
-                            viewModel.addRoommate(roommate)
-                        },
-                        onUserRemoved = { roommateId ->
-                            viewModel.removeRoommate(roommateId)
-                        },
-                        selectedUsers = state.selectedRoommates
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(40.dp))
             }
-
-            item {
-                Text(
-                    "Property Features",
-                    fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Select at least 3 features", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            item {
-                FlowRow {
-                    CondoPreference.entries.forEach { pref ->
-                        val isSelected = state.features.any { it == pref }
-                        Button(
-                            onClick = { viewModel.toggleFeature(pref) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isSelected) Primary else Secondary,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(50),
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .height(42.dp)
-                                .width(112.dp)
-                        ) {
-                            Text(
-                                text = pref.name.replace("_", " ").lowercase()
-                                    .replaceFirstChar { it.uppercase() },
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Visible
-                            )
-                        }
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
-        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = onNext,
             enabled = isStep1Valid,
-            modifier = Modifier.
-                align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(50.dp),
             colors = ButtonDefaults.buttonColors(
@@ -248,7 +242,6 @@ fun AddPropertyScreen(
         }
     }
 }
-
 
 
 @Composable

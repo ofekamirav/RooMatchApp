@@ -83,7 +83,7 @@ fun OwnerAnalyticsScreen(viewModel: OwnerAnalyticsViewModel) {
                     }
 
                     val matchesList = currentAnalytics.matchesPerProperty
-                    if (matchesList.isEmpty()) {
+                    if (matchesList.isEmpty() && !isLoadingState.value) {
                         item {
                             Text(
                                 "No property match data available.",

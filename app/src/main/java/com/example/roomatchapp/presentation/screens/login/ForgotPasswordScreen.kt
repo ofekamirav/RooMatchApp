@@ -6,9 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,150 +19,160 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.R
+import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.AppDependencies
+import com.example.roomatchapp.presentation.components.LoadingAnimation
+import com.example.roomatchapp.presentation.login.ForgotPasswordViewModel
 import com.example.roomatchapp.presentation.theme.Background
-import com.example.roomatchapp.presentation.theme.CardBackground
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.cardBackground
 
-enum class UserType(val displayName: String) {
-    ROOMMATE("Roommate"),
-    PROPERTY_OWNER("Property Owner")
+enum class UserType(val apiValue:String, val displayName: String) {
+    ROOMMATE("Roommate", "Roommate"),
+    PROPERTY_OWNER("PropertyOwner", "Property Owner")
 }
 
 @Composable
-fun ForgotPasswordScreen(viewModel: ForgotPasswordViewModel, onLoginClick: () -> Unit) {
-    var email by remember { mutableStateOf("") }
-    var userType by remember { mutableStateOf("Roommate") }
+fun ForgotPasswordScreen(
+    viewModel: ForgotPasswordViewModel,
+    onLoginClick: EmptyCallback,
+    onSendCodeSuccess: EmptyCallback
+) {
+    val email by viewModel.email.collectAsState()
+    var userType by remember { mutableStateOf(UserType.ROOMMATE) }
     val status by viewModel.statusMessage.collectAsState()
+    val requestResetSuccess by viewModel.requestResetSuccess.collectAsState()
+    val loading  by viewModel.isOtpLoading.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-        contentAlignment = Alignment.TopCenter
+
+    LaunchedEffect(requestResetSuccess) {
+        requestResetSuccess?.let { success ->
+            if (success) {
+                onSendCodeSuccess()
+                viewModel.clearStatusMessage()
+            }
+            viewModel.clearRequestResetSuccessStatus()
+        }
+    }
+
+    LoadingAnimation(
+        isLoading = loading,
+        animationResId = R.raw.loading_animation
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background)
+                .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logoname),
-                contentDescription = "Logo",
-                modifier = Modifier.size(200.dp)
-            )
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.logoname),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(200.dp)
+                )
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = "Reset Password",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email Address") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    // Type selection chips
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        UserType.entries.forEach { type ->
-                            FilterChip(
-                                selected = userType == type.displayName,
-                                onClick = { userType = type.displayName  },
-                                label = { Text(type.displayName) },
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Primary,
-                                    selectedLabelColor = Color.White,
-                                )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Reset Password",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
                             )
                         }
-                    }
 
-                    Button(
-                        onClick = { viewModel.requestPasswordReset(email, userType)},
-                        enabled = email.isNotBlank(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                        ,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Primary,
-                            contentColor = Color.White,
-                            disabledContainerColor = Primary.copy(alpha = 0.5f)
-                        ),
-                    ) {
-                        Text("Send",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { viewModel.updateEmail(it) },
+                            label = { Text("Email Address") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    }
 
-                    status?.let {
-                        Text(
-                            it,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                        // Type selection chips
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            UserType.entries.forEach { type ->
+                                FilterChip(
+                                    selected = userType == type,
+                                    onClick = {
+                                        userType = type
+                                        viewModel.updateUserType(type.apiValue)
+                                    },
+                                    label = { Text(type.displayName) },
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Primary,
+                                        selectedLabelColor = Color.White,
+                                    )
+                                )
+                            }
+                        }
 
-                    Row {
-                        Text("Remembered your password?", fontSize = 12.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Login",
-                            fontSize = 12.sp,
-                            color = Primary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { onLoginClick() }
-                        )
+                        Button(
+                            onClick = { viewModel.requestPasswordReset(email, userType.apiValue)},
+                            enabled = email.isNotBlank(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                            ,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary,
+                                contentColor = Color.White,
+                                disabledContainerColor = Primary.copy(alpha = 0.5f)
+                            ),
+                        ) {
+                            Text("Send",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White
+                            )
+                        }
+
+                        status?.let {
+                            Text(
+                                it,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+
+                        Row {
+                            Text("Remembered your password?", fontSize = 12.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Login",
+                                fontSize = 12.sp,
+                                color = Primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { onLoginClick() }
+                            )
+                        }
                     }
                 }
             }
         }
     }
+
+
 }
 
-@Composable
-fun UserTypeSegment(label: String, selected: Boolean, onClick: () -> Unit) {
-    val backgroundColor = if (selected) Primary else Color.Transparent
-    val textColor = if (selected) Color.White else MaterialTheme.colorScheme.onBackground
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(backgroundColor)
-            .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-    ) {
-        Text(text = label, color = textColor, fontWeight = FontWeight.Medium)
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun ForgotPasswordScreenPreview() {
-    ForgotPasswordScreen(viewModel = ForgotPasswordViewModel(AppDependencies.userRepository)) {}
-}

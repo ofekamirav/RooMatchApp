@@ -41,9 +41,7 @@ import com.example.roomatchapp.presentation.screens.login.ResetPasswordScreen
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.roomatchapp.R
-import com.example.roomatchapp.data.remote.api.user.UserApiServiceImplementation
-import com.example.roomatchapp.presentation.components.LoadingAnimation
-import com.example.roomatchapp.presentation.screens.login.ForgotPasswordViewModel
+import com.example.roomatchapp.presentation.login.ForgotPasswordViewModel
 import com.example.roomatchapp.presentation.screens.welcome.Onboarding
 import kotlinx.coroutines.delay
 
@@ -124,7 +122,12 @@ fun WelcomeScreenComposable(
 
 @Destination<RootNavGraph>(start = true)
 @Composable
-fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserSessionManager, registrationViewModel: RegistrationViewModel) {
+fun LoginScreenComposable(
+    navigator: DestinationsNavigator,
+    sessionManager: UserSessionManager,
+    registrationViewModel: RegistrationViewModel,
+    forgotPasswordViewModel: ForgotPasswordViewModel
+) {
     val loginViewModel = LoginViewModel(AppDependencies.userRepository,sessionManager)
     val context = LocalContext.current
     val state = loginViewModel.state.collectAsStateWithLifecycle()
@@ -203,10 +206,13 @@ fun LoginScreenComposable(navigator: DestinationsNavigator,sessionManager: UserS
                 }
             )
         },
-        onForgotPasswordClick = {navigator.navigate(ForgotPasswordScreenComposableDestination) },
+        onForgotPasswordClick = {
+            navigator.navigate(ForgotPasswordScreenComposableDestination())
+        },
         onRegisterClick = { navigator.navigate(RegisterScreenComposableDestination) },
         loginViewModel = loginViewModel,
-        registrationViewModel = registrationViewModel
+        registrationViewModel = registrationViewModel,
+        forgotPasswordViewModel = forgotPasswordViewModel
     )
 }
 
@@ -327,13 +333,19 @@ fun RoommateFlowScreenComposable(navigator: DestinationsNavigator,registrationVi
 @Composable
 fun ForgotPasswordScreenComposable(
     navigator: DestinationsNavigator,
-    forgotPasswordViewModel: ForgotPasswordViewModel
+    forgotPasswordViewModel: ForgotPasswordViewModel,
 ) {
     ForgotPasswordScreen(
         viewModel = forgotPasswordViewModel,
         onLoginClick = {
             navigator.navigate(LoginScreenComposableDestination) {
                 popUpTo(ForgotPasswordScreenComposableDestination) { inclusive = true }
+            }
+        },
+        onSendCodeSuccess = {
+            navigator.navigate(ResetPasswordScreenComposableDestination) {
+                popUpTo(ForgotPasswordScreenComposableDestination) { inclusive = true }
+                launchSingleTop = true
             }
         }
     )

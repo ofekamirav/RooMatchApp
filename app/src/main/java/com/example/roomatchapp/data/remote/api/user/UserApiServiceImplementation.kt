@@ -11,7 +11,9 @@ import com.example.roomatchapp.data.remote.dto.LoginRequest
 import com.example.roomatchapp.data.remote.dto.PropertyOwnerUser
 import com.example.roomatchapp.data.remote.dto.RefreshTokenRequest
 import com.example.roomatchapp.data.remote.dto.RefreshTokenResponse
+import com.example.roomatchapp.data.remote.dto.ResetPassword
 import com.example.roomatchapp.data.remote.dto.RoommateUser
+import com.example.roomatchapp.data.remote.dto.ServerMessageResponse
 import com.example.roomatchapp.data.remote.dto.UserResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -189,54 +191,56 @@ class UserApiServiceImplementation(
 
     override suspend fun sendResetToken(email: String, userType: String): Result<String> {
         return try {
-            val response = client.post("http://$baseUrl/api/auth/request-reset-token") {
+            val response = client.post("$baseUrl/auth/request-password-reset") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("email" to email, "userType" to userType))
             }
             when (response.status) {
                 HttpStatusCode.OK -> {
-                    val message = response.bodyAsText()
-                    Result.success(message)
+                    val responseBody = response.body<ServerMessageResponse>()
+                    Result.success(responseBody.message ?: "Reset code sent successfully.")
                 }
-                HttpStatusCode.BadRequest -> {
-                    val message = response.bodyAsText()
-                    Result.failure(Exception(message))
-                }
-                HttpStatusCode.InternalServerError -> {
-                    val message = response.bodyAsText()
-                    Result.failure(Exception(message))
-                }
-                HttpStatusCode.NotFound -> {
-                    val message = response.bodyAsText()
-                    Result.failure(Exception(message))
+                HttpStatusCode.BadRequest, HttpStatusCode.InternalServerError, HttpStatusCode.NotFound -> {
+                    val errorBody = response.body<ServerMessageResponse>()
+                    Result.failure(Exception(errorBody.error ?: "Failed to send reset code."))
                 }
                 else -> {
                     Result.failure(Exception("Unexpected response status: ${response.status}"))
                 }
             }
         } catch (e: Exception) {
+            Log.e("TAG", "ApiService-sendResetToken API call failed: ${e.message}", e)
             Result.failure(e)
         }
     }
 
-    override suspend fun resetPassword(token: String, newPassword: String, userType: String): Result<String> {
+    override suspend fun resetPassword(email: String, otpCode: String, newPassword: String, userType: String): Result<String> {
         return try {
-            val response = client.post("http://$baseUrl/api/auth/reset-password") {
+            val requestBody = ResetPassword(
+                email = email,
+                otpCode = otpCode,
+                newPassword = newPassword,
+                userType = userType
+            )
+            Log.d("TAG", "ApiService-Sending POST to $baseUrl/auth/reset-password with body: $requestBody")
+            val response = client.post("$baseUrl/auth/reset-password") {
                 contentType(ContentType.Application.Json)
-                setBody(mapOf("token" to token, "newPassword" to newPassword, "userType" to userType))
+                setBody(requestBody)
             }
+            Log.d("TAG", "ApiService-Reset Password Response status: ${response.status}")
+
             if (response.status.isSuccess()) {
-                val message = response.bodyAsText()
-                Result.success(message)
+                val responseBody = response.body<ServerMessageResponse>()
+                Result.success(responseBody.message ?: "Password reset successfully.")
             } else {
-                Result.failure(Exception("Failed to reset password"))
+                val errorBody = response.body<ServerMessageResponse>()
+                Result.failure(Exception(errorBody.error ?: "Failed to reset password. Invalid OTP or email.")) // התאמת הודעה
             }
         } catch (e: Exception) {
+            Log.e("TAG", "ApiService-resetPassword API call failed: ${e.message}", e)
             Result.failure(e)
         }
     }
-
-
 
 
     override suspend fun googleSignIn(idToken: String): UserResponse {
@@ -364,5 +368,26 @@ class UserApiServiceImplementation(
             Log.e("TAG", "ApiService-PUT Owner API call failed: ${e.message}", e)
             throw e
         }
+    }
+
+    override suspend fun checkEmailRegistered(email: String): Boolean {
+        Log.d("TAG", "ApiService-Sending post request to $baseUrl/check-email")
+        try {
+            val response = client.post("$baseUrl/check-email")
+            {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("email" to email))
+            }
+            Log.d("TAG", "ApiService-POST Email Response status: ${response.status}")
+            if (response.status == HttpStatusCode.OK) {
+                return true
+            }
+            if (response.status == HttpStatusCode.NotFound) {
+                return false
+            }
+        } catch (e: Exception) {
+            Log.e("TAG", "ApiService-POST Email API call failed: ${e.message}", e)
+        }
+        return false
     }
 }
