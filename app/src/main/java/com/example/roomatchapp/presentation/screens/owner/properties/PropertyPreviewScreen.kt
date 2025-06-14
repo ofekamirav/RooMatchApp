@@ -124,6 +124,13 @@ fun PropertyPreviewScreen(
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
+                Text(
+                    text = if (property?.available == true) "Available" else "Not Available",
+                    color = if (property?.available == true) Color(0xFF2E7D32) else Color.Red,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Spacer(modifier = Modifier.height(12.dp))
 
