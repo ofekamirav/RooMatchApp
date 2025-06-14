@@ -52,6 +52,31 @@ class AddPropertyViewModel(
     private val _allRoomates = MutableStateFlow<List<Roommate>>(emptyList())
     val allRoomates: StateFlow<List<Roommate>> = _allRoomates.asStateFlow()
 
+    private val _state = MutableStateFlow(
+        AddPropertyFormState(
+            roomsNumber = 1,
+            bathrooms = 2,
+            floor = 0,
+            canContainRoommates = 1
+        )
+    )
+    val state: StateFlow<AddPropertyFormState> = _state.asStateFlow()
+
+    private val _selectedUris = MutableStateFlow<List<Uri>>(emptyList())
+    val selectedUris: StateFlow<List<Uri>> = _selectedUris.asStateFlow()
+
+    var isUploadingImage by mutableStateOf(false)
+        private set
+
+    var isLoading by mutableStateOf(false)
+        private set
+
+    private val _navigateToProperties = MutableStateFlow(false)
+    val navigateToProperties: StateFlow<Boolean> = _navigateToProperties.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     init {
         viewModelScope.launch {
             val roommates = userRepository.getAllRoommatesRemote()
@@ -60,24 +85,6 @@ class AddPropertyViewModel(
             }
         }
     }
-
-    private val _state = MutableStateFlow(AddPropertyFormState())
-    val state: StateFlow<AddPropertyFormState> = _state.asStateFlow()
-
-    private val _selectedUris = MutableStateFlow<List<Uri>>(emptyList())
-    val selectedUris: StateFlow<List<Uri>> = _selectedUris.asStateFlow()
-
-    var isUploadingImage by mutableStateOf(false)
-        public set
-
-    var isLoading by mutableStateOf(false)
-        public set
-
-    private val _navigateToProperties = MutableStateFlow(false)
-    val navigateToProperties: StateFlow<Boolean> = _navigateToProperties.asStateFlow()
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     fun addPhotoUri(uri: Uri) {
         if (!_selectedUris.value.contains(uri) && _selectedUris.value.size < 6) {
