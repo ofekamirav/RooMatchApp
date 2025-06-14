@@ -27,7 +27,8 @@
 /gradle.properties
 
 # IDE specific files (for IntelliJ IDEA / Android Studio)
-/.idea/                  # Ignores the entire .idea directory. This is usually preferred.
+ # Ignores the entire .idea directory. This is usually preferred.
+/.idea/
 # If you need to include specific files from .idea (e.g., vcs.xml), you'd explicitly unignore them:
 #!/.idea/vcs.xml
 
