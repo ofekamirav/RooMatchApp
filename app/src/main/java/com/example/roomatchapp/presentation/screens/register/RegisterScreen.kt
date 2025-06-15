@@ -45,6 +45,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -107,7 +108,7 @@ fun RegisterScreen(
                             registrationViewModel.updateState(
                                 state.copy(
                                     email = email,
-                                    emailError = if (registrationViewModel.isValidEmail(email)) null else "Email is not valid"
+                                    emailError = if (registrationViewModel.isValidEmailLocal(email) ) null else "Email is not valid"
                                 )
                             )
                         },
@@ -117,7 +118,13 @@ fun RegisterScreen(
                         label = { Text("Enter your email address") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .focusRequester(focusRequesterEmail),
+                            .focusRequester(focusRequesterEmail).onFocusChanged(
+                                onFocusChanged = { focusState ->
+                                    if (!focusState.isFocused) {
+                                        registrationViewModel.isValidEmailRemote(state.email)
+                                    }
+                                }
+                            ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Next

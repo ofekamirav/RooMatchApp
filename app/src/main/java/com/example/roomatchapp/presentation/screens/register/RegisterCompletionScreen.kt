@@ -93,7 +93,7 @@ fun RegisterCompletionScreen(
                             registrationViewModel.updateState(
                                 state.copy(
                                     email = email,
-                                    emailError = if (registrationViewModel.isValidEmail(email)) null else "Email is not valid"
+                                    emailError = if (registrationViewModel.isValidEmailLocal(email)) null else "Email is not valid"
                                 )
                             )
                         },
