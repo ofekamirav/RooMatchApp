@@ -133,7 +133,6 @@ fun RoommateMainScreen(
                         EditProfileViewModel(
                             userRepository = AppDependencies.userRepository,
                             seekerId = seekerId,
-                            matchRepository = AppDependencies.matchRepository,
                             userSessionManager = AppDependencies.sessionManager
                         )
                     }

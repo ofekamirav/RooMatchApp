@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -38,10 +37,8 @@ import com.example.roomatchapp.presentation.theme.CustomTeal
 import com.example.roomatchapp.presentation.theme.Third
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.RadioButtonDefaults.colors
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +46,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.CloudinaryModel
-import com.example.roomatchapp.domain.repository.UserRepository
 import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PriceRangeSelector
@@ -124,8 +120,8 @@ fun EditProfileContent(
 ) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
-    var selectedPreferences by remember { mutableStateOf(uiState.lookingForRoomies.toMutableList()) }
-    var selectedCondoPreferences by remember { mutableStateOf(uiState.lookingForCondo.toMutableList()) }
+    val selectedRoomiesPreferences = remember { mutableStateListOf<LookingForRoomiesPreference>() }
+    var selectedCondoPreferences = remember { mutableStateListOf<LookingForCondoPreference>() }
     var preferredRadius by remember { mutableStateOf(uiState.preferredRadiusKm) }
     var priceRange by remember { mutableStateOf(uiState.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
     var sizeRange by remember { mutableStateOf(uiState.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
@@ -137,7 +133,7 @@ fun EditProfileContent(
     var isLoadingBio by remember { mutableStateOf(false) }
     var birthDate by remember { mutableStateOf(uiState.birthDate) }
     var work by remember { mutableStateOf(uiState.work) }
-    var bio by remember { mutableStateOf(uiState.personalBio ?: "") }
+    var bio by remember { mutableStateOf(uiState.personalBio) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var selectedAttributes by remember { mutableStateOf(uiState.attributes.toMutableList()) }
@@ -145,6 +141,31 @@ fun EditProfileContent(
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     var profilePictureUrl by remember { mutableStateOf(uiState.profilePicture) }
+
+    LaunchedEffect(uiState) {
+        fullName = uiState.fullName
+        email = uiState.email
+        phone = uiState.phoneNumber
+        birthDate = uiState.birthDate
+        work = uiState.work
+        bio = uiState.personalBio
+        profilePictureUrl = uiState.profilePicture
+        preferredRadius = uiState.preferredRadiusKm
+        roommatesNumber = uiState.roommatesNumber
+        priceRange = uiState.minPrice.toFloat()..uiState.maxPrice.toFloat()
+        sizeRange = uiState.minPropertySize.toFloat()..uiState.maxPropertySize.toFloat()
+
+        selectedRoomiesPreferences.clear()
+        selectedRoomiesPreferences.addAll(uiState.lookingForRoomies)
+        selectedCondoPreferences.clear()
+        selectedCondoPreferences.addAll(uiState.lookingForCondo)
+
+        selectedAttributes.clear()
+        selectedAttributes.addAll(uiState.attributes)
+        selectedHobbies.clear()
+        selectedHobbies.addAll(uiState.hobbies)
+    }
+
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
@@ -523,12 +544,6 @@ fun EditProfileContent(
                     isExpanded = expandedSection == "LookingForCondo",
                     onToggle = { expandedSection = if (expandedSection == "LookingForCondo") null else "LookingForCondo" }
                 ) {
-                    var priceRange by remember { mutableStateOf(roommate.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
-                    var sizeRange by remember { mutableStateOf(roommate.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
-                    var roommatesNumber by remember { mutableStateOf(roommate.roommatesNumber) }
-                    var preferredRadius by remember { mutableStateOf(roommate.preferredRadiusKm) }
-                    var selectedCondoPreferences by remember { mutableStateOf(roommate.lookingForCondo.toMutableList()) }
-
                     Spacer(modifier = Modifier.height(12.dp))
 
                     PriceRangeSelector(
@@ -590,11 +605,11 @@ fun EditProfileContent(
                             Button(
                                 onClick = {
                                     selectedCondoPreferences = if (isSelected) {
-                                        selectedCondoPreferences.toMutableList().apply {
+                                        selectedCondoPreferences.apply {
                                             removeIf { it.preference == pref }
                                         }
                                     } else {
-                                        selectedCondoPreferences.toMutableList().apply {
+                                        selectedCondoPreferences.apply {
                                             add(
                                                 LookingForCondoPreference(
                                                     preference = pref,
@@ -642,7 +657,7 @@ fun EditProfileContent(
                                     sliderValue.value = newValue
                                     val index = selectedCondoPreferences.indexOfFirst { it.preference == pref.preference }
                                     if (index != -1) {
-                                        selectedCondoPreferences = selectedCondoPreferences.toMutableList().apply {
+                                        selectedCondoPreferences = selectedCondoPreferences.apply {
                                             set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
                                         }
                                     }
@@ -672,7 +687,7 @@ fun EditProfileContent(
                     personalBio = bio,
                     attributes = selectedAttributes,
                     hobbies = selectedHobbies,
-                    lookingForRoomies = selectedPreferences,
+                    lookingForRoomies = selectedRoomiesPreferences,
                     lookingForCondo = selectedCondoPreferences,
                     preferredRadiusKm = preferredRadius,
                     roommatesNumber = roommatesNumber,
