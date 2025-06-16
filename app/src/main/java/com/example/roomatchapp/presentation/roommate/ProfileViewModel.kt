@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 class ProfileViewModel(
     private val userRepository: UserRepository,
     private val seekerId: String
-
 ) : ViewModel() {
     private val _roommate = MutableStateFlow<Roommate?>(null)
     val roommate: StateFlow<Roommate?> = _roommate
@@ -36,7 +35,20 @@ class ProfileViewModel(
             } catch (e: Exception) {
                 Log.e("ProfileViewModel", "Error loading roommate", e)
                 _roommate.value = null
-
+            }
+        }
+    }
+    fun refreshProfileDetails(){
+        viewModelScope.launch {
+            try {
+                Log.d("ProfileViewModel", "Loading roommate for Id: $seekerId")
+                val result = userRepository.getRoommate(seekerId, forceRefresh = true)
+                Log.d("ProfileViewModel", "Loaded roommate: ${result?.fullName}")
+                _roommate.value = result
+                _isLoading.value = false
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error loading roommate", e)
+                _roommate.value = null
             }
         }
     }

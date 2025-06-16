@@ -43,4 +43,21 @@ class OwnerProfileViewModel(
             }
         }
     }
+    fun refreshProfileDetails() {
+        viewModelScope.launch {
+            try {
+                Log.d("TAG", "OwnerProfileVM-Loading owner profile for ID: $ownerId")
+                val result = userRepository.getPropertyOwner(ownerId, forceRefresh = true)
+                if (result != null) {
+                    _owner.value = result
+                    isProfileLoaded.value = true
+                    Log.d("TAG", "OwnerProfileVM-Owner profile loaded: $result")
+                } else {
+                    Log.e("TAG", "OwnerProfileVM-Failed to load owner profile")
+                }
+            } catch (e: Exception) {
+                Log.e("TAG", "OwnerProfileVM-Error loading owner profile", e)
+                _owner.value = null
+            }
+        }    }
 }

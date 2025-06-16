@@ -45,11 +45,11 @@ import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "10.0.2.2" //if your are using emulator change ip to 10.0.2.2
+    const val computerIP = "192.168.1.158" //if your are using emulator change ip to 10.0.2.2
 
     const val dnsAddress = "roomatch.cs.colman.ac.il"
 
-    internal const val BASE_URL = "http://$dnsAddress:8080"
+    internal const val BASE_URL = "http://$computerIP:8080"
 
     lateinit var sessionManager: UserSessionManager
 

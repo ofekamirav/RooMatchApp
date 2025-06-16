@@ -1,10 +1,10 @@
 package com.example.roomatchapp.presentation.screens.roommate
 
-import android.R.attr.enabled
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -120,52 +120,24 @@ fun EditProfileContent(
 ) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
-    val selectedRoomiesPreferences = remember { mutableStateListOf<LookingForRoomiesPreference>() }
-    var selectedCondoPreferences = remember { mutableStateListOf<LookingForCondoPreference>() }
-    var preferredRadius by remember { mutableStateOf(uiState.preferredRadiusKm) }
-    var priceRange by remember { mutableStateOf(uiState.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
-    var sizeRange by remember { mutableStateOf(uiState.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
-    var roommatesNumber by remember { mutableStateOf(uiState.roommatesNumber) }
-    var fullName by remember { mutableStateOf(uiState.fullName) }
-    var email by remember { mutableStateOf(uiState.email) }
-    var phone by remember { mutableStateOf(uiState.phoneNumber) }
-    var password by remember { mutableStateOf("") }
-    var isLoadingBio by remember { mutableStateOf(false) }
-    var birthDate by remember { mutableStateOf(uiState.birthDate) }
-    var work by remember { mutableStateOf(uiState.work) }
-    var bio by remember { mutableStateOf(uiState.personalBio) }
+    val isLoadingBio by viewModel.geminiLoading.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var selectedAttributes by remember { mutableStateOf(uiState.attributes.toMutableList()) }
-    var selectedHobbies by remember { mutableStateOf(uiState.hobbies.toMutableList()) }
+    val errorMessage by viewModel.errorMsg.collectAsState()
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
-    var profilePictureUrl by remember { mutableStateOf(uiState.profilePicture) }
+    var profilePictureUrl by remember { mutableStateOf<String?>(roommate.profilePicture) }
 
-    LaunchedEffect(uiState) {
-        fullName = uiState.fullName
-        email = uiState.email
-        phone = uiState.phoneNumber
-        birthDate = uiState.birthDate
-        work = uiState.work
-        bio = uiState.personalBio
-        profilePictureUrl = uiState.profilePicture
-        preferredRadius = uiState.preferredRadiusKm
-        roommatesNumber = uiState.roommatesNumber
-        priceRange = uiState.minPrice.toFloat()..uiState.maxPrice.toFloat()
-        sizeRange = uiState.minPropertySize.toFloat()..uiState.maxPropertySize.toFloat()
-
-        selectedRoomiesPreferences.clear()
-        selectedRoomiesPreferences.addAll(uiState.lookingForRoomies)
-        selectedCondoPreferences.clear()
-        selectedCondoPreferences.addAll(uiState.lookingForCondo)
-
-        selectedAttributes.clear()
-        selectedAttributes.addAll(uiState.attributes)
-        selectedHobbies.clear()
-        selectedHobbies.addAll(uiState.hobbies)
+    LaunchedEffect(roommate.profilePicture) {
+        profilePictureUrl = roommate.profilePicture
     }
 
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearErrorMessage()
+        }
+    }
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
@@ -182,6 +154,7 @@ fun EditProfileContent(
                         onSuccess = {
                             url -> profilePictureUrl = url.toString()
                             viewModel.isUploadingImage = false
+                            viewModel.updateProfilePicture(url.toString())
                         },
                         onError = {
                             Log.e("TAG", "Upload Error: $it")
@@ -278,22 +251,22 @@ fun EditProfileContent(
                     onToggle = { expandedSection = if (expandedSection == "Account") null else "Account" }
                 ) {
                     Text("Full Name", style = MaterialTheme.typography.titleSmall, color = Third)
-                    EditableTextField("Full Name", fullName) { fullName = it }
+                    EditableTextField("Full Name", uiState.fullName) { viewModel.updateFullName(it) }
 
                     Text("Email", style = MaterialTheme.typography.titleSmall, color = Third)
-                    EditableTextField("Email", email, KeyboardType.Email) { email = it }
+                    EditableTextField("Email", uiState.email, KeyboardType.Email) { viewModel.updateEmail(it) }
 
                     Text("Phone Number", style = MaterialTheme.typography.titleSmall, color = Third)
-                    EditableTextField("Phone Number", phone, KeyboardType.Phone) { phone = it }
+                    EditableTextField("Phone Number", uiState.phoneNumber, KeyboardType.Phone) { viewModel.updatePhoneNumber(it) }
 
                     Text("Work", style = MaterialTheme.typography.titleSmall, color = Third)
-                    EditableTextField("Work", work) { work = it }
+                    EditableTextField("Work", uiState.work) { viewModel.updateWork(it) }
 
                     Text("Password", style = MaterialTheme.typography.titleSmall, color = Third)
-                    EditableTextField("Password", password, isPassword = true) { password = it }
+                    EditableTextField("Password", uiState.password, isPassword = true) { viewModel.updatePassword(it) }
 
                     Text("Birthdate", style = MaterialTheme.typography.titleSmall, color = Third)
-                    EditableDateField(selectedDate = birthDate) { birthDate = it }
+                    EditableDateField(selectedDate = uiState.birthDate) { viewModel.updateBirthDate(it) }
                 }
 
                 ExpandableSection(
@@ -309,15 +282,13 @@ fun EditProfileContent(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
                         Attribute.entries.forEach { attr ->
-                            val isSelected = selectedAttributes.contains(attr)
+                            val isSelected = uiState.attributes.contains(attr)
 
                             Button(
                                 onClick = {
-                                    selectedAttributes = if (isSelected) {
-                                        selectedAttributes.toMutableList().apply { remove(attr) }
-                                    } else {
-                                        selectedAttributes.toMutableList().apply { add(attr) }
-                                    }
+                                    val currentAttrs = uiState.attributes.toMutableList()
+                                    if (isSelected) currentAttrs.remove(attr) else currentAttrs.add(attr)
+                                    viewModel.updateAttributes(currentAttrs)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) Primary else Secondary,
@@ -349,15 +320,12 @@ fun EditProfileContent(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Hobby.entries.forEach { hobby ->
-                            val isSelected = selectedHobbies.contains(hobby)
-
+                            val isSelected = uiState.hobbies.contains(hobby)
                             Button(
                                 onClick = {
-                                    selectedHobbies = if (isSelected) {
-                                        selectedHobbies.toMutableList().apply { remove(hobby) }
-                                    } else {
-                                        selectedHobbies.toMutableList().apply { add(hobby) }
-                                    }
+                                    val currentHobbies = uiState.hobbies.toMutableList()
+                                    if (isSelected) currentHobbies.remove(hobby) else currentHobbies.add(hobby)
+                                    viewModel.updateHobbies(currentHobbies)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) Primary else Secondary,
@@ -385,8 +353,8 @@ fun EditProfileContent(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     CapsuleTextField(
-                        value = bio,
-                        onValueChange = { if (!isLoadingBio) bio = it },
+                        value = uiState.personalBio,
+                        onValueChange = { if (!isLoadingBio) viewModel.updatePersonalBio(it) },
                         placeholder = "Personal Bio",
                         modifier = Modifier
                             .height(170.dp)
@@ -412,17 +380,7 @@ fun EditProfileContent(
                         Spacer(modifier = Modifier.width(16.dp))
                         Button(
                             onClick = {
-                                isLoadingBio = true
-                                coroutineScope.launch {
-                                    try {
-                                        val suggested = "Generated bio by Gemini AI..."
-                                        bio = suggested
-                                    } catch (e: Exception) {
-                                        Log.e("AI", "Error: ${e.message}")
-                                    } finally {
-                                        isLoadingBio = false
-                                    }
-                                }
+                                viewModel.generateGeminiPersonalBio()
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Secondary,
@@ -447,11 +405,6 @@ fun EditProfileContent(
                     onToggle = { expandedSection = if (expandedSection == "LookingForRoommate") null else "LookingForRoommate" }
                 ) {
                     val allAttributes = Attribute.entries
-                    var selectedPreferences by remember {
-                        mutableStateOf(
-                            roommate.lookingForRoomies.toMutableList()
-                        )
-                    }
 
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -459,26 +412,23 @@ fun EditProfileContent(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
                         allAttributes.forEach { attr ->
-                            val existing = selectedPreferences.find { it.attribute == attr }
-                            val isSelected = existing != null
+                            val isSelected = uiState.lookingForRoomies.any { it.attribute == attr }
 
                             Button(
                                 onClick = {
-                                    selectedPreferences = if (isSelected) {
-                                        selectedPreferences.toMutableList().apply {
-                                            removeIf { it.attribute == attr }
-                                        }
+                                    val currentPrefs = uiState.lookingForRoomies.toMutableList()
+                                    if (isSelected) {
+                                        currentPrefs.removeIf { it.attribute == attr }
                                     } else {
-                                        selectedPreferences.toMutableList().apply {
-                                            add(
-                                                LookingForRoomiesPreference(
-                                                    attribute = attr,
-                                                    weight = 0.5,
-                                                    setWeight = true
-                                                )
+                                        currentPrefs.add(
+                                            LookingForRoomiesPreference(
+                                                attribute = attr,
+                                                weight = 0.5,
+                                                setWeight = true
                                             )
-                                        }
+                                        )
                                     }
+                                    viewModel.updateLookingForRoomies(currentPrefs)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) Primary else Secondary,
@@ -502,7 +452,7 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    selectedPreferences.forEach { pref ->
+                    uiState.lookingForRoomies.forEach { pref ->
                         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                             Text(
                                 text = pref.attribute.name.replace("_", " ").lowercase()
@@ -518,20 +468,11 @@ fun EditProfileContent(
                             WeightedSlider(
                                 value = sliderValue.value,
                                 onValueChange = { newValue ->
-                                    sliderValue.value = newValue
-                                    val index =
-                                        selectedPreferences.indexOfFirst { it.attribute == pref.attribute }
+                                    val currentPrefs = uiState.lookingForRoomies.toMutableList()
+                                    val index = currentPrefs.indexOfFirst { it.attribute == pref.attribute }
                                     if (index != -1) {
-                                        selectedPreferences =
-                                            selectedPreferences.toMutableList().apply {
-                                                set(
-                                                    index,
-                                                    pref.copy(
-                                                        weight = newValue.toDouble(),
-                                                        setWeight = true
-                                                    )
-                                                )
-                                            }
+                                        currentPrefs[index] = currentPrefs[index].copy(weight = newValue.toDouble())
+                                        viewModel.updateLookingForRoomies(currentPrefs)
                                     }
                                 }
                             )
@@ -547,16 +488,22 @@ fun EditProfileContent(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     PriceRangeSelector(
-                        priceRange = priceRange,
-                        onValueChange = { priceRange = it },
+                        priceRange = uiState.minPrice.toFloat()..uiState.maxPrice.toFloat(),
+                        onValueChange = {
+                            viewModel.updateMinPrice(it.start.toInt())
+                            viewModel.updateMaxPrice(it.endInclusive.toInt())
+                        },
                         color = CustomTeal
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     SizeRangeSelector(
-                        sizeRange = sizeRange,
-                        onValueChange = { sizeRange = it },
+                        sizeRange = uiState.minPropertySize.toFloat()..uiState.maxPropertySize.toFloat(),
+                        onValueChange = {
+                            viewModel.updateMinPropertySize(it.start.toInt())
+                            viewModel.updateMaxPropertySize(it.endInclusive.toInt())
+                        },
                         color = CustomTeal
                     )
 
@@ -566,8 +513,8 @@ fun EditProfileContent(
                         Text("Roommates:", style = MaterialTheme.typography.titleSmall, color = Third)
                         Spacer(Modifier.width(8.dp))
                         CountSelector(
-                            count = roommatesNumber,
-                            onCountChange = { roommatesNumber = it },
+                            count = uiState.roommatesNumber,
+                            onCountChange = { viewModel.updateRoommatesNumber(it) },
                             min = 1,
                             max = 10,
                         )
@@ -575,11 +522,11 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Preferred radius: ${preferredRadius}km", style = MaterialTheme.typography.titleSmall, color = Third)
+                    Text("Preferred radius: ${uiState.preferredRadiusKm}km", style = MaterialTheme.typography.titleSmall, color = Third)
 
                     Slider(
-                        value = preferredRadius.toFloat(),
-                        onValueChange = { preferredRadius = it.toInt() },
+                        value = uiState.preferredRadiusKm.toFloat(),
+                        onValueChange = { viewModel.updatePreferredRadiusKm(it.toInt()) },
                         valueRange = 0.5f..100f,
                         modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
@@ -600,25 +547,17 @@ fun EditProfileContent(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         CondoPreference.entries.forEach { pref ->
-                            val isSelected = selectedCondoPreferences.any { it.preference == pref }
+                            val isSelected = uiState.lookingForCondo.any { it.preference == pref }
 
                             Button(
                                 onClick = {
-                                    selectedCondoPreferences = if (isSelected) {
-                                        selectedCondoPreferences.apply {
-                                            removeIf { it.preference == pref }
-                                        }
+                                    val currentCondoPrefs = uiState.lookingForCondo.toMutableList()
+                                    if (isSelected) {
+                                        currentCondoPrefs.removeIf { it.preference == pref }
                                     } else {
-                                        selectedCondoPreferences.apply {
-                                            add(
-                                                LookingForCondoPreference(
-                                                    preference = pref,
-                                                    weight = 0.5,
-                                                    setWeight = true
-                                                )
-                                            )
-                                        }
+                                        currentCondoPrefs.add(LookingForCondoPreference(pref, 0.5, true))
                                     }
+                                    viewModel.updateLookingForCondo(currentCondoPrefs)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) Primary else Secondary,
@@ -641,9 +580,7 @@ fun EditProfileContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    selectedCondoPreferences.forEach { pref ->
-                        val sliderValue = remember { mutableStateOf(pref.weight.toFloat()) }
-
+                    uiState.lookingForCondo.forEach { pref ->
                         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                             Text(
                                 text = pref.preference.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
@@ -652,14 +589,13 @@ fun EditProfileContent(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             WeightedSlider(
-                                value = sliderValue.value,
+                                value = pref.weight.toFloat(),
                                 onValueChange = { newValue ->
-                                    sliderValue.value = newValue
-                                    val index = selectedCondoPreferences.indexOfFirst { it.preference == pref.preference }
+                                    val currentCondoPrefs = uiState.lookingForCondo.toMutableList()
+                                    val index = currentCondoPrefs.indexOfFirst { it.preference == pref.preference }
                                     if (index != -1) {
-                                        selectedCondoPreferences = selectedCondoPreferences.apply {
-                                            set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
-                                        }
+                                        currentCondoPrefs[index] = currentCondoPrefs[index].copy(weight = newValue.toDouble())
+                                        viewModel.updateLookingForCondo(currentCondoPrefs)
                                     }
                                 }
                             )
@@ -676,27 +612,13 @@ fun EditProfileContent(
             text = { Text("Save Changes") },
             icon = { Icon(Icons.Default.Check, contentDescription = "Save Changes") },
             onClick = {
-                viewModel.saveChanges(
-                    fullName = fullName,
-                    email = email,
-                    phoneNumber = phone,
-                    password = password,
-                    birthDate = birthDate,
-                    work = work,
-                    profilePicture = profilePictureUrl,
-                    personalBio = bio,
-                    attributes = selectedAttributes,
-                    hobbies = selectedHobbies,
-                    lookingForRoomies = selectedRoomiesPreferences,
-                    lookingForCondo = selectedCondoPreferences,
-                    preferredRadiusKm = preferredRadius,
-                    roommatesNumber = roommatesNumber,
-                    minPrice = priceRange.start.toInt(),
-                    maxPrice = priceRange.endInclusive.toInt(),
-                    minPropertySize = sizeRange.start.toInt(),
-                    maxPropertySize = sizeRange.endInclusive.toInt()
-                )
-                onSaveClick()
+                viewModel.saveChanges(                )
+                if (viewModel.isSaving.value) {
+                    onSaveClick()
+                }
+                else{
+                    Toast.makeText(context, "Error saving changes", Toast.LENGTH_SHORT).show()
+                }
             },
             containerColor = CustomTeal,
             contentColor = Color.White,

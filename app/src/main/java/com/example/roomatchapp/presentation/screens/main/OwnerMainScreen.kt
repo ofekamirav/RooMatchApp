@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,6 +50,7 @@ fun OwnerMainScreen(
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
     val systemUiController = rememberSystemUiController()
+    var isOwnerUpdated by remember { mutableStateOf(false) }
 
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -119,7 +123,9 @@ fun OwnerMainScreen(
                     },
                     onEditClick = {
                         navController.navigate("edit_profile")
-                    }
+                    },
+                    wasProfileUpdated = isOwnerUpdated,
+                    onRefreshDone =  {isOwnerUpdated = false}
                 )
             }
             composable("add_property") {
@@ -208,6 +214,7 @@ fun OwnerMainScreen(
                     viewModel = viewModel,
                     onBackClick = {
                         navController.popBackStack()
+                        isOwnerUpdated = true
                     },
                     onSaveClick = {
                         navController.popBackStack()
