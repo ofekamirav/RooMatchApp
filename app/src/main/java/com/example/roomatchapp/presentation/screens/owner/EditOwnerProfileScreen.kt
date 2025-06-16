@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.base.EmptyCallback
@@ -90,13 +91,6 @@ fun EditOwnerProfileScreen(
 
 @Composable
 fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel, onSave: EmptyCallback) {
-    var fullName by remember { mutableStateOf(owner.fullName) }
-    var email by remember { mutableStateOf(owner.email) }
-    var phone by remember { mutableStateOf(owner.phoneNumber) }
-    var password by remember { mutableStateOf("") }
-    var birthDate by remember { mutableStateOf(owner.birthDate) }
-    var profilePictureUrl by remember { mutableStateOf(owner.profilePicture) }
-
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -109,18 +103,12 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
                     bitmap = bitmap,
                     name = "owner_${System.currentTimeMillis()}",
                     folder = "roomatchapp/owners",
-                    onSuccess = { profilePictureUrl = it.toString() },
+                    onSuccess = {viewModel.updateProfilePicture(it) },
                     onError = { Log.e("Upload", "Error: $it") },
                     context = context
                 )
             }
         }
-    }
-
-    val profilePainter = if (profilePictureUrl != null) {
-        rememberAsyncImagePainter(profilePictureUrl)
-    } else {
-        painterResource(id = R.drawable.avatar)
     }
 
     Column(
@@ -135,8 +123,9 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
         Spacer(modifier = Modifier.height(16.dp))
 
         Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Image(
-                painter = profilePainter,
+            AsyncImage(
+                model = owner.profilePicture,
+                placeholder = painterResource(id = R.drawable.avatar),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(120.dp)
@@ -158,11 +147,11 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        EditableTextField("Full Name", fullName) { fullName = it }
-        EditableTextField("Email", email) { email = it }
-        EditableTextField("Phone Number", phone) { phone = it }
-        EditableTextField("Password", password, isPassword = true) { password = it }
-        EditableDateField("Birth Date", birthDate) { birthDate = it }
+        EditableTextField("Full Name", owner.fullName) { viewModel.updateFullName(it) }
+        EditableTextField("Email", owner.email) { viewModel.updateEmail(it) }
+        EditableTextField("Phone Number", owner.phoneNumber) { viewModel.updatePhoneNumber(it) }
+        EditableTextField("Password", viewModel.password, isPassword = true) { viewModel.updatePassword(it) }
+        EditableDateField("Birth Date", owner.birthDate) { viewModel.updateBirthDate(it) }
 
         Spacer(modifier = Modifier.height(100.dp))
     }
@@ -177,24 +166,16 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
                 )
             },
             onClick = {
-                coroutineScope.launch {
-                    val result = viewModel.saveChanges(
-                        fullName = fullName,
-                        email = email,
-                        phoneNumber = phone,
-                        password = password,
-                        birthDate = birthDate,
-                        profilePicture = profilePictureUrl
-                    )
-                    if (result) {
-                        Toast.makeText(context, "Changes saved successfully", Toast.LENGTH_SHORT).show()
+                viewModel.saveChanges(
+                    onSuccess = {
+                        Toast.makeText(context, "Changes saved successfully", Toast.LENGTH_SHORT)
+                            .show()
                         onSave()
+                    },
+                    onError = { errorMessage ->
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                     }
-                    else {
-                        Toast.makeText(context, "Failed to save changes", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
+                )
             },
             containerColor = Primary,
             contentColor = Color.White,
