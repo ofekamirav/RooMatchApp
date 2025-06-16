@@ -31,6 +31,7 @@ import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.presentation.theme.Primary
@@ -45,10 +46,7 @@ fun ProfileScreen(
     val roommate by viewModel.roommate.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
-    val painter = rememberAsyncImagePainter(roommate?.profilePicture)
-    val imageState = painter.state
-    val isImageReady = imageState is AsyncImagePainter.State.Success
-    val shouldShowLoading = isLoading || !isImageReady
+    val shouldShowLoading = isLoading
 
 
 
@@ -79,7 +77,6 @@ fun ProfileScreen(
             roommate?.let {
                 ProfileContent(
                     roommate = it,
-                    painter = painter,
                     onLogoutClick = {
                         showLogoutDialog = true
                     },
@@ -98,7 +95,6 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     roommate: Roommate,
-    painter: Painter,
     onEditClick: EmptyCallback,
     onLogoutClick: EmptyCallback
 ) {
@@ -119,8 +115,9 @@ fun ProfileContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Image(
-                painter = painter,
+            AsyncImage(
+                model = roommate.profilePicture,
+                placeholder = painterResource(R.drawable.avatar),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(120.dp)

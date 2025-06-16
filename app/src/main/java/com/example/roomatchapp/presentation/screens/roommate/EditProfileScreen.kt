@@ -124,8 +124,8 @@ fun EditProfileContent(
 ) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
 
-    var selectedPreferences by remember { mutableStateOf(uiState.lookingForRoomies.toMutableList()) }
-    var selectedCondoPreferences by remember { mutableStateOf(uiState.lookingForCondo.toMutableList()) }
+    val selectedRoomiesPreferences = remember { mutableStateListOf<LookingForRoomiesPreference>() }
+    var selectedCondoPreferences = remember { mutableStateListOf<LookingForCondoPreference>() }
     var preferredRadius by remember { mutableStateOf(uiState.preferredRadiusKm) }
     var priceRange by remember { mutableStateOf(uiState.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
     var sizeRange by remember { mutableStateOf(uiState.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
@@ -137,7 +137,7 @@ fun EditProfileContent(
     var isLoadingBio by remember { mutableStateOf(false) }
     var birthDate by remember { mutableStateOf(uiState.birthDate) }
     var work by remember { mutableStateOf(uiState.work) }
-    var bio by remember { mutableStateOf(uiState.personalBio ?: "") }
+    var bio by remember { mutableStateOf(uiState.personalBio) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var selectedAttributes by remember { mutableStateOf(uiState.attributes.toMutableList()) }
@@ -145,6 +145,31 @@ fun EditProfileContent(
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     var profilePictureUrl by remember { mutableStateOf(uiState.profilePicture) }
+
+    LaunchedEffect(uiState) {
+        fullName = uiState.fullName
+        email = uiState.email
+        phone = uiState.phoneNumber
+        birthDate = uiState.birthDate
+        work = uiState.work
+        bio = uiState.personalBio
+        profilePictureUrl = uiState.profilePicture
+        preferredRadius = uiState.preferredRadiusKm
+        roommatesNumber = uiState.roommatesNumber
+        priceRange = uiState.minPrice.toFloat()..uiState.maxPrice.toFloat()
+        sizeRange = uiState.minPropertySize.toFloat()..uiState.maxPropertySize.toFloat()
+
+        selectedRoomiesPreferences.clear()
+        selectedRoomiesPreferences.addAll(uiState.lookingForRoomies)
+        selectedCondoPreferences.clear()
+        selectedCondoPreferences.addAll(uiState.lookingForCondo)
+
+        selectedAttributes.clear()
+        selectedAttributes.addAll(uiState.attributes)
+        selectedHobbies.clear()
+        selectedHobbies.addAll(uiState.hobbies)
+    }
+
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let {
@@ -523,12 +548,6 @@ fun EditProfileContent(
                     isExpanded = expandedSection == "LookingForCondo",
                     onToggle = { expandedSection = if (expandedSection == "LookingForCondo") null else "LookingForCondo" }
                 ) {
-                    var priceRange by remember { mutableStateOf(roommate.minPrice.toFloat()..roommate.maxPrice.toFloat()) }
-                    var sizeRange by remember { mutableStateOf(roommate.minPropertySize.toFloat()..roommate.maxPropertySize.toFloat()) }
-                    var roommatesNumber by remember { mutableStateOf(roommate.roommatesNumber) }
-                    var preferredRadius by remember { mutableStateOf(roommate.preferredRadiusKm) }
-                    var selectedCondoPreferences by remember { mutableStateOf(roommate.lookingForCondo.toMutableList()) }
-
                     Spacer(modifier = Modifier.height(12.dp))
 
                     PriceRangeSelector(
@@ -590,11 +609,11 @@ fun EditProfileContent(
                             Button(
                                 onClick = {
                                     selectedCondoPreferences = if (isSelected) {
-                                        selectedCondoPreferences.toMutableList().apply {
+                                        selectedCondoPreferences.apply {
                                             removeIf { it.preference == pref }
                                         }
                                     } else {
-                                        selectedCondoPreferences.toMutableList().apply {
+                                        selectedCondoPreferences.apply {
                                             add(
                                                 LookingForCondoPreference(
                                                     preference = pref,
@@ -642,7 +661,7 @@ fun EditProfileContent(
                                     sliderValue.value = newValue
                                     val index = selectedCondoPreferences.indexOfFirst { it.preference == pref.preference }
                                     if (index != -1) {
-                                        selectedCondoPreferences = selectedCondoPreferences.toMutableList().apply {
+                                        selectedCondoPreferences = selectedCondoPreferences.apply {
                                             set(index, pref.copy(weight = newValue.toDouble(), setWeight = true))
                                         }
                                     }
@@ -672,7 +691,7 @@ fun EditProfileContent(
                     personalBio = bio,
                     attributes = selectedAttributes,
                     hobbies = selectedHobbies,
-                    lookingForRoomies = selectedPreferences,
+                    lookingForRoomies = selectedRoomiesPreferences,
                     lookingForCondo = selectedCondoPreferences,
                     preferredRadiusKm = preferredRadius,
                     roommatesNumber = roommatesNumber,

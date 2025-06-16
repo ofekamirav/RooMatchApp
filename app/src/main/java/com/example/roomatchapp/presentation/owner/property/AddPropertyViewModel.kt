@@ -69,7 +69,7 @@ class AddPropertyViewModel(
         private set
 
     var isLoading by mutableStateOf(false)
-        private set
+        public set
 
     private val _navigateToProperties = MutableStateFlow(false)
     val navigateToProperties: StateFlow<Boolean> = _navigateToProperties.asStateFlow()

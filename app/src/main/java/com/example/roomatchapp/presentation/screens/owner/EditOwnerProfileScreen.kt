@@ -94,7 +94,7 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
     var email by remember { mutableStateOf(owner.email) }
     var phone by remember { mutableStateOf(owner.phoneNumber) }
     var password by remember { mutableStateOf("") }
-    var birthDate by remember { mutableStateOf(owner.birthDate ?: "") }
+    var birthDate by remember { mutableStateOf(owner.birthDate) }
     var profilePictureUrl by remember { mutableStateOf(owner.profilePicture) }
 
     val context = LocalContext.current

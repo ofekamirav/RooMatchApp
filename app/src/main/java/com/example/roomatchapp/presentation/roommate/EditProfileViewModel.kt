@@ -40,7 +40,6 @@ data class EditProfileUiState(
 class EditProfileViewModel(
     private val userRepository: UserRepository,
     private val seekerId: String,
-    private val matchRepository: MatchRepository,
     private val userSessionManager: UserSessionManager
 ) : ViewModel() {
 
@@ -122,6 +121,7 @@ class EditProfileViewModel(
     ) {
         val current = _roommate.value ?: return
         _isSaving.value = true
+        Log.d("TAG", "EditProfileViewModel-Current roommate details: $current")
 
         val preferencesChanged = current.lookingForRoomies != lookingForRoomies ||
                 current.lookingForCondo != lookingForCondo ||
@@ -179,9 +179,9 @@ class EditProfileViewModel(
                         minPropertySize = updatedRoommate.minPropertySize,
                         maxPropertySize = updatedRoommate.maxPropertySize
                     )
+                    Log.d("TAG", "EditProfileViewModel-Updated roommate details: $updatedRoommate")
                     if (preferencesChanged) {
                         Log.d("TAG", "EditProfileViewModel-Updating suggested matches because preferences changed")
-                        matchRepository.clearLocalSuggestedMatches()
                         userSessionManager.setUpdatedPreferencesFlag(true)
                     }
                     Log.d("TAG", "EditProfileViewModel-Profile updated successfully.")
