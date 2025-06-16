@@ -612,13 +612,14 @@ fun EditProfileContent(
             text = { Text("Save Changes") },
             icon = { Icon(Icons.Default.Check, contentDescription = "Save Changes") },
             onClick = {
-                viewModel.saveChanges(                )
-                if (viewModel.isSaving.value) {
-                    onSaveClick()
-                }
-                else{
-                    Toast.makeText(context, "Error saving changes", Toast.LENGTH_SHORT).show()
-                }
+                viewModel.saveChanges(
+                    onSuccess = {
+                        onSaveClick()
+                    },
+                    onError = { errorMessage ->
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                )
             },
             containerColor = CustomTeal,
             contentColor = Color.White,

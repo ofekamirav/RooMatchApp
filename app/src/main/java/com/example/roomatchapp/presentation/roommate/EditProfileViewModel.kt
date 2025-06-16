@@ -121,7 +121,6 @@ class EditProfileViewModel(
     fun updateMaxPrice(newMaxPrice: Int) {
         _uiState.value = _uiState.value.copy(maxPrice = newMaxPrice)
     }
-
     fun updateMinPropertySize(newMinPropertySize: Int) {
         _uiState.value = _uiState.value.copy(minPropertySize = newMinPropertySize)
     }
@@ -136,6 +135,9 @@ class EditProfileViewModel(
     private fun loadRoommateProfile() {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
+                _roommate.value = null
+                _uiState.value = EditProfileUiState()
                 Log.d("TAG", "EditProfileViewModel-Loading roommate for Id: $seekerId")
                 val result = userRepository.getRoommate(seekerId)
                 if (result != null) {
@@ -192,6 +194,7 @@ class EditProfileViewModel(
 
     //Update the Roommate with the changes from the UiState
     fun EditProfileUiState.toRoommate(current: Roommate) = current.copy(
+        id              = current.id,
         fullName        = fullName,
         email           = email,
         phoneNumber     = phoneNumber,
@@ -223,17 +226,17 @@ class EditProfileViewModel(
 
         if (u.email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(u.email).matches()){
             _errorMsg.value = "E-mail address is required"
-            return  false
+            return false
         }
 
         if (u.phoneNumber.isBlank() || u.phoneNumber.length < 7){
             _errorMsg.value = "Phone number is invalid"
-            return  false
+            return false
         }
 
         if (u.password.isNotBlank() && u.password.length < 6){
             _errorMsg.value = "Password must be at least 6 characters"
-            return  false
+            return false
         }
 
         if (u.birthDate.isNotBlank()) {
@@ -243,11 +246,11 @@ class EditProfileViewModel(
                 val date = LocalDate.parse(u.birthDate, formatter)
                 if (date.isAfter(LocalDate.now())){
                     _errorMsg.value = "Birth date cannot be in the future"
-                    return  false
+                    return false
                 }
             }.onFailure {
                 _errorMsg.value = "Birth date format should be DD-MM-YYYY"
-                return  false
+                return false
             }
         }
 
@@ -258,70 +261,125 @@ class EditProfileViewModel(
 
         if (u.hobbies.size<3){
             _errorMsg.value = "Choose at least 3 hobbies"
-            return  false
+            return false
         }
-            _errorMsg.value = "Choose at least one hobby"
 
         if (u.minPrice <= 0 || u.maxPrice <= 0 || u.minPrice > u.maxPrice){
             _errorMsg.value = "Price range is invalid"
-            return  false
+            return false
         }
 
         if (u.minPropertySize <= 0 || u.maxPropertySize <= 0 ||
             u.minPropertySize > u.maxPropertySize){
             _errorMsg.value = "Property size range is invalid"
-            return  false
+            return false
         }
 
         if (u.preferredRadiusKm !in 1..100){
             _errorMsg.value = "Preferred radius must be 1-100 km"
-            return  false
+            return false
         }
 
         if (u.roommatesNumber !in 1..10){
             _errorMsg.value = "Roommates number must be 1-10"
-            return  false
+            return false
+        }
+
+        if (u.work.isBlank()){
+            _errorMsg.value = "Work place is required"
+            return false
+        }
+
+        if (u.personalBio.isBlank()){
+            _errorMsg.value = "Personal bio is required"
+            return false
+        }
+
+        if (u.profilePicture == null){
+            _errorMsg.value = "Profile picture is required"
+            return false
+        }
+
+        if (u.birthDate.isBlank()){
+            _errorMsg.value = "Birth date is required"
+            return false
+        }
+
+        if (u.phoneNumber.isBlank()){
+            _errorMsg.value = "Phone number is required"
+            return false
+        }
+
+        if (u.email.isBlank()){
+            _errorMsg.value = "Email is required"
+            return false
+        }
+
+        if (u.fullName.isBlank()){
+            _errorMsg.value = "Full name is required"
+            return false
+        }
+
+        if(u.lookingForCondo.size < 2){
+            _errorMsg.value = "You must select at least 2 Condo Preferences"
+            return false
+        }
+
+        if(u.lookingForRoomies.size < 3){
+            _errorMsg.value = "You must select at least 3 Roommates Preferences"
+            return false
         }
         return true
     }
 
 
-    fun saveChanges() {
+    fun saveChanges(
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
         if (!validationBeforeSaving()) {
-            _savingSuccess.value = false
+            onError(_errorMsg.value ?: "Validation failed")
             return
         }
-
-        val current = _roommate.value ?: return
+        val current = _roommate.value ?: run {
+            onError("Cannot save, user data not loaded.")
+            return
+        }
         val updatedUi = _uiState.value
-        Log.d("TAG", "EditProfileViewModel-Current roommate details: $current")
+        Log.d("TAG", "EditProfileViewModel-Current roommate details: ${current.lookingForCondo}, ${current.lookingForRoomies}, ${current.attributes}, ${current.hobbies} , ${current.email}, ${current.fullName}")
         if (updatedUi == current.toUiState()) {
-            _savingSuccess.value = true
+            Log.d("SaveChanges", "No changes detected. Navigating back.")
+            onSuccess()
             return
         }
         _isSaving.value = true
         viewModelScope.launch {
             try {
                 val roommateToSend = updatedUi.toRoommate(current)
-                val success = userRepository.updateRoommate(seekerId,roommateToSend)
+                val success = userRepository.updateRoommate(roommateToSend)
 
                 if (success) {
                     _roommate.value = roommateToSend
-                    Log.d("TAG", "EditProfileViewModel-Updated roommate details: $roommateToSend")
+                    _uiState.value = roommateToSend.toUiState()
+                    _uiState.value = _uiState.value.copy(password = "")
+                    Log.d("TAG", "EditProfileViewModel-Updated roommate details: ${roommateToSend.lookingForCondo}, ${roommateToSend.lookingForRoomies}, ${roommateToSend.attributes}, ${roommateToSend.hobbies} , ${roommateToSend.email}, ${roommateToSend.fullName}")
                     userSessionManager.setUpdatedPreferencesFlag(
                         roommateToSend.lookingForRoomies != current.lookingForRoomies ||
                                 roommateToSend.lookingForCondo  != current.lookingForCondo
                     )
                     _savingSuccess.value = true
+                    onSuccess()
                     Log.d("TAG", "EditProfileViewModel-Profile updated successfully.")
                 } else {
                     Log.e("TAG", "EditProfileViewModel-Failed to update profile: API returned false")
                     _savingSuccess.value = false
+                    onError("Failed to save changes. Please try again.")
                 }
 
             } catch (e: Exception) {
                 Log.e("TAG", "EditProfileViewModel-Error updating profile", e)
                 _savingSuccess.value = false
+                onError("An error occurred: ${e.message}")
             } finally {
                 delay(1500)
                 _isSaving.value = false

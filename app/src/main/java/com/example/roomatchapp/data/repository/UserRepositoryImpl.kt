@@ -162,23 +162,24 @@ class UserRepositoryImpl(
     }
 
     override suspend fun updateRoommate(
-        seekerId: String,
-        roommate: Roommate,
+        roommate: Roommate
     ): Boolean {
-        Log.d("TAG", "UserRepositoryImp- updateRoommate - seekerId: $seekerId")
-        val cacheEntry = cacheDao.getByIdAndType(seekerId, CacheType.ROOMMATE)
+        Log.d("TAG", "UserRepositoryImp- updateRoommate - seekerId: ${roommate.id}")
+        val cacheEntry = cacheDao.getByIdAndType(roommate.id, CacheType.ROOMMATE)
         if (cacheEntry != null){
             cacheDao.delete(cacheEntry.entityId)
+            roommateDao.delete(roommate.id)
+            Log.d("TAG", "UserRepositoryImp- updateRoommate - cleared cache")
         }
         roommateDao.insert(roommate)
         cacheDao.insert(
             CacheEntity(
                 type = CacheType.ROOMMATE,
-                entityId = seekerId,
+                entityId = roommate.id,
                 lastUpdatedAt = System.currentTimeMillis()
             )
         )
-        return apiService.updateRoommate(seekerId, roommate)
+        return apiService.updateRoommate(roommate)
     }
 
     override suspend fun updateOwner(
@@ -189,6 +190,7 @@ class UserRepositoryImpl(
         val cacheEntry = cacheDao.getByIdAndType(ownerId, CacheType.PROPERTY_OWNER)
         if (cacheEntry != null){
             cacheDao.delete(cacheEntry.entityId)
+            propertyOwnerDao.delete(ownerId)
         }
         propertyOwnerDao.insert(propertyOwner)
         cacheDao.insert(
