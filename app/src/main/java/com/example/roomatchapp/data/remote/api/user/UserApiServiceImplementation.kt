@@ -373,7 +373,7 @@ class UserApiServiceImplementation(
     override suspend fun checkEmailRegistered(email: String): Boolean {
         Log.d("TAG", "ApiService-Sending post request to $baseUrl/check-email")
         try {
-            val response = client.post("$baseUrl/check-email")
+            val response = client.post("$baseUrl/roommates/check-email")
             {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("email" to email))

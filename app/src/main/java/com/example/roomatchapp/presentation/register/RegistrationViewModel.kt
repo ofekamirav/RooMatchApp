@@ -14,6 +14,7 @@ import com.example.roomatchapp.data.model.Hobby
 import com.example.roomatchapp.data.model.LookingForCondoPreference
 import com.example.roomatchapp.data.model.LookingForRoomiesPreference
 import com.example.roomatchapp.data.remote.dto.RoommateUser
+import com.example.roomatchapp.di.AppDependencies.userRepository
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -80,6 +81,9 @@ class RegistrationViewModel(
 
     var googleSignInPic by mutableStateOf(null as String?)
         public set
+
+    var EmailNotValid by mutableStateOf(true)
+        private set
 
 
     private val _navigateToMain = MutableStateFlow(false)
@@ -158,7 +162,26 @@ class RegistrationViewModel(
     }
 
     //Validation
-    fun isValidEmail(email: String): Boolean {
+    fun isValidEmailRemote(email: String) {
+            viewModelScope.launch {
+                val notValid = userRepository.checkEmailRegistered(email)
+                if (notValid){
+                    _baseState.value = _baseState.value.copy(
+                        emailError = "This email is already registered."
+                    )
+                    EmailNotValid = true
+                }
+                else{
+                    EmailNotValid = false
+                    _baseState.value = _baseState.value.copy(
+                        emailError = null
+                    )
+                }
+            }
+        }
+
+
+    fun isValidEmailLocal(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
@@ -187,12 +210,13 @@ class RegistrationViewModel(
 
     // Check all fields
     fun validateAllFields(): Boolean {
-        return isValidEmail(_baseState.value.email) &&
+        return isValidEmailLocal(_baseState.value.email) &&
                 isValidFullName(_baseState.value.fullName) &&
                 isValidPhoneNumber(_baseState.value.phoneNumber) &&
                 isValidBirthDate(_baseState.value.birthDate) &&
                 isValidPassword(_baseState.value.password) &&
                 doPasswordsMatch(_baseState.value.password, _baseState.value.confirmPassword)
+                && !EmailNotValid
     }
 
     //Check complete fields
@@ -200,7 +224,7 @@ class RegistrationViewModel(
         return isValidFullName(_baseState.value.fullName) &&
                 isValidPhoneNumber(_baseState.value.phoneNumber) &&
                 isValidBirthDate(_baseState.value.birthDate) &&
-                isValidEmail(_baseState.value.email)
+                isValidEmailLocal(_baseState.value.email)
     }
 
 //-----------------------------GoogleSignin---------------------------------------------------------------------------------
