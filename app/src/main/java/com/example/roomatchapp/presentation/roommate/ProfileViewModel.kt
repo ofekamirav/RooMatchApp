@@ -24,25 +24,13 @@ class ProfileViewModel(
         loadRoommateProfile()
     }
 
-    private fun loadRoommateProfile() {
+    internal fun loadRoommateProfile() {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
+                _roommate.value = null
                 Log.d("ProfileViewModel", "Loading roommate for Id: $seekerId")
                 val result = userRepository.getRoommate(seekerId)
-                Log.d("ProfileViewModel", "Loaded roommate: ${result?.fullName}")
-                _roommate.value = result
-                _isLoading.value = false
-            } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Error loading roommate", e)
-                _roommate.value = null
-            }
-        }
-    }
-    fun refreshProfileDetails(){
-        viewModelScope.launch {
-            try {
-                Log.d("ProfileViewModel", "Loading roommate for Id: $seekerId")
-                val result = userRepository.getRoommate(seekerId, forceRefresh = true)
                 Log.d("ProfileViewModel", "Loaded roommate: ${result?.fullName}")
                 _roommate.value = result
                 _isLoading.value = false

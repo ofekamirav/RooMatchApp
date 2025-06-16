@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +51,6 @@ fun OwnerMainScreen(
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
     val systemUiController = rememberSystemUiController()
-    var isOwnerUpdated by remember { mutableStateOf(false) }
 
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -108,7 +108,7 @@ fun OwnerMainScreen(
                     OwnerAnalyticsScreen(viewModel = viewModel)
                 }
             }
-            composable("owner_profile") {
+            composable("owner_profile") { backStackEntry->
                 // Owner profile screen
                 val viewModel = remember(ownerId) {
                     OwnerProfileViewModel(
@@ -116,6 +116,14 @@ fun OwnerMainScreen(
                         ownerId = ownerId
                     )
                 }
+
+                LaunchedEffect(Unit) {
+                    if (backStackEntry.savedStateHandle.get<Boolean>("profile_updated") == true) {
+                        viewModel.loadOwnerProfile()
+                        backStackEntry.savedStateHandle.remove<Boolean>("profile_updated")
+                    }
+                }
+
                 OwnerProfileScreen(
                     viewModel = viewModel,
                     onLogout = {
@@ -124,8 +132,6 @@ fun OwnerMainScreen(
                     onEditClick = {
                         navController.navigate("edit_profile")
                     },
-                    wasProfileUpdated = isOwnerUpdated,
-                    onRefreshDone =  {isOwnerUpdated = false}
                 )
             }
             composable("add_property") {
@@ -214,9 +220,11 @@ fun OwnerMainScreen(
                     viewModel = viewModel,
                     onBackClick = {
                         navController.popBackStack()
-                        isOwnerUpdated = true
                     },
                     onSaveClick = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("profile_updated", true)
                         navController.popBackStack()
                     }
                 )

@@ -335,12 +335,11 @@ class UserApiServiceImplementation(
     }
 
     override suspend fun updateRoommate(
-        seekerId: String,
         roommate: Roommate,
     ): Boolean {
-        Log.d("TAG", "ApiService-Sending PUT request to $baseUrl/roommates/$seekerId")
+        Log.d("TAG", "ApiService-Sending PUT request to $baseUrl/roommates/${roommate.id}")
         try {
-            val response = client.put("$baseUrl/roommates/$seekerId") {
+            val response = client.put("$baseUrl/roommates/${roommate.id}") {
                 contentType(ContentType.Application.Json)
                 setBody(roommate)
             }

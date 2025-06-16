@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,7 +48,6 @@ fun RoommateMainScreen(
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
     val systemUiController = rememberSystemUiController()
-    var isRoommateUpdated by remember { mutableStateOf(false) }
 
 
     SideEffect {
@@ -113,7 +113,7 @@ fun RoommateMainScreen(
                 }
             }
 
-            composable("roommate_profile") {
+            composable("roommate_profile") { backStackEntry ->
                 if (seekerId.isNotBlank()) {
                     val viewModel = remember(seekerId) {
                         ProfileViewModel(
@@ -121,14 +121,20 @@ fun RoommateMainScreen(
                             seekerId = seekerId
                         )
                     }
+
+                    LaunchedEffect(Unit) {
+                        if (backStackEntry.savedStateHandle.get<Boolean>("profile_updated") == true) {
+                            viewModel.loadRoommateProfile()
+                            backStackEntry.savedStateHandle.remove<Boolean>("profile_updated")
+                        }
+                    }
+
                     ProfileScreen(
                         viewModel = viewModel,
                         onEditClick = {
                             navController.navigate("edit_profile")
                         },
-                        onLogout = { onLogout() },
-                        wasProfileUpdated = isRoommateUpdated,
-                        onRefreshDone = { isRoommateUpdated = false }
+                        onLogout = { onLogout() }
                     )
                 }
             }
@@ -146,9 +152,12 @@ fun RoommateMainScreen(
                     EditProfileScreen(
                         viewModel = viewModel,
                         onSaveClick = {
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("profile_updated", true)
+
                             navController.popBackStack()
                             Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                            isRoommateUpdated = true
                         },
                         onBackClick = {
                             navController.popBackStack()

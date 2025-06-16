@@ -1,7 +1,6 @@
 package com.example.roomatchapp.presentation.screens.roommate
 
 import CustomAlertDialog
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,10 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.model.*
 import com.example.roomatchapp.presentation.components.LoadingAnimation
@@ -29,10 +26,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
 import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Third
@@ -42,21 +36,12 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onEditClick: EmptyCallback,
     onLogout: () -> Unit,
-    wasProfileUpdated: Boolean,
-    onRefreshDone: () -> Unit = {}
 ) {
     val roommate by viewModel.roommate.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val shouldShowLoading = isLoading
 
-    LaunchedEffect(wasProfileUpdated) {
-        if (wasProfileUpdated) {
-            println("Profile update detected, refreshing data...")
-            viewModel.refreshProfileDetails()
-            onRefreshDone()
-        }
-    }
 
     if (showLogoutDialog) {
         CustomAlertDialog(

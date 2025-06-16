@@ -43,7 +43,7 @@ class UserUseCase(private val userRepository: UserRepository) {
     }
 
     suspend fun updateRoommate(id: String, roommate: Roommate): Boolean {
-        return userRepository.updateRoommate(id, roommate)
+        return userRepository.updateRoommate(roommate)
     }
 
     suspend fun updateOwner(id: String, owner: PropertyOwner): Boolean {
