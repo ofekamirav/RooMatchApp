@@ -1,6 +1,7 @@
 package com.example.roomatchapp.presentation.roommate
 
 import android.util.Log
+import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class EditProfileUiState(
     val fullName: String = "",
@@ -32,7 +35,7 @@ data class EditProfileUiState(
     val minPrice: Int = 2000,
     val maxPrice: Int = 4000,
     val minPropertySize: Int = 60,
-    val maxPropertySize: Int = 100
+    val maxPropertySize: Int = 100,
 )
 
 class EditProfileViewModel(
@@ -47,14 +50,84 @@ class EditProfileViewModel(
     private val _uiState = MutableStateFlow(EditProfileUiState())
     val uiState: StateFlow<EditProfileUiState> = _uiState
 
+    private val _geminiLoading = MutableStateFlow(false)
+    val geminiLoading: StateFlow<Boolean> = _geminiLoading
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
 
+    private val _savingSuccess = MutableStateFlow(false)
+    val savingSuccess: StateFlow<Boolean> = _savingSuccess
+
     var isUploadingImage by mutableStateOf(false)
         public set
+
+    private val _errorMsg = MutableStateFlow<String?>(null)
+    val errorMsg: StateFlow<String?> = _errorMsg
+
+
+    fun updateFullName(newName: String) {
+        _uiState.value = _uiState.value.copy(fullName = newName)
+    }
+
+    fun updatePhoneNumber(newPhone: String) {
+        _uiState.value = _uiState.value.copy(phoneNumber = newPhone)
+    }
+    fun updateEmail(newEmail: String) {
+        _uiState.value = _uiState.value.copy(email = newEmail)
+    }
+
+    fun updateBirthDate(newBirthDate: String) {
+        _uiState.value = _uiState.value.copy(birthDate = newBirthDate)
+    }
+    fun updateWork(newWork: String) {
+        _uiState.value = _uiState.value.copy(work = newWork)
+    }
+    fun updateProfilePicture(newProfilePicture: String?) {
+        _uiState.value = _uiState.value.copy(profilePicture = newProfilePicture)
+    }
+    fun updatePersonalBio(newPersonalBio: String) {
+        _uiState.value = _uiState.value.copy(personalBio = newPersonalBio)
+    }
+
+    fun updateAttributes(newAttributes: List<Attribute>) {
+        _uiState.value = _uiState.value.copy(attributes = newAttributes)
+    }
+    fun updateHobbies(newHobbies: List<Hobby>) {
+        _uiState.value = _uiState.value.copy(hobbies = newHobbies)
+    }
+    fun updateLookingForRoomies(newLookingForRoomies: List<LookingForRoomiesPreference>) {
+        _uiState.value = _uiState.value.copy(lookingForRoomies = newLookingForRoomies)
+    }
+    fun updateLookingForCondo(newLookingForCondo: List<LookingForCondoPreference>) {
+        _uiState.value = _uiState.value.copy(lookingForCondo = newLookingForCondo)
+    }
+
+    fun updatePreferredRadiusKm(newPreferredRadiusKm: Int) {
+        _uiState.value = _uiState.value.copy(preferredRadiusKm = newPreferredRadiusKm)
+    }
+    fun updateRoommatesNumber(newRoommatesNumber: Int) {
+        _uiState.value = _uiState.value.copy(roommatesNumber = newRoommatesNumber)
+    }
+    fun updatePassword(newPassword: String) {
+        _uiState.value = _uiState.value.copy(password = newPassword)
+    }
+    fun updateMinPrice(newMinPrice: Int) {
+        _uiState.value = _uiState.value.copy(minPrice = newMinPrice)
+    }
+    fun updateMaxPrice(newMaxPrice: Int) {
+        _uiState.value = _uiState.value.copy(maxPrice = newMaxPrice)
+    }
+
+    fun updateMinPropertySize(newMinPropertySize: Int) {
+        _uiState.value = _uiState.value.copy(minPropertySize = newMinPropertySize)
+    }
+    fun updateMaxPropertySize(newMaxPropertySize: Int) {
+        _uiState.value = _uiState.value.copy(maxPropertySize = newMaxPropertySize)
+    }
 
     init {
         loadRoommateProfile()
@@ -65,30 +138,12 @@ class EditProfileViewModel(
             try {
                 Log.d("TAG", "EditProfileViewModel-Loading roommate for Id: $seekerId")
                 val result = userRepository.getRoommate(seekerId)
-                _roommate.value = result
-                result?.let {
-                    _uiState.value = EditProfileUiState(
-                        fullName = it.fullName,
-                        email = it.email,
-                        phoneNumber = it.phoneNumber,
-                        password = it.password,
-                        birthDate = it.birthDate,
-                        work = it.work,
-                        profilePicture = it.profilePicture,
-                        personalBio = it.personalBio ?: "",
-                        attributes = it.attributes,
-                        hobbies = it.hobbies,
-                        lookingForRoomies = it.lookingForRoomies,
-                        lookingForCondo = it.lookingForCondo,
-                        preferredRadiusKm = it.preferredRadiusKm,
-                        roommatesNumber = it.roommatesNumber,
-                        minPrice = it.minPrice,
-                        maxPrice = it.maxPrice,
-                        minPropertySize = it.minPropertySize,
-                        maxPropertySize = it.maxPropertySize
-                    )
+                if (result != null) {
+                    _roommate.value = result
+                    _uiState.value = result.toUiState()
+                    _uiState.value = _uiState.value.copy(password = "")
+                    _isLoading.value = false
                 }
-                _isLoading.value = false
             } catch (e: Exception) {
                 Log.e("TAG", "EditProfileViewModel-Error loading roommate", e)
                 _roommate.value = null
@@ -97,102 +152,184 @@ class EditProfileViewModel(
         }
     }
 
-    fun saveChanges(
-        fullName: String,
-        email: String,
-        phoneNumber: String,
-        password: String,
-        birthDate: String,
-        work: String?,
-        profilePicture: String?,
-        personalBio: String,
-        attributes: List<Attribute>,
-        hobbies: List<Hobby>,
-        lookingForRoomies: List<LookingForRoomiesPreference>,
-        lookingForCondo: List<LookingForCondoPreference>,
-        preferredRadiusKm: Int,
-        roommatesNumber: Int,
-        minPrice: Int,
-        maxPrice: Int,
-        minPropertySize: Int,
-        maxPropertySize: Int
-    ) {
-        val current = _roommate.value ?: return
-        _isSaving.value = true
-        Log.d("TAG", "EditProfileViewModel-Current roommate details: $current")
-
-        val preferencesChanged = current.lookingForRoomies != lookingForRoomies ||
-                current.lookingForCondo != lookingForCondo ||
-                current.preferredRadiusKm != preferredRadiusKm ||
-                current.roommatesNumber != roommatesNumber ||
-                current.minPrice != minPrice ||
-                current.maxPrice != maxPrice ||
-                current.minPropertySize != minPropertySize ||
-                current.maxPropertySize != maxPropertySize
-
+    fun generateGeminiPersonalBio(){
+        _geminiLoading.value = true
+        val stringAttributesList: List<String> = _uiState.value.attributes.map { it.name }
+        val stringHobbiesList: List<String> = _uiState.value.hobbies.map { it.name }
         viewModelScope.launch {
             try {
-                val updatedRoommate = current.copy(
-                    fullName = if (fullName.isNotBlank()) fullName else current.fullName,
-                    email = if (email.isNotBlank()) email else current.email,
-                    phoneNumber = if (phoneNumber.isNotBlank()) phoneNumber else current.phoneNumber,
-                    password = if (password.isNotBlank()) password else current.password,
-                    birthDate = if (birthDate.isNotBlank()) birthDate else current.birthDate,
-                    work = if (!work.isNullOrBlank()) work else current.work,
-                    profilePicture = profilePicture ?: current.profilePicture,
-                    personalBio = if (personalBio.isNotBlank()) personalBio else current.personalBio,
-                    attributes = if (attributes.isNotEmpty()) attributes else current.attributes,
-                    hobbies = if (hobbies.isNotEmpty()) hobbies else current.hobbies,
-                    lookingForRoomies = lookingForRoomies,
-                    lookingForCondo = lookingForCondo,
-                    preferredRadiusKm = preferredRadiusKm,
-                    roommatesNumber = roommatesNumber,
-                    minPrice = minPrice,
-                    maxPrice = maxPrice,
-                    minPropertySize = minPropertySize,
-                    maxPropertySize = maxPropertySize
-                )
+                val response = userRepository.geminiSuggestClicked(_uiState.value.fullName, stringAttributesList, stringHobbiesList, uiState.value.work)
+                if (response != null){
+                    _uiState.value = _uiState.value.copy(personalBio = response.toString())
+                    _geminiLoading.value = false
+                }
+            }catch (e: Exception){
+                Log.e("TAG", "EditProfileViewModel-Error generating Gemini bio", e)
+                _geminiLoading.value = false
+            }
+        }
+    }
+    //Convert the Roommate to the UiState
+    fun Roommate.toUiState() = EditProfileUiState(
+        fullName           = fullName,
+        email              = email,
+        phoneNumber        = phoneNumber,
+        birthDate          = birthDate,
+        work               = work,
+        profilePicture     = profilePicture,
+        personalBio        = personalBio.toString(),
+        attributes         = attributes,
+        hobbies            = hobbies,
+        lookingForRoomies  = lookingForRoomies,
+        lookingForCondo    = lookingForCondo,
+        preferredRadiusKm  = preferredRadiusKm,
+        roommatesNumber    = roommatesNumber,
+        minPrice           = minPrice,
+        maxPrice           = maxPrice,
+        minPropertySize    = minPropertySize,
+        maxPropertySize    = maxPropertySize,
+    )
 
-                val success = userRepository.updateRoommate(seekerId, updatedRoommate)
+    //Update the Roommate with the changes from the UiState
+    fun EditProfileUiState.toRoommate(current: Roommate) = current.copy(
+        fullName        = fullName,
+        email           = email,
+        phoneNumber     = phoneNumber,
+        birthDate       = birthDate,
+        work            = work,
+        personalBio     = personalBio,
+        attributes      = attributes,
+        hobbies         = hobbies,
+        lookingForRoomies = lookingForRoomies,
+        lookingForCondo   = lookingForCondo,
+        preferredRadiusKm = preferredRadiusKm,
+        roommatesNumber   = roommatesNumber,
+        minPrice          = minPrice,
+        maxPrice          = maxPrice,
+        minPropertySize   = minPropertySize,
+        maxPropertySize   = maxPropertySize,
+        profilePicture = profilePicture ?: current.profilePicture,
+        password = if (password.isNotBlank()) password else current.password
+    )
+
+    fun validationBeforeSaving(): Boolean {
+
+        val u = _uiState.value
+
+        if (u.fullName.isBlank()){
+            _errorMsg.value = "Full name is required"
+            return false
+        }
+
+        if (u.email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(u.email).matches()){
+            _errorMsg.value = "E-mail address is required"
+            return  false
+        }
+
+        if (u.phoneNumber.isBlank() || u.phoneNumber.length < 7){
+            _errorMsg.value = "Phone number is invalid"
+            return  false
+        }
+
+        if (u.password.isNotBlank() && u.password.length < 6){
+            _errorMsg.value = "Password must be at least 6 characters"
+            return  false
+        }
+
+        if (u.birthDate.isNotBlank()) {
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+            runCatching {
+                val date = LocalDate.parse(u.birthDate, formatter)
+                if (date.isAfter(LocalDate.now())){
+                    _errorMsg.value = "Birth date cannot be in the future"
+                    return  false
+                }
+            }.onFailure {
+                _errorMsg.value = "Birth date format should be DD-MM-YYYY"
+                return  false
+            }
+        }
+
+        if (u.attributes.size<3){
+            _errorMsg.value = "Choose at least 3 attributes"
+            return  false
+        }
+
+        if (u.hobbies.size<3){
+            _errorMsg.value = "Choose at least 3 hobbies"
+            return  false
+        }
+            _errorMsg.value = "Choose at least one hobby"
+
+        if (u.minPrice <= 0 || u.maxPrice <= 0 || u.minPrice > u.maxPrice){
+            _errorMsg.value = "Price range is invalid"
+            return  false
+        }
+
+        if (u.minPropertySize <= 0 || u.maxPropertySize <= 0 ||
+            u.minPropertySize > u.maxPropertySize){
+            _errorMsg.value = "Property size range is invalid"
+            return  false
+        }
+
+        if (u.preferredRadiusKm !in 1..100){
+            _errorMsg.value = "Preferred radius must be 1-100 km"
+            return  false
+        }
+
+        if (u.roommatesNumber !in 1..10){
+            _errorMsg.value = "Roommates number must be 1-10"
+            return  false
+        }
+        return true
+    }
+
+
+    fun saveChanges() {
+        if (!validationBeforeSaving()) {
+            _savingSuccess.value = false
+            return
+        }
+
+        val current = _roommate.value ?: return
+        val updatedUi = _uiState.value
+        Log.d("TAG", "EditProfileViewModel-Current roommate details: $current")
+        if (updatedUi == current.toUiState()) {
+            _savingSuccess.value = true
+            return
+        }
+        _isSaving.value = true
+        viewModelScope.launch {
+            try {
+                val roommateToSend = updatedUi.toRoommate(current)
+                val success = userRepository.updateRoommate(seekerId,roommateToSend)
 
                 if (success) {
-                    _roommate.value = updatedRoommate
-                    _uiState.value = EditProfileUiState(
-                        fullName = updatedRoommate.fullName,
-                        email = updatedRoommate.email,
-                        phoneNumber = updatedRoommate.phoneNumber,
-                        password = updatedRoommate.password,
-                        birthDate = updatedRoommate.birthDate,
-                        work = updatedRoommate.work,
-                        profilePicture = updatedRoommate.profilePicture,
-                        personalBio = updatedRoommate.personalBio ?: "",
-                        attributes = updatedRoommate.attributes,
-                        hobbies = updatedRoommate.hobbies,
-                        lookingForRoomies = updatedRoommate.lookingForRoomies,
-                        lookingForCondo = updatedRoommate.lookingForCondo,
-                        preferredRadiusKm = updatedRoommate.preferredRadiusKm,
-                        roommatesNumber = updatedRoommate.roommatesNumber,
-                        minPrice = updatedRoommate.minPrice,
-                        maxPrice = updatedRoommate.maxPrice,
-                        minPropertySize = updatedRoommate.minPropertySize,
-                        maxPropertySize = updatedRoommate.maxPropertySize
+                    _roommate.value = roommateToSend
+                    Log.d("TAG", "EditProfileViewModel-Updated roommate details: $roommateToSend")
+                    userSessionManager.setUpdatedPreferencesFlag(
+                        roommateToSend.lookingForRoomies != current.lookingForRoomies ||
+                                roommateToSend.lookingForCondo  != current.lookingForCondo
                     )
-                    Log.d("TAG", "EditProfileViewModel-Updated roommate details: $updatedRoommate")
-                    if (preferencesChanged) {
-                        Log.d("TAG", "EditProfileViewModel-Updating suggested matches because preferences changed")
-                        userSessionManager.setUpdatedPreferencesFlag(true)
-                    }
+                    _savingSuccess.value = true
                     Log.d("TAG", "EditProfileViewModel-Profile updated successfully.")
                 } else {
                     Log.e("TAG", "EditProfileViewModel-Failed to update profile: API returned false")
+                    _savingSuccess.value = false
                 }
 
             } catch (e: Exception) {
                 Log.e("TAG", "EditProfileViewModel-Error updating profile", e)
+                _savingSuccess.value = false
             } finally {
                 delay(1500)
                 _isSaving.value = false
             }
         }
+    }
+
+    fun clearErrorMessage() {
+        _errorMsg.value = null
     }
 }

@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,6 +47,8 @@ fun RoommateMainScreen(
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
     val systemUiController = rememberSystemUiController()
+    var isRoommateUpdated by remember { mutableStateOf(false) }
+
 
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -121,7 +126,9 @@ fun RoommateMainScreen(
                         onEditClick = {
                             navController.navigate("edit_profile")
                         },
-                        onLogout = { onLogout() }
+                        onLogout = { onLogout() },
+                        wasProfileUpdated = isRoommateUpdated,
+                        onRefreshDone = { isRoommateUpdated = false }
                     )
                 }
             }
@@ -141,6 +148,7 @@ fun RoommateMainScreen(
                         onSaveClick = {
                             navController.popBackStack()
                             Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                            isRoommateUpdated = true
                         },
                         onBackClick = {
                             navController.popBackStack()

@@ -33,11 +33,21 @@ import com.example.roomatchapp.presentation.theme.Third
 fun OwnerProfileScreen(
     onLogout: EmptyCallback,
     viewModel: OwnerProfileViewModel,
-    onEditClick: EmptyCallback
+    onEditClick: EmptyCallback,
+    wasProfileUpdated: Boolean,
+    onRefreshDone: () -> Unit = {}
 ) {
     val owner by viewModel.owner.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isProfileLoaded by viewModel.profileLoaded.collectAsState()
+
+    LaunchedEffect(wasProfileUpdated) {
+        if (wasProfileUpdated) {
+            println("Profile update detected, refreshing data...")
+            viewModel.refreshProfileDetails()
+            onRefreshDone()
+        }
+    }
 
     if (showLogoutDialog) {
         CustomAlertDialog(

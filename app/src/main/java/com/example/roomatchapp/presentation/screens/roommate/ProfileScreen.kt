@@ -42,13 +42,21 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onEditClick: EmptyCallback,
     onLogout: () -> Unit,
+    wasProfileUpdated: Boolean,
+    onRefreshDone: () -> Unit = {}
 ) {
     val roommate by viewModel.roommate.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val shouldShowLoading = isLoading
 
-
+    LaunchedEffect(wasProfileUpdated) {
+        if (wasProfileUpdated) {
+            println("Profile update detected, refreshing data...")
+            viewModel.refreshProfileDetails()
+            onRefreshDone()
+        }
+    }
 
     if (showLogoutDialog) {
         CustomAlertDialog(
