@@ -6,10 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.roomatchapp.data.local.dao.SuggestedMatchDao
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.*
-import com.example.roomatchapp.domain.repository.MatchRepository
 import com.example.roomatchapp.domain.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

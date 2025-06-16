@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -38,10 +37,8 @@ import com.example.roomatchapp.presentation.theme.CustomTeal
 import com.example.roomatchapp.presentation.theme.Third
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.RadioButtonDefaults.colors
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +46,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
 import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.CloudinaryModel
-import com.example.roomatchapp.domain.repository.UserRepository
 import com.example.roomatchapp.presentation.components.CountSelector
 import com.example.roomatchapp.presentation.components.LoadingAnimation
 import com.example.roomatchapp.presentation.components.PriceRangeSelector
