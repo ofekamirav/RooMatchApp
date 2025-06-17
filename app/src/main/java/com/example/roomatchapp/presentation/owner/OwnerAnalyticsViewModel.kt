@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.AnalyticsResponse
 import com.example.roomatchapp.domain.repository.UserRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class AnalyticsState(
@@ -19,12 +22,16 @@ class OwnerAnalyticsViewModel(
     private val userSessionManager: UserSessionManager
 ): ViewModel()  {
     private val _analyticsResponse = MutableStateFlow(AnalyticsState())
-    val analyticsResponse: MutableStateFlow<AnalyticsState> = _analyticsResponse
+    val analyticsResponse: StateFlow<AnalyticsState> = _analyticsResponse.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _message = MutableStateFlow("")
-    val message: MutableStateFlow<String> = _message
+    val message: StateFlow<String> = _message.asStateFlow()
 
     init{
+        _isLoading.value = true
         viewModelScope.launch {
             val updated = userSessionManager.consumeUpdatedPreferencesFlag()
             loadAnalytics(ownerId,updated)
@@ -32,12 +39,15 @@ class OwnerAnalyticsViewModel(
     }
 
     private suspend fun loadAnalytics(ownerId: String,forceRefresh: Boolean = false) {
+        _isLoading.value = true
         val analytics = userRepository.getOwnerAnalytics(ownerId,forceRefresh)
         if (analytics != null) {
             _analyticsResponse.value = AnalyticsState(analytics)
+            _isLoading.value = false
         }else{
             _analyticsResponse.value = AnalyticsState(null)
             _message.value = "No analytics found"
+            _isLoading.value = false
         }
     }
 

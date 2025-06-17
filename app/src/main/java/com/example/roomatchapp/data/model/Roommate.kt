@@ -15,7 +15,7 @@ data class Roommate(
     val birthDate: String,
     val password: String,
     val refreshToken: String?=null,
-    val profilePicture: String? = null, //Optional, can be null and will set by user later
+    val profilePicture: String? = null,
     val work: String,
     val gender: Gender,
     val attributes: List<Attribute>,
@@ -106,12 +106,4 @@ data class LookingForRoomiesPreference(
     val setWeight: Boolean,
 )
 
-data class ForgotPasswordRequest(
-    val email: String
-)
-
-data class ResetPasswordRequest(
-    val token: String,
-    val newPassword: String
-)
 

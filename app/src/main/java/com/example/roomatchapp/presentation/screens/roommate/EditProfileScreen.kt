@@ -1,7 +1,10 @@
 package com.example.roomatchapp.presentation.screens.roommate
 
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.location.Location
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -25,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roomatchapp.R
@@ -44,6 +46,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.roomatchapp.data.base.EmptyCallback
 import com.example.roomatchapp.di.CloudinaryModel
 import com.example.roomatchapp.presentation.components.CountSelector
@@ -54,6 +57,9 @@ import com.example.roomatchapp.presentation.roommate.EditProfileUiState
 import com.example.roomatchapp.presentation.roommate.EditProfileViewModel
 import com.example.roomatchapp.presentation.theme.Primary
 import com.example.roomatchapp.presentation.theme.Secondary
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -70,16 +76,15 @@ fun EditProfileScreen(
 
     val showScreenLoading = isLoading || roommate == null || isSaving
 
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
+    LoadingAnimation(
+        isLoading = showScreenLoading,
+        animationResId = R.raw.loading_animation
     ) {
-        LoadingAnimation(
-            isLoading = showScreenLoading,
-            animationResId = R.raw.loading_animation
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -119,9 +124,25 @@ fun EditProfileContent(
     onBackClick: EmptyCallback
 ) {
     var expandedSection by remember { mutableStateOf<String?>("Account") }
+    val context = LocalContext.current
+    //Location
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var isFetchingLocation by remember { mutableStateOf(false) }
+    //Location Permissions
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                getCurrentLocation(fusedLocationClient, viewModel) { isLoading ->
+                    isFetchingLocation = isLoading
+                }
+            } else {
+                Toast.makeText(context, "Location permission is required", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
 
     val isLoadingBio by viewModel.geminiLoading.collectAsState()
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val errorMessage by viewModel.errorMsg.collectAsState()
     val imageUri = remember { mutableStateOf<Uri?>(null) }
@@ -461,12 +482,11 @@ fun EditProfileContent(
                                 color = Color.DarkGray
                             )
 
-                            val sliderValue = remember { mutableStateOf(pref.weight.toFloat()) }
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             WeightedSlider(
-                                value = sliderValue.value,
+                                value = pref.weight.toFloat(),
                                 onValueChange = { newValue ->
                                     val currentPrefs = uiState.lookingForRoomies.toMutableList()
                                     val index = currentPrefs.indexOfFirst { it.attribute == pref.attribute }
@@ -602,6 +622,55 @@ fun EditProfileContent(
                         }
                     }
                 }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "Location Icon",
+                        tint = Primary,
+                        modifier = Modifier
+                            .size(30.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "My Location",
+                        modifier = Modifier.weight(1f),
+                        color = Third
+                    )
+                    if (isFetchingLocation) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    } else {
+                        Button(
+                            onClick = {
+                            if (ContextCompat.checkSelfPermission(context, ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                getCurrentLocation(fusedLocationClient, viewModel) { isLoading ->
+                                    isFetchingLocation = isLoading
+                                }
+                                Toast.makeText(context, "New location is set", Toast.LENGTH_SHORT).show()
+                            } else {
+                                permissionLauncher.launch(ACCESS_FINE_LOCATION)
+                            }
+                        },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary,
+                                contentColor = Color.White,
+                                disabledContainerColor = Secondary.copy(alpha = 0.5f),
+                                disabledContentColor = Color.White.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier
+                                .height(42.dp)
+                                .width(112.dp),
+                            enabled = !isFetchingLocation
+                            ) {
+                            Text("Update", color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
@@ -862,36 +931,29 @@ fun WeightedSlider(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun EditProfileScreenPreview() {
-    val dummyRoommate = Roommate(
-        id = "1",
-        email = "bar@example.com",
-        fullName = "Bar Kobi",
-        phoneNumber = "050-1234567",
-        birthDate = "1999-05-06",
-        password = "password123",
-        refreshToken = null,
-        profilePicture = null,
-        work = "QA Engineer",
-        gender = Gender.FEMALE,
-        attributes = listOf(Attribute.CLEAN, Attribute.PET_LOVER),
-        hobbies = listOf(Hobby.YOGA, Hobby.TRAVELER),
-        lookingForRoomies = listOf(),
-        lookingForCondo = listOf(),
-        roommatesNumber = 2,
-        minPropertySize = 60,
-        maxPropertySize = 100,
-        minPrice = 2000,
-        maxPrice = 4000,
-        personalBio = "I love hiking, music, and keeping a tidy apartment.",
-        preferredRadiusKm = 10,
-        latitude = null,
-        longitude = null,
-        resetToken = null,
-        resetTokenExpiration = null
-    )
-
+private fun getCurrentLocation(
+    fusedLocationClient: FusedLocationProviderClient,
+    viewModel: EditProfileViewModel,
+    setLoading: (Boolean) -> Unit
+) {
+    setLoading(true)
+    try {
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location: Location? ->
+                location?.let {
+                    Log.d("LocationPicker", "Location received: Lat=${it.latitude}, Lon=${it.longitude}")
+                    viewModel.updateLocation(it.latitude, it.longitude)
+                } ?: run {
+                    Log.w("LocationPicker", "Failed to get location, result is null.")
+                }
+                setLoading(false)
+            }
+            .addOnFailureListener { e ->
+                Log.e("LocationPicker", "Failed to get location.", e)
+                setLoading(false)
+            }
+    } catch (e: SecurityException) {
+        Log.e("LocationPicker", "SecurityException getting location.", e)
+        setLoading(false)
+    }
 }

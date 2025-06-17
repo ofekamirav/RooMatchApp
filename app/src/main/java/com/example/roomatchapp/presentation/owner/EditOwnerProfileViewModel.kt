@@ -12,6 +12,7 @@ import com.example.roomatchapp.domain.repository.UserRepository
 import com.example.roomatchapp.utils.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
 
@@ -28,6 +29,9 @@ class EditOwnerProfileViewModel(
 
     private val _errorMsg = MutableStateFlow<String?>(null)
     val errorMsg: StateFlow<String?> = _errorMsg
+
+    var isUploadingImage by mutableStateOf(false)
+        public set
 
     var password by mutableStateOf("")
         public set
@@ -58,12 +62,15 @@ class EditOwnerProfileViewModel(
     }
 
     private fun loadOwnerProfile() {
+        _isLoading.value = true
         viewModelScope.launch {
             try {
                 val result = userRepository.getPropertyOwner(ownerId)
                 _owner.value = result
+                _isLoading.value = false
             } catch (e: Exception) {
                 Log.e("EditOwnerViewModel", "Error loading owner profile", e)
+                _isLoading.value = false
             } finally {
                 _isLoading.value = false
             }
@@ -99,6 +106,10 @@ class EditOwnerProfileViewModel(
             return false
         }
         return true
+    }
+
+    fun clearErrorMessage() {
+        _errorMsg.value = null
     }
 
     fun saveChanges(
