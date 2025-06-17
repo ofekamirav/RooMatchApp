@@ -36,6 +36,8 @@ data class EditProfileUiState(
     val maxPrice: Int = 4000,
     val minPropertySize: Int = 60,
     val maxPropertySize: Int = 100,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 class EditProfileViewModel(
@@ -91,6 +93,10 @@ class EditProfileViewModel(
     }
     fun updatePersonalBio(newPersonalBio: String) {
         _uiState.value = _uiState.value.copy(personalBio = newPersonalBio)
+    }
+
+    fun updateLocation(newLatitude: Double, newLongitude: Double) {
+        _uiState.value = _uiState.value.copy(latitude = newLatitude, longitude = newLongitude)
     }
 
     fun updateAttributes(newAttributes: List<Attribute>) {
@@ -190,6 +196,8 @@ class EditProfileViewModel(
         maxPrice           = maxPrice,
         minPropertySize    = minPropertySize,
         maxPropertySize    = maxPropertySize,
+        latitude           = latitude,
+        longitude          = longitude
     )
 
     //Update the Roommate with the changes from the UiState
@@ -212,7 +220,9 @@ class EditProfileViewModel(
         minPropertySize   = minPropertySize,
         maxPropertySize   = maxPropertySize,
         profilePicture = profilePicture ?: current.profilePicture,
-        password = if (password.isNotBlank()) password else current.password
+        password = if (password.isNotBlank()) password else current.password,
+        latitude = this.latitude ?: current.latitude,
+        longitude = this.longitude ?: current.longitude
     )
 
     fun validationBeforeSaving(): Boolean {

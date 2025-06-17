@@ -85,13 +85,14 @@ fun PropertiesScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(8.dp),
+                        .padding(horizontal = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Properties",
                         style = MaterialTheme.typography.titleLarge,
                         color = Primary,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     if (!isLoading && properties.isEmpty()) {
@@ -124,10 +125,11 @@ fun PropertiesScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
-
                 }
                 Row(
                     modifier = Modifier
@@ -140,12 +142,11 @@ fun PropertiesScreen(
                         contentColor = Color.Unspecified,
                         shape = RoundedCornerShape(50),
                         modifier = Modifier.size(60.dp),
-                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                        elevation = FloatingActionButtonDefaults.elevation(0.dp                        ),
                         content = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_add),
                                 contentDescription = "Add Property",
-                                modifier = Modifier.size(60.dp),
                                 tint = Color.Unspecified
                             )
                         }

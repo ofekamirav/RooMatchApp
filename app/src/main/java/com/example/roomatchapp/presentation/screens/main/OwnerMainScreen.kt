@@ -139,7 +139,8 @@ fun OwnerMainScreen(
                     AddPropertyViewModel(
                         propertyRepository = AppDependencies.propertyRepository,
                         userRepository = AppDependencies.userRepository,
-                        ownerId = ownerId
+                        ownerId = ownerId,
+                        userSessionManager = AppDependencies.sessionManager
                     )
                 }
                 AddPropertyFlow(

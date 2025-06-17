@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.CondoPreference
 import com.example.roomatchapp.data.model.LookingForCondoPreference
 import com.example.roomatchapp.data.model.PropertyType
@@ -46,7 +47,8 @@ data class AddPropertyFormState(
 class AddPropertyViewModel(
     private val propertyRepository: PropertyRepository,
     private val userRepository: UserRepository,
-    private val ownerId: String
+    private val ownerId: String,
+    private val userSessionManager: UserSessionManager
 ) : ViewModel() {
 
     private val _allRoomates = MutableStateFlow<List<Roommate>>(emptyList())
@@ -231,6 +233,7 @@ class AddPropertyViewModel(
             Log.d("TAG", "AddPropertyViewModel- Submit property result: $result")
             if (result != null) {
                 _navigateToProperties.value = true
+                userSessionManager.setUpdatedPreferencesFlag(true)
             } else {
                 _errorMessage.value = "Failed to add property"
             }

@@ -38,6 +38,7 @@ class PropertiesViewModel(
 
     fun loadProperties() {
         viewModelScope.launch {
+            _isLoading.value = true
             val properties = propertyRepository.getOwnerProperties(ownerId)
             if (properties != null) {
                 _properties.value = properties

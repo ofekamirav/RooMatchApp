@@ -53,11 +53,16 @@ class PropertyRepositoryImpl(
             }
         }
 
-        val isCacheFresh = propertiesWithCache.all { (_, cacheEntry) ->
-            (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
+        val relevantCachedPropertiesForOwner = propertiesWithCache.filter { (property, _) ->
+            property.ownerId == ownerId
         }
 
-        if (forceRefresh || !isCacheFresh) {
+        val isCacheFreshAndRelevant = relevantCachedPropertiesForOwner.all { (_, cacheEntry) ->
+            (now - cacheEntry.lastUpdatedAt) <= maxCacheAgeMillis
+        } && relevantCachedPropertiesForOwner.isNotEmpty()
+
+        if (forceRefresh || !isCacheFreshAndRelevant) {
+            Log.d("TAG", "PropertyRepositoryImpl- getOwnerProperties call to server")
             val freshProperties = apiService.getOwnerProperties(ownerId)
 
             freshProperties?.let { properties ->
@@ -78,16 +83,18 @@ class PropertyRepositoryImpl(
                 val existingIds = propertyDao.getAllIds()
                 val idsToDelete = existingIds.filterNot { incomingIds.contains(it) }
 
-                propertyDao.deleteByIds(idsToDelete)
-                cacheDao.deleteByEntityIds(idsToDelete)
+                if (idsToDelete.isNotEmpty()) {
+                    propertyDao.deleteByIds(idsToDelete)
+                    cacheDao.deleteByEntityIds(idsToDelete)
+                }
             }
 
             return freshProperties
         } else{
             //Cache is fresh, return cached properties
-            val cachedProperties = propertiesWithCache.filter { (property, _) -> property.ownerId == ownerId  }
-                .map {it.first}
-            return if (cachedProperties.isNotEmpty()) cachedProperties else null
+            Log.d("TAG", "PropertyRepositoryImpl- getOwnerProperties call from cache")
+            val cachedPropertiesToReturn = relevantCachedPropertiesForOwner.map { it.first }
+            return cachedPropertiesToReturn
         }
     }
 

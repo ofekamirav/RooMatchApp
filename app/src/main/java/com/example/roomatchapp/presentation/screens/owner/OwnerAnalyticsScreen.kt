@@ -7,10 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +27,7 @@ import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.animation.simpleChartAnimation
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
+import androidx.compose.runtime.getValue
 import java.util.Locale
 import com.example.roomatchapp.R
 import com.example.roomatchapp.presentation.theme.Secondary
@@ -37,29 +35,21 @@ import com.example.roomatchapp.presentation.theme.Secondary
 @Composable
 fun OwnerAnalyticsScreen(viewModel: OwnerAnalyticsViewModel) {
 
-    val analyticsState = viewModel.analyticsResponse.collectAsState()
-    val messageState = viewModel.message.collectAsState()
-    val isLoadingState = remember { mutableStateOf(true) }
+    val analyticsState by viewModel.analyticsResponse.collectAsState()
+    val messageState by viewModel.message.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
-    LaunchedEffect(analyticsState.value, messageState.value) {
-        if (analyticsState.value.analytics != null || messageState.value.isNotEmpty()) {
-            isLoadingState.value = false
-        } else {
-            isLoadingState.value = true
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
+    LoadingAnimation(
+        isLoading = isLoading,
+        animationResId = R.raw.loading_animation
     ) {
-        LoadingAnimation(
-            isLoading = isLoadingState.value,
-            animationResId = R.raw.loading_animation
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background)
         ) {
-            val currentAnalytics = analyticsState.value.analytics
-            val currentMessage = messageState.value
+            val currentAnalytics = analyticsState.analytics
+            val currentMessage = messageState
 
             if (currentAnalytics != null) {
                 LazyColumn(
@@ -83,7 +73,7 @@ fun OwnerAnalyticsScreen(viewModel: OwnerAnalyticsViewModel) {
                     }
 
                     val matchesList = currentAnalytics.matchesPerProperty
-                    if (matchesList.isEmpty() && !isLoadingState.value) {
+                    if (matchesList.isEmpty() && !isLoading) {
                         item {
                             Text(
                                 "No property match data available.",
@@ -140,20 +130,6 @@ fun OwnerAnalyticsScreen(viewModel: OwnerAnalyticsViewModel) {
                         text = currentMessage,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Secondary,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "No analytics data available at the moment.",
-                        style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
                 }
