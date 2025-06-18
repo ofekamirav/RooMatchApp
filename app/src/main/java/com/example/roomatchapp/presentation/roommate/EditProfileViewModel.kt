@@ -134,6 +134,34 @@ class EditProfileViewModel(
         _uiState.value = _uiState.value.copy(maxPropertySize = newMaxPropertySize)
     }
 
+    fun updateRoomiePreference(attribute: Attribute, newWeight: Double) {
+        val currentPrefs = _uiState.value.lookingForRoomies.toMutableList()
+        val index = currentPrefs.indexOfFirst { it.attribute == attribute }
+
+        if (index != -1) {
+            currentPrefs[index] = currentPrefs[index].copy(
+                weight = newWeight,
+                setWeight = true
+            )
+            _uiState.value = _uiState.value.copy(lookingForRoomies = currentPrefs)
+        }
+    }
+
+    fun updateCondoPreference(preference: CondoPreference, newWeight: Double) {
+        val currentPrefs = _uiState.value.lookingForCondo.toMutableList()
+        val index = currentPrefs.indexOfFirst { it.preference == preference }
+
+        if (index != -1) {
+            currentPrefs[index] = currentPrefs[index].copy(
+                weight = newWeight,
+                setWeight = true
+            )
+            _uiState.value = _uiState.value.copy(lookingForCondo = currentPrefs)
+        }
+    }
+
+
+
     init {
         loadRoommateProfile()
     }
@@ -188,8 +216,20 @@ class EditProfileViewModel(
         personalBio        = personalBio.toString(),
         attributes         = attributes,
         hobbies            = hobbies,
-        lookingForRoomies  = lookingForRoomies,
-        lookingForCondo    = lookingForCondo,
+        lookingForRoomies  = lookingForRoomies.map {
+            LookingForRoomiesPreference(
+                attribute = it.attribute,
+                weight = it.weight,
+                setWeight = it.setWeight
+            )
+        },
+        lookingForCondo    = lookingForCondo.map {
+            LookingForCondoPreference(
+                preference = it.preference,
+                weight = it.weight,
+                setWeight = it.setWeight
+            )
+        },
         preferredRadiusKm  = preferredRadiusKm,
         roommatesNumber    = roommatesNumber,
         minPrice           = minPrice,

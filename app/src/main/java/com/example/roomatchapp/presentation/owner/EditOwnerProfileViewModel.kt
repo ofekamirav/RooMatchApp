@@ -53,7 +53,7 @@ class EditOwnerProfileViewModel(
     fun updatePassword(newPassword: String) {
         _owner.value = _owner.value?.copy(password = newPassword)
     }
-    fun updateProfilePicture(newProfilePicture: String?) {
+    fun updateProfilePicture(newProfilePicture: String) {
         _owner.value = _owner.value?.copy(profilePicture = newProfilePicture)
     }
 
@@ -91,7 +91,7 @@ class EditOwnerProfileViewModel(
             return false
         }
 
-        if (owner.email.isBlank() || Patterns.EMAIL_ADDRESS.matcher(owner.email).matches()) {
+        if (owner.email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(owner.email).matches()) {
             _errorMsg.value = "Email is not valid."
             return false
         }
@@ -132,11 +132,6 @@ class EditOwnerProfileViewModel(
                 birthDate = current.birthDate,
                 profilePicture = current.profilePicture
             )
-            if (updatedOwner == current) {
-                Log.d("EditOwnerViewModel", "No changes detected.")
-                onSuccess()
-                return
-            }
             viewModelScope.launch {
                 val success = userRepository.updateOwner(ownerId, updatedOwner)
                 if (success) {

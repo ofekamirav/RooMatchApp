@@ -275,56 +275,56 @@ fun PropertyPreviewScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Owner's Name",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Primary
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    if(state.OwnerPic != null){
-                        Image(
-                            painter = rememberAsyncImagePainter(state.OwnerPic),
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50.dp)),
-                            contentScale = ContentScale.Fit
+                if (!isOwner) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Owner's Name",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Primary
                         )
-                    }else{
-                        Image(
-                            painter = painterResource(id = R.drawable.avatar),
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50.dp)),
-                            contentScale = ContentScale.Fit
-                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        if (state.OwnerPic != null) {
+                            Image(
+                                painter = rememberAsyncImagePainter(state.OwnerPic),
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50.dp)),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.avatar),
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50.dp)),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = state.OwnerName.toString(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Left
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    if (!isOwner) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = state.OwnerName.toString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Left
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Spacer(modifier = Modifier.width(12.dp))
                         IconButton(
                             onClick = {
-                                val message = "Hi ${state.OwnerName ?: "there"}, I saw your property at RoomMatch and I'm interested in it."
+                                val message =
+                                    "Hi ${state.OwnerName ?: "there"}, I saw your property at RoomMatch and I'm interested in it."
                                 val phoneNumber = state.ownerPhone
 
                                 if (!phoneNumber.isNullOrBlank()) {
@@ -337,10 +337,18 @@ fun PropertyPreviewScreen(
                                     if (intent.resolveActivity(context.packageManager) != null) {
                                         context.startActivity(intent)
                                     } else {
-                                        Toast.makeText(context, "No SMS app found", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            "No SMS app found",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 } else {
-                                    Toast.makeText(context, "Owner phone number is not available", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Owner phone number is not available",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             },
                             modifier = Modifier.size(40.dp)
@@ -395,7 +403,6 @@ fun PropertyPreviewScreen(
                     }
                 }
             }
-
 
             if (showDeleteMessage) {
                 CustomAlertDialog(

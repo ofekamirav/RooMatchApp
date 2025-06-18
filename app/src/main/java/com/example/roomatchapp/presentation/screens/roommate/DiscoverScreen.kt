@@ -257,16 +257,13 @@ fun MatchCard(
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(cardDetails.address, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
+            Text(
+                text = cardDetails.title,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleSmall
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
             //Property Image
@@ -295,22 +292,30 @@ fun MatchCard(
                     })
             )
             Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = cardDetails.title,
-                    fontWeight = FontWeight.Normal,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            Row {
+                Icon(
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = null,
+                    tint = Primary,
+                    modifier = Modifier.size(24.dp)
                 )
-                Text("${cardDetails.price} ₪", fontWeight = FontWeight.Bold, maxLines = 1)
+                Spacer(Modifier.width(8.dp))
+                Text(cardDetails.address, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Text("Price: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text("${cardDetails.price} ₪", fontWeight = FontWeight.Bold, maxLines = 1, style = MaterialTheme.typography.bodyMedium, color = Primary)
+            }
+
+
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Roommate Matches:", fontWeight = FontWeight.Medium)
+            Text("Roommate Matches:", style = MaterialTheme.typography.bodyMedium,fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(

@@ -486,14 +486,10 @@ fun EditProfileContent(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             WeightedSlider(
-                                value = pref.weight.toFloat(),
-                                onValueChange = { newValue ->
-                                    val currentPrefs = uiState.lookingForRoomies.toMutableList()
-                                    val index = currentPrefs.indexOfFirst { it.attribute == pref.attribute }
-                                    if (index != -1) {
-                                        currentPrefs[index] = currentPrefs[index].copy(weight = newValue.toDouble())
-                                        viewModel.updateLookingForRoomies(currentPrefs)
-                                    }
+                                currentWeight  = pref.weight.toFloat(),
+                                setWeight = pref.setWeight,
+                                onWeightSelected = { newWeight ->
+                                    viewModel.updateRoomiePreference(pref.attribute, newWeight.toDouble())
                                 }
                             )
                         }
@@ -609,14 +605,10 @@ fun EditProfileContent(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             WeightedSlider(
-                                value = pref.weight.toFloat(),
-                                onValueChange = { newValue ->
-                                    val currentCondoPrefs = uiState.lookingForCondo.toMutableList()
-                                    val index = currentCondoPrefs.indexOfFirst { it.preference == pref.preference }
-                                    if (index != -1) {
-                                        currentCondoPrefs[index] = currentCondoPrefs[index].copy(weight = newValue.toDouble())
-                                        viewModel.updateLookingForCondo(currentCondoPrefs)
-                                    }
+                                currentWeight  = pref.weight.toFloat(),
+                                setWeight = pref.setWeight,
+                                onWeightSelected = { newWeight ->
+                                    viewModel.updateCondoPreference(pref.preference, newWeight.toDouble())
                                 }
                             )
                         }
@@ -871,56 +863,48 @@ fun ExpandableSection(
 }
 @Composable
 fun WeightedSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
+    currentWeight: Float,
+    setWeight: Boolean,
+    onWeightSelected: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val roundedValue = remember(value) {
-        (value * 4).toInt() / 4f
-    }
-
+    var hasUserSelected by remember { mutableStateOf(setWeight) }
     var sliderWidth by remember { mutableStateOf(0f) }
     var textWidth by remember { mutableStateOf(0f) }
-
     val density = LocalDensity.current
-    val offsetFraction = (roundedValue - 0f) / (1f - 0f)
+    val offsetFraction = currentWeight.coerceIn(0f, 1f)
     val xOffsetDp = with(density) {
         (sliderWidth * offsetFraction - textWidth / 2).toDp()
     }
+    Column(modifier) {
+        Box {
+            Text(
+                text = "%.2f".format(currentWeight),
+                modifier = Modifier
+                    .offset(x = xOffsetDp)
+                    .onGloballyPositioned { textWidth = it.size.width.toFloat() }
+                    .padding(bottom = 8.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (hasUserSelected) CustomTeal else Color.Gray
+            )
 
-    Box(modifier = modifier) {
-        Text(
-            text = String.format("%.2f", roundedValue),
-            modifier = Modifier
-                .offset(x = xOffsetDp)
-                .onGloballyPositioned {
-                    textWidth = it.size.width.toFloat()
-                }
-                .padding(bottom = 8.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = CustomTeal
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .padding(horizontal = 8.dp)
-                    .onGloballyPositioned {
-                        sliderWidth = it.size.width.toFloat()
-                    }
+                    .onGloballyPositioned { sliderWidth = it.size.width.toFloat() }
             ) {
                 Slider(
-                    value = roundedValue,
+                    value = currentWeight,
                     onValueChange = {
                         val stepped = (it * 4).roundToInt() / 4f
-                        onValueChange(stepped)
+                        if (!hasUserSelected || stepped != currentWeight) {
+                            hasUserSelected = true
+                            onWeightSelected(stepped)
+                        }
                     },
                     valueRange = 0f..1f,
-                    modifier = Modifier.fillMaxWidth(),
+                    steps = 3,
                     colors = SliderDefaults.colors(
                         thumbColor = Primary,
                         activeTrackColor = Primary,
