@@ -102,7 +102,8 @@ fun EditOwnerContent(owner: PropertyOwner, viewModel: EditOwnerProfileViewModel,
                     name = "owner_${System.currentTimeMillis()}",
                     folder = "roomatchapp/owners",
                     onSuccess = {
-                        viewModel.updateProfilePicture(it)
+                        Log.d("TAG", "Image uploaded successfully: $it")
+                        viewModel.updateProfilePicture(it.toString())
                         viewModel.isUploadingImage = false
                     },
                     onError = {
