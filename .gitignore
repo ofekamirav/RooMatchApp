@@ -24,7 +24,8 @@
 
 # Local configuration file (SDK location, etc)
 local.properties        # Should be at the root of the Android project
-/gradle.properties
+gradle.properties
+keystore.properties
 
 # IDE specific files (for IntelliJ IDEA / Android Studio)
  # Ignores the entire .idea directory. This is usually preferred.

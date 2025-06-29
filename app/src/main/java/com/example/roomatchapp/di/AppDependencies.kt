@@ -45,11 +45,11 @@ import kotlin.getValue
 
 object AppDependencies {
 
-    const val computerIP = "192.168.1.158" //if your are using emulator change ip to 10.0.2.2
+//    const val computerIP = "192.168.1.158" //if your are using emulator change ip to 10.0.2.2
+//
+//    const val dnsAddress = "roomatch.cs.colman.ac.il"
 
-    const val dnsAddress = "roomatch.cs.colman.ac.il"
-
-    internal const val BASE_URL = "http://$computerIP:8080"
+//    internal const val BASE_URL = "http://$computerIP:8080"
 
     lateinit var sessionManager: UserSessionManager
 
@@ -61,7 +61,7 @@ object AppDependencies {
 
     fun init(context: Context){
         localDB = LocalDatabaseProvider.getDatabase(context)
-        tokenAuthenticator = TokenAuthenticator(sessionManager, BASE_URL, httpClient)
+        tokenAuthenticator = TokenAuthenticator(sessionManager, BuildConfig.BASE_URL, httpClient)
         initPlaces(context)
     }
 
@@ -106,7 +106,7 @@ object AppDependencies {
 
 
     val userApiService: UserApiService by lazy {
-        UserApiServiceImplementation(httpClient, BASE_URL)
+        UserApiServiceImplementation(httpClient, BuildConfig.BASE_URL)
     }
 
     val userRepository: UserRepository by lazy {
@@ -120,7 +120,7 @@ object AppDependencies {
     }
 
     val matchApiService: MatchApiService by lazy {
-        MatchApiServiceImplementation(httpClient, BASE_URL)
+        MatchApiServiceImplementation(httpClient, BuildConfig.BASE_URL)
     }
 
     val matchRepository: MatchRepository by lazy {
@@ -136,7 +136,7 @@ object AppDependencies {
     }
 
     val propertyApiService: PropertyApiService by lazy {
-        PropertyApiServiceImplementation(httpClient, BASE_URL)
+        PropertyApiServiceImplementation(httpClient, BuildConfig.BASE_URL)
     }
 
     val propertyRepository: PropertyRepository by lazy {
@@ -148,7 +148,7 @@ object AppDependencies {
     }
 
     val likeApiService: LikeApiService by lazy {
-        LikeApiServiceImplementation(httpClient, BASE_URL)
+        LikeApiServiceImplementation(httpClient, BuildConfig.BASE_URL)
     }
 
     val likeRepository: LikeRepository by lazy {
