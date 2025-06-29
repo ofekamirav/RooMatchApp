@@ -8,6 +8,7 @@ auth0 = "4.5.0"
 charts = "0.2.4-alpha"
 coilCompose = "2.4.0"
 kotlinxCoroutinesTest = "1.7.3"
+ktorClientAuth = "3.1.1"
 mockitoCore = "4.11.0"
 mockitoKotlin = "4.1.0"
 turbine = "1.0.0"
@@ -66,6 +67,7 @@ bottom-sheet = { module = "io.github.raamcosta.compose-destinations:bottom-sheet
 charts = { module = "com.github.tehras:charts", version.ref = "charts" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktorClientAuth" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

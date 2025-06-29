@@ -1,13 +1,10 @@
 package com.example.roomatchapp.data.remote.api.match
 
 import android.util.Log
-import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Match
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.model.Roommate
 import com.example.roomatchapp.di.AppDependencies
-import com.example.roomatchapp.utils.TokenUtils
-import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -18,7 +15,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.coroutines.flow.first
 
 class MatchApiServiceImplementation(
     private val client: HttpClient,

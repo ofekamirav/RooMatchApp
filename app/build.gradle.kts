@@ -1,4 +1,6 @@
 import org.gradle.kotlin.dsl.implementation
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,6 +9,14 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     kotlin("kapt")
+}
+val keystoreProperties = Properties()
+val keystoreFile = rootProject.file("keystore.properties")
+if (keystoreFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystoreFile))
+    println("DEBUG: storeFile from properties: ${keystoreProperties.getProperty("storeFile")}")
+} else {
+    println("DEBUG: keystore.properties file NOT found at ${keystoreFile.absolutePath}")
 }
 
 android {
@@ -22,19 +32,33 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "CLOUD_NAME", "\"${project.properties["CLOUD_NAME"]?: ""}\"")
-        buildConfigField("String", "API_KEY", "\"${project.properties["API_KEY"]?: ""}\"")
-        buildConfigField("String", "API_SECRET", "\"${project.properties["API_SECRET"]?: ""}\"")
-        buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"${project.properties["GOOGLE_PLACES_API_KEY"]?: ""}\"")
+        buildConfigField("String", "CLOUD_NAME", "\"${keystoreProperties.getProperty("CLOUD_NAME")?: ""}\"")
+        buildConfigField("String", "API_KEY", "\"${keystoreProperties.getProperty("API_KEY")?: ""}\"")
+        buildConfigField("String", "API_SECRET", "\"${keystoreProperties.getProperty("API_SECRET")?: ""}\"")
+        buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"${keystoreProperties.getProperty("GOOGLE_PLACES_API_KEY")?: ""}\"")
+        buildConfigField("String", "RELEASE_ID_TOKEN", "\"${keystoreProperties.getProperty("RELEASE_ID_TOKEN")?: ""}\"")
+    }
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProperties.getProperty("storeFile"))
+            storePassword = keystoreProperties.getProperty("storePassword")
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"http://roomatch.cs.colman.ac.il:8080\"")
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.0.2:8080\"")
         }
     }
     compileOptions {
@@ -64,9 +88,6 @@ android {
             isReturnDefaultValues = true
         }
     }
-
-
-
 }
 
 
@@ -104,6 +125,7 @@ dependencies {
     implementation (libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.ktor.client.auth)
     implementation(libs.auth0)
     //retrofit
     implementation(libs.retrofit)
@@ -125,7 +147,6 @@ dependencies {
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.datastore.preferences)
 
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -139,11 +160,6 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
-
-
-
-    //Google Places API
-    implementation(libs.places)
 
     // photos
     implementation (libs.accompanist.pager)

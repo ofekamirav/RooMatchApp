@@ -1,11 +1,9 @@
 package com.example.roomatchapp.data.remote.api.property
 
 import android.util.Log
-import com.example.roomatchapp.data.local.session.UserSessionManager
 import com.example.roomatchapp.data.model.Property
 import com.example.roomatchapp.data.remote.dto.PropertyDto
 import com.example.roomatchapp.di.AppDependencies
-import com.example.roomatchapp.utils.TokenUtils.refreshTokenIfNeeded
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete

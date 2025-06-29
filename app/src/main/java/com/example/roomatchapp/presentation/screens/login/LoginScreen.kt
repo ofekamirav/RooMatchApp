@@ -46,6 +46,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.cloudinary.api.exceptions.ApiException
+import com.example.roomatchapp.BuildConfig
 import com.example.roomatchapp.presentation.theme.Background
 import com.example.roomatchapp.R
 import com.example.roomatchapp.data.base.EmptyCallback
@@ -80,7 +81,7 @@ fun LoginScreen(
         GoogleSignIn.getClient(
             context,
             GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("366891104441-vcv1o33mkv628rggcfetj4ekipc0thmi.apps.googleusercontent.com")
+                .requestIdToken(BuildConfig.RELEASE_ID_TOKEN)
                 .requestEmail()
                 .build()
         )
